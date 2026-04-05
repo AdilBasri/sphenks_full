@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=23 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
 [ext_resource type="Animation" uid="uid://c3w5olixra7ns" path="res://oturma1.res" id="2_eeger"]
@@ -12,6 +12,10 @@
 [ext_resource type="PackedScene" uid="uid://c0m1gbfgf5rmt" path="res://Assets/door/scene.gltf" id="10_gyfrk"]
 [ext_resource type="Script" uid="uid://0rccufjia2dw" path="res://grid_generator.gd" id="11_grid"]
 [ext_resource type="PackedScene" uid="uid://dsh2b6624y0hk" path="res://Assets/screen/scene.gltf" id="12_gyfrk"]
+[ext_resource type="PackedScene" uid="uid://cjmioknigrhq5" path="res://Assets/a_table/scene.gltf" id="13_2jv0e"]
+[ext_resource type="PackedScene" uid="uid://berst0pur28ff" path="res://Assets/chair/scene.gltf" id="14_bbdvs"]
+[ext_resource type="PackedScene" uid="uid://b2fdkeid834us" path="res://Assets/card/scene.gltf" id="15_f3tc8"]
+[ext_resource type="Texture2D" uid="uid://50tu8f6bkdqr" path="res://Assets/card/L.png" id="16_bi1g6"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
 _data = {
@@ -32,8 +36,12 @@ height = 1.9550781
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gyfrk"]
 albedo_color = Color(0, 0, 0, 1)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2jv0e"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f3tc8"]
 albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_woum2"]
+albedo_texture = ExtResource("16_bi1g6")
+uv1_scale = Vector3(1, 2, 1)
 
 [node name="GameRoom" type="Node3D"]
 
@@ -48,7 +56,7 @@ operation = 2
 size = Vector3(4.5, 2.5, 6.5)
 
 [node name="Sitting" parent="." instance=ExtResource("1_p6dlx")]
-transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, -1.24, -2.900278)
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, -1.24, -2.900278)
 
 [node name="Skeleton3D" parent="Sitting" index="0"]
 bones/0/position = Vector3(-7.791787e-05, 0.64586365, 0.036555447)
@@ -180,9 +188,19 @@ spot_range = 8.0
 spot_angle = 40.0
 
 [node name="OmniLight3D" type="OmniLight3D" parent="WorldEnvironment"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4231892, -0.8172629, 0.7240896)
-light_color = Color(0.47058824, 0.56078434, 0.28235295, 1)
-light_energy = 0.5
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15051156, 0.6931714, -2.6440423)
+light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
+light_energy = 5.0
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15051156, 0.6931714, 0.14272171)
+light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
+light_energy = 5.0
+
+[node name="OmniLight3D3" type="OmniLight3D" parent="WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15051156, 0.6931714, 2.818002)
+light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
+light_energy = 5.0
 
 [node name="CharacterBody3D" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11820468, -3.305133)
@@ -193,7 +211,7 @@ shape = SubResource("CapsuleShape3D_6acwk")
 
 [node name="Camera3D" type="Camera3D" parent="CharacterBody3D"]
 transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, -0.31322035, 2.0847573)
-fov = 50.0
+fov = 80.0
 script = ExtResource("4_pbwbf")
 
 [node name="vent" parent="." instance=ExtResource("5_eeger")]
@@ -427,30 +445,49 @@ transform = Transform3D(-2.1855694e-10, 0, 0.005, 0, 0.005, 0, -0.005, 0, -2.185
 visible = false
 
 [node name="OyuncuGrid" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7, -1.657)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7, -1.5245745)
 script = ExtResource("11_grid")
 hucre_boyutu = 0.1
 bosluk = 0.01
 
 [node name="DüşmanGrid" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7, -2.308)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7, -2.1127071)
 script = ExtResource("11_grid")
 hucre_boyutu = 0.1
 bosluk = 0.01
 
 [node name="paravan" parent="." instance=ExtResource("12_gyfrk")]
-transform = Transform3D(-0.26, 0, -3.9258907e-08, 0, 0.26, 0, 3.9258907e-08, 0, -0.26, 2.6171403, -0.90039897, -1.9558293)
+transform = Transform3D(-0.26, 0, -3.9258907e-08, 0, 0.26, 0, 3.9258907e-08, 0, -0.26, 2.5862331, -0.90039897, -1.7762405)
 
-[node name="CSGBox3D" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0005207062, -0.7297375, -1.9765923)
+[node name="masa_üst" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0005207062, -0.7297375, -1.8185587)
 size = Vector3(0.75149155, 0.04989624, 0.97024536)
 material = SubResource("StandardMaterial3D_gyfrk")
 
-[node name="CSGBox3D2" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0041656494, -1.0403157, -1.9838578)
+[node name="masa_alt" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0041656494, -1.0403157, -1.9162539)
 size = Vector3(0.73947144, 0.5864258, 0.26123047)
-material = SubResource("StandardMaterial3D_2jv0e")
+material = SubResource("StandardMaterial3D_f3tc8")
+
+[node name="masa" parent="." instance=ExtResource("13_2jv0e")]
+transform = Transform3D(0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05, 0.7423043, -1.2007478, -1.9761416)
+
+[node name="masa2" parent="." instance=ExtResource("13_2jv0e")]
+transform = Transform3D(0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05, -0.7529588, -1.2007478, -1.9761416)
+
+[node name="chair" parent="." instance=ExtResource("14_bbdvs")]
+transform = Transform3D(0.08, 0, -5.0858397e-09, 0, 0.08, 0, 5.0858397e-09, 0, 0.08, -0.004329741, -0.5934596, -0.7391614)
+
+[node name="chair2" parent="chair" instance=ExtResource("14_bbdvs")]
+transform = Transform3D(-1.2, 0, -1.81195e-07, 0, 1.2, 0, 1.81195e-07, 0, -1.2, -1.784414e-06, 1.5793962, -28.048073)
+
+[node name="card" parent="." instance=ExtResource("15_f3tc8")]
+transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.6589358, -0.73025525, -1.8714454)
+
+[node name="Object_4" parent="card/Sketchfab_model/root/GLTF_SceneRootNode/card texture_0" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_woum2")
 
 [editable path="Sitting"]
 [editable path="kapi"]
 [editable path="paravan"]
+[editable path="card"]
