@@ -1,0 +1,11 @@
+Model Information:
+* title:	Wood ceiling
+* source:	https://sketchfab.com/3d-models/wood-ceiling-d1ab5904479449efafd63450aa38e208
+* author:	slls666 (https://sketchfab.com/slls666)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Wood ceiling" (https://sketchfab.com/3d-models/wood-ceiling-d1ab5904479449efafd63450aa38e208) by slls666 (https://sketchfab.com/slls666) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

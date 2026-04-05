@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://cksmvb2kuwuxx"]
+
+[ext_resource type="PackedScene" uid="uid://v2kql7glcb54" path="res://Assets/shelves2/scene.gltf" id="1_h3i7m"]
+
+[node name="Sketchfab_Scene" instance=ExtResource("1_h3i7m")]
+
+[node name="Cardboard_box_04" parent="Sketchfab_model/Storage_Shelves_and_Cardboard_Boxs_fbx/RootNode" index="4"]
+visible = false
+
+[node name="Cardboard_box_03" parent="Sketchfab_model/Storage_Shelves_and_Cardboard_Boxs_fbx/RootNode" index="5"]
+visible = false
+
+[node name="Cardboard_box_01" parent="Sketchfab_model/Storage_Shelves_and_Cardboard_Boxs_fbx/RootNode" index="6"]
+visible = false
+
+[node name="Cardboard_box_02" parent="Sketchfab_model/Storage_Shelves_and_Cardboard_Boxs_fbx/RootNode" index="7"]
+visible = false
