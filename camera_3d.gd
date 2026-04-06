@@ -257,11 +257,46 @@ func consume_held_card():
 		
 		# Animasyon ve kamera hareketi başlat
 		var paravan_cam = get_tree().root.find_child("ParavanKamerasi", true, false)
-		if paravan_cam:
+		var paravan_node = get_tree().root.find_child("paravan", true, false)
+		
+		if paravan_cam and paravan_node:
 			is_locked = true
+			
+			# 1- Önce kamerayı yavaşça default ortalanmış açısına çekelim
+			var rot_tw = create_tween().set_parallel(true)
+			rot_tw.tween_property(self, "rotation_degrees:y", start_y, 0.4).set_trans(Tween.TRANS_SINE)
+			rot_tw.tween_property(self, "rotation_degrees:x", start_x, 0.4).set_trans(Tween.TRANS_SINE)
+			await rot_tw.finished
+			
+			# Temel yerimizi kaydet (Geri dönmek için)
 			original_camera_transform = global_transform
 			original_camera_rotation_degrees = rotation_degrees
 			
+			var anim_player = paravan_node.find_child("AnimationPlayer", true, false)
+			
+			# Güvenlik önlemi: Eğer paravan içinde değilse kök sahnede veya GameRoom'da da arayalim.
+			if not anim_player:
+				anim_player = get_tree().root.find_child("AnimationPlayer", true, false)
+				
+			if anim_player:
+				var target_anim = "paravan_ac"
+				if not anim_player.has_animation(target_anim):
+					target_anim = anim_player.get_animation_list()[0]
+					
+				# Hızı 2 katına çıkar
+				anim_player.speed_scale = 2.0
+				anim_player.play(target_anim)
+				
+				# Animasyonun tam yarısını hesapla (Hız 2 olduğu için bekleyeceğimiz süre / 2 olur)
+				var half_time = anim_player.current_animation_length / 2.0
+				await get_tree().create_timer(half_time / 2.0).timeout
+				
+				# Yarıda dondur (Böylece geriye kalanı dönerken kapanış için oynatılabilecek)
+				anim_player.pause()
+			else:
+				await get_tree().create_timer(1.0).timeout
+			
+			# 2- Paravan yarıya kadar açıldı (durdu), ŞİMDİ kamerayı hareket ettiriyoruz
 			var tw = create_tween()
 			tw.tween_property(self, "global_transform", paravan_cam.global_transform, 1.0).set_trans(Tween.TRANS_SINE)
 			tw.tween_callback(func():
@@ -272,10 +307,6 @@ func consume_held_card():
 				pitch = euler.x
 				rotation_degrees = euler
 				is_locked = false # İzin ver etrafa baksın
-				
-				var anim_player = get_tree().root.find_child("AnimationPlayer", true, false)
-				if anim_player:
-					anim_player.play("paravan_ac")
 				
 				# Çöp objeyi eline alan logic'i tetikliyoruz. Yerde belirmeden!
 				var block_scene = load("res://block_cop.tscn")
@@ -406,7 +437,8 @@ func update_block_preview():
 			
 		var max_dist = b_size / 1.5 
 		
-		for m in ghost_block.find_children("*", "CSGBox3D"):
+		# Artık görseller farklı bir mesh (GLTF) olabileceğinden çarpışma kutularının merkezlerini baz alıyoruz
+		for m in ghost_block.find_children("*", "CollisionShape3D"):
 			# Koordinat dönüşümünü grid uzayına çekerek hesaplamayı tablo eğik bile olsa doğru yapalım
 			var m_local = grid_gen.to_local(m.global_position) if grid_gen else m.global_position
 			var closest_cell = null
@@ -435,9 +467,15 @@ func update_block_preview():
 				break
 				
 		var color = Color(0, 1, 0, 0.5) if is_placement_valid else Color(1, 0, 0, 0.5)
+		
+		# Hayaletin üstündeki herhangi bir CSGBox veya Mesh varsa rengini boya
 		for m in ghost_block.find_children("*", "CSGBox3D"):
-			m.material.albedo_color = color
+			if m.material: m.material.albedo_color = color
 			
+		for m in ghost_block.find_children("*", "MeshInstance3D"):
+			if m.get_surface_override_material(0):
+				m.get_surface_override_material(0).albedo_color = color
+				
 		ghost_block.set_meta("target_cells", target_cells)
 
 func place_held_block():
@@ -487,13 +525,24 @@ func place_held_block():
 		if enemy_placement_mode:
 			enemy_placement_mode = false
 			is_locked = true
-			var anim_player = get_tree().root.find_child("AnimationPlayer", true, false)
-			if anim_player:
-				anim_player.play("paravan_kapa")
-				
+			
 			var ret_tw = create_tween()
 			ret_tw.tween_property(self, "global_transform", original_camera_transform, 1.0).set_trans(Tween.TRANS_SINE).set_delay(0.5)
+			
+			# Kamera yerine ulaşıp geri döndükten SONRA paravanı kapatalım
 			ret_tw.tween_callback(func():
+				var paravan_node = get_tree().root.find_child("paravan", true, false)
+				var anim_player = null
+				if paravan_node:
+					anim_player = paravan_node.find_child("AnimationPlayer", true, false)
+				if not anim_player:
+					anim_player = get_tree().root.find_child("AnimationPlayer", true, false)
+					
+				if anim_player:
+					# Kapatmak için dondurduğumuz yerden kaldığı gibi devam ettir!
+					anim_player.speed_scale = 2.0
+					anim_player.play()
+						
 				var euler = original_camera_rotation_degrees
 				start_y = euler.y
 				start_x = euler.x
