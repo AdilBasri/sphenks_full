@@ -50,7 +50,7 @@ func _ready():
 	setup_viewmodel_rendering()
 	
 	# Kartlara kod üzerinden bir fizik alanı (Hitbox) ekleyelim ki raycast ile tıklayabilelim
-	for card_name in ["card", "card2"]:
+	for card_name in ["card", "card2", "card3"]:
 		var card = get_tree().root.find_child(card_name, true, false)
 		if card:
 			var static_body = StaticBody3D.new()
