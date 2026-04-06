@@ -18,6 +18,10 @@ var ghost_block: Node3D = null
 var current_hovered_cell: Node3D = null
 var is_placement_valid: bool = false
 
+var enemy_placement_mode: bool = false
+var original_camera_transform: Transform3D
+var original_camera_rotation_degrees: Vector3
+
 # Shake Params
 var shake_intensity: float = 0.0
 var shake_duration: float = 0.0
@@ -248,6 +252,58 @@ func create_ghost_block(original_block: Node3D):
 func consume_held_card():
 	if held_card == null: return
 	
+	if held_card.name.to_lower().begins_with("card3") or held_card.name == "card3":
+		enemy_placement_mode = true
+		
+		# Animasyon ve kamera hareketi başlat
+		var paravan_cam = get_tree().root.find_child("ParavanKamerasi", true, false)
+		if paravan_cam:
+			is_locked = true
+			original_camera_transform = global_transform
+			original_camera_rotation_degrees = rotation_degrees
+			
+			var tw = create_tween()
+			tw.tween_property(self, "global_transform", paravan_cam.global_transform, 1.0).set_trans(Tween.TRANS_SINE)
+			tw.tween_callback(func():
+				var euler = paravan_cam.rotation_degrees
+				start_y = euler.y
+				start_x = euler.x
+				yaw = euler.y
+				pitch = euler.x
+				rotation_degrees = euler
+				is_locked = false # İzin ver etrafa baksın
+				
+				var anim_player = get_tree().root.find_child("AnimationPlayer", true, false)
+				if anim_player:
+					anim_player.play("paravan_ac")
+				
+				# Çöp objeyi eline alan logic'i tetikliyoruz. Yerde belirmeden!
+				var block_scene = load("res://block_cop.tscn")
+				if block_scene:
+					held_block = block_scene.instantiate()
+					# scale_factor hesabı
+					var size = 0.1 
+					var grid_gen = get_tree().root.find_child("DusmanGrid", true, false)
+					if grid_gen and grid_gen.get("hucre_boyutu"):
+						size = grid_gen.hucre_boyutu
+					var scale_factor = size / 0.1
+					held_block.scale = Vector3(scale_factor, scale_factor, scale_factor)
+					
+					add_child(held_block)
+					held_block.position = Vector3(-0.25, -0.05, -0.4)
+					held_block.rotation = Vector3(deg_to_rad(20), deg_to_rad(35), 0)
+					
+					for sb in held_block.find_children("*", "StaticBody3D"):
+						sb.collision_layer = 0
+						sb.collision_mask = 0
+						
+					create_ghost_block(held_block)
+			)
+			
+		held_card.queue_free()
+		held_card = null
+		return
+	
 	held_card.queue_free()
 	held_card = null
 	
@@ -340,7 +396,10 @@ func update_block_preview():
 		is_placement_valid = true
 		var target_cells = []
 		
-		var grid_gen = get_tree().root.find_child("OyuncuGrid", true, false)
+		# Hedef grid'i belirle (Düşman veya Oyuncu)
+		var active_grid_name = "DusmanGrid" if enemy_placement_mode else "OyuncuGrid"
+		var grid_gen = get_tree().root.find_child(active_grid_name, true, false)
+		
 		var b_size = 0.1
 		if grid_gen and grid_gen.get("hucre_boyutu"):
 			b_size = grid_gen.hucre_boyutu
@@ -417,10 +476,30 @@ func place_held_block():
 		ghost_block.queue_free()
 		ghost_block = null
 		
-	# Yere indiğinde tüm fizik alanlarını aç ki tıklanabilsin (diğer objeler çarpabilsin)
+	# Yere indiğinde tüm fizik alanlarını aç ki tıklanabilsin
 	tw.tween_callback(func():
 		if temp_block and is_instance_valid(temp_block):
 			for sb in temp_block.find_children("*", "StaticBody3D"):
 				sb.collision_layer = 1
 				sb.collision_mask = 1
+				
+		# Düşman modu geri dönüş lojiği
+		if enemy_placement_mode:
+			enemy_placement_mode = false
+			is_locked = true
+			var anim_player = get_tree().root.find_child("AnimationPlayer", true, false)
+			if anim_player:
+				anim_player.play("paravan_kapa")
+				
+			var ret_tw = create_tween()
+			ret_tw.tween_property(self, "global_transform", original_camera_transform, 1.0).set_trans(Tween.TRANS_SINE).set_delay(0.5)
+			ret_tw.tween_callback(func():
+				var euler = original_camera_rotation_degrees
+				start_y = euler.y
+				start_x = euler.x
+				yaw = euler.y
+				pitch = euler.x
+				rotation_degrees = euler
+				is_locked = false
+			)
 	)
