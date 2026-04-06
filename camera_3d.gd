@@ -286,7 +286,7 @@ func _find_block_occupying_cell(cell_node):
 func _clear_single_part(part_node: Node3D, block_node: Node3D):
 	var c_shape = part_node.find_child("CollisionShape3D", true, false)
 	if c_shape:
-		for g_name in ["OyuncuGrid", "DusmanGrid"]:
+		for g_name in ["OyuncuGrid", "DüşmanGrid"]:
 			var g = get_tree().root.find_child(g_name, true, false)
 			if g:
 				var m_local = g.to_local(c_shape.global_position)
@@ -464,7 +464,7 @@ func consume_held_card():
 					held_block = block_scene.instantiate()
 					# scale_factor hesabı
 					var size = 0.1 
-					var grid_gen = get_tree().root.find_child("DusmanGrid", true, false)
+					var grid_gen = get_tree().root.find_child("DüşmanGrid", true, false)
 					if grid_gen and grid_gen.get("hucre_boyutu"):
 						size = grid_gen.hucre_boyutu
 					var scale_factor = size / 0.1
@@ -570,7 +570,7 @@ func update_block_preview():
 		
 		# Pivotu merkeze hizala, azıcık yukarı kaldır ve döndürmeyi sıfırla/hizala
 		var base_y_offset = 0.0165
-		ghost_block.global_position = current_hovered_cell.global_position + Vector3(0, base_y_offset, 0)
+		ghost_block.global_position = current_hovered_cell.global_position + current_hovered_cell.global_transform.basis.y * base_y_offset
 		ghost_block.global_rotation = current_hovered_cell.global_rotation
 		
 		# Çok hücreli (Multi-mesh) bloklar için tam doğrulama
@@ -578,7 +578,7 @@ func update_block_preview():
 		var target_cells = []
 		
 		# Hedef grid'i belirle (Düşman veya Oyuncu)
-		var active_grid_name = "DusmanGrid" if enemy_placement_mode else "OyuncuGrid"
+		var active_grid_name = "DüşmanGrid" if enemy_placement_mode else "OyuncuGrid"
 		var grid_gen = get_tree().root.find_child(active_grid_name, true, false)
 		
 		var b_size = 0.1
@@ -633,7 +633,7 @@ func place_held_block():
 	# Sol üstteki bloğu siluet(ghost) bloğun pozisyonuna doğru uçur (fırlat)
 	var tw = create_tween()
 	var target_global_pos = ghost_block.global_position
-	var target_global_rot = Vector3.ZERO
+	var target_global_rot = ghost_block.global_rotation
 	
 	# Bloğu kameradan çıkar, dünyaya ekle ki bağımsız dursun
 	var g_trans = held_block.global_transform
