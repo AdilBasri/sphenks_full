@@ -219,6 +219,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_woum2")
 transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.65298396, -0.73025525, -1.9234607)
 
 [node name="Object_4" parent="card4/Sketchfab_model/root/GLTF_SceneRootNode/card texture_0" index="0"]
+transform = Transform3D(1, -1.0587912e-22, 0, -4.2351647e-22, 1, 1.6703742e-22, 0, 4.1759355e-23, 1, 0, 0, 0.1857729)
 surface_material_override/0 = SubResource("StandardMaterial3D_woum2")
 
 [node name="Control" type="Control" parent="."]
