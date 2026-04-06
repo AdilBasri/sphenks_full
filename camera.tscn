@@ -1,10 +1,11 @@
-[gd_scene load_steps=17 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=18 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
 [ext_resource type="Animation" uid="uid://c3w5olixra7ns" path="res://oturma1.res" id="2_eeger"]
 [ext_resource type="Script" uid="uid://wuvldqmhm6c6" path="res://camera_3d.gd" id="4_pbwbf"]
 [ext_resource type="Script" uid="uid://0rccufjia2dw" path="res://grid_generator.gd" id="11_grid"]
+[ext_resource type="Texture2D" uid="uid://be4hi8tsld53t" path="res://Assets/Cursor/Cursor.png" id="11_motcw"]
 [ext_resource type="PackedScene" uid="uid://dsh2b6624y0hk" path="res://Assets/screen/scene.gltf" id="12_gyfrk"]
 [ext_resource type="PackedScene" uid="uid://cjmioknigrhq5" path="res://Assets/a_table/scene.gltf" id="13_2jv0e"]
 [ext_resource type="PackedScene" uid="uid://berst0pur28ff" path="res://Assets/chair/scene.gltf" id="14_bbdvs"]
@@ -194,11 +195,43 @@ transform = Transform3D(0.08, 0, -5.0858397e-09, 0, 0.08, 0, 5.0858397e-09, 0, 0
 transform = Transform3D(-1.2, 0, -1.81195e-07, 0, 1.2, 0, 1.81195e-07, 0, -1.2, -1.784414e-06, 1.5793962, -28.048073)
 
 [node name="card" parent="." instance=ExtResource("15_f3tc8")]
-transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.6589358, -0.73025525, -1.7041852)
+transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.63351613, -0.73025525, -1.7041852)
 
 [node name="Object_4" parent="card/Sketchfab_model/root/GLTF_SceneRootNode/card texture_0" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_woum2")
 
+[node name="card2" parent="." instance=ExtResource("15_f3tc8")]
+transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.76855356, -0.73025525, -1.7041852)
+
+[node name="Object_4" parent="card2/Sketchfab_model/root/GLTF_SceneRootNode/card texture_0" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_woum2")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Crosshair" type="TextureRect" parent="Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -5.0
+offset_top = -5.0
+offset_right = 5.0
+offset_bottom = 5.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(5, 5)
+texture = ExtResource("11_motcw")
+expand_mode = 1
+
 [editable path="Sitting"]
 [editable path="paravan"]
 [editable path="card"]
+[editable path="card2"]

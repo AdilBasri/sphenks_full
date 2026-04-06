@@ -9,6 +9,7 @@ var pitch: float = 0.0
 var start_y: float = 0.0
 var start_x: float = 0.0
 var is_locked: bool = false
+var ray_length: float = 10.0
 
 # Shake Params
 var shake_intensity: float = 0.0
@@ -36,6 +37,14 @@ func _ready():
 		start_x = pitch
 	
 	setup_viewmodel_rendering()
+	
+	# Masadaki kartlara script ataması
+	for card_name in ["card", "card2"]:
+		var card = get_parent().get_node_or_null(card_name)
+		if card:
+			var card_script = preload("res://card_logic.gd")
+			card.set_script(card_script)
+			card._ready()
 
 func reset_rotation():
 	yaw = start_y
@@ -103,6 +112,9 @@ func _apply_no_depth_recursive(node: Node, priority: int):
 		_apply_no_depth_recursive(child, priority)
 
 func _input(event):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		interact_with_crosshair()
+
 	if is_locked: return
 	if event is InputEventMouseMotion:
 		# Only rotate if the mouse is captured (Fixes browser/itch.io mouse fight)
@@ -141,3 +153,19 @@ func _process(_delta):
 	rotation_degrees.y = yaw + breath_yaw + (shake_offset.x * 2.0)
 	rotation_degrees.x = pitch + breath_pitch + (shake_offset.y * 2.0)
 	rotation_degrees.z = breath_roll + (shake_offset.z * 5.0)
+
+func interact_with_crosshair():
+	var space_state = get_world_3d().direct_space_state
+	var v_size = get_viewport().get_visible_rect().size
+	var center = v_size / 2.0
+	var origin = project_ray_origin(center)
+	var end = origin + project_ray_normal(center) * ray_length
+	var query = PhysicsRayQueryParameters3D.create(origin, end)
+	var result = space_state.intersect_ray(query)
+	
+	if result:
+		var collider = result.collider
+		if collider.has_meta("is_card"):
+			var card_node = collider.get_meta("card_node")
+			if card_node and card_node.has_method("pick_up"):
+				card_node.pick_up(self)
