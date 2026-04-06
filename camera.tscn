@@ -231,6 +231,9 @@ pivot_offset = Vector2(5, 5)
 texture = ExtResource("11_motcw")
 expand_mode = 1
 
+[node name="BlokSpawnNoktasi" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.57837576, -1.0755553, -1.2357945)
+
 [editable path="Sitting"]
 [editable path="paravan"]
 [editable path="card"]

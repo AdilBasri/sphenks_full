@@ -10,6 +10,9 @@ var start_y: float = 0.0
 var start_x: float = 0.0
 var is_locked: bool = false
 
+var ray_length: float = 10.0
+var held_card: Node3D = null
+
 # Shake Params
 var shake_intensity: float = 0.0
 var shake_duration: float = 0.0
@@ -36,6 +39,22 @@ func _ready():
 		start_x = pitch
 	
 	setup_viewmodel_rendering()
+	
+	# Kartlara kod üzerinden bir fizik alanı (Hitbox) ekleyelim ki raycast ile tıklayabilelim
+	for card_name in ["card", "card2"]:
+		var card = get_tree().root.find_child(card_name, true, false)
+		if card:
+			var static_body = StaticBody3D.new()
+			static_body.set_meta("is_card", true)
+			static_body.set_meta("card_node", card)
+			
+			var collision_shape = CollisionShape3D.new()
+			var box_shape = BoxShape3D.new()
+			box_shape.size = Vector3(4.0, 0.5, 6.0) # Hitboxu garantiye almak için biraz büyüttüm
+			collision_shape.shape = box_shape
+			
+			static_body.add_child(collision_shape)
+			card.add_child(static_body)
 
 func reset_rotation():
 	yaw = start_y
@@ -103,6 +122,12 @@ func _apply_no_depth_recursive(node: Node, priority: int):
 		_apply_no_depth_recursive(child, priority)
 
 func _input(event):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if held_card != null:
+			consume_held_card()
+		else:
+			interact_with_crosshair()
+
 	if is_locked: return
 	if event is InputEventMouseMotion:
 		# Only rotate if the mouse is captured (Fixes browser/itch.io mouse fight)
@@ -141,3 +166,64 @@ func _process(_delta):
 	rotation_degrees.y = yaw + breath_yaw + (shake_offset.x * 2.0)
 	rotation_degrees.x = pitch + breath_pitch + (shake_offset.y * 2.0)
 	rotation_degrees.z = breath_roll + (shake_offset.z * 5.0)
+
+func interact_with_crosshair():
+	var space_state = get_world_3d().direct_space_state
+	var v_size = get_viewport().get_visible_rect().size
+	var center = v_size / 2.0
+	var origin = project_ray_origin(center)
+	var end = origin + project_ray_normal(center) * ray_length
+	var query = PhysicsRayQueryParameters3D.create(origin, end)
+	var result = space_state.intersect_ray(query)
+	
+	if result:
+		var collider = result.collider
+		if collider.has_meta("is_card"):
+			var card_node = collider.get_meta("card_node")
+			if card_node:
+				pick_up_card(card_node)
+
+func pick_up_card(card_node: Node3D):
+	if held_card != null: return
+	held_card = card_node
+	
+	var g_trans = card_node.global_transform
+	card_node.get_parent().remove_child(card_node)
+	add_child(card_node)
+	card_node.global_transform = g_trans
+	
+	var tw = create_tween().set_parallel(true)
+	var hand_pos = Vector3(0, -0.25, -0.5) # Ekranın alt ortası
+	var hand_rot = Vector3(deg_to_rad(90), 0, 0)
+	
+	tw.tween_property(card_node, "position", hand_pos, 0.4).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(card_node, "rotation", hand_rot, 0.4).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(card_node, "scale", Vector3(0.07, 0.07, 0.07) * 1.5, 0.4).set_trans(Tween.TRANS_SINE)
+
+func consume_held_card():
+	if held_card == null: return
+	
+	held_card.queue_free()
+	held_card = null
+	
+	# Spawn a single block at Marker3D
+	var marker = get_tree().root.find_child("BlokSpawnNoktasi", true, false)
+	if marker:
+		var block = CSGBox3D.new()
+		# GridScene varsa hücre boyutunu alalım, yoksa varsayılan 0.1 yapalım
+		var size = 0.1 
+		var grid_gen = get_tree().root.find_child("OyuncuGrid", true, false)
+		if grid_gen and grid_gen.get("hucre_boyutu"):
+			size = grid_gen.hucre_boyutu
+			
+		block.size = Vector3(size, size, size)
+		
+		# Görsellik için basit bir materyal
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.2, 0.6, 1.0) # Açık mavi bir küp
+		block.material = mat
+		
+		marker.get_parent().add_child(block)
+		block.global_position = marker.global_position
+	else:
+		print("HATA: Sahnede 'Marker3D' adında bir node bulunamadı! Lütfen tam adını kontrol et.")
