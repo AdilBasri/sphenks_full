@@ -215,6 +215,12 @@ transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0
 [node name="Object_4" parent="card3/Sketchfab_model/root/GLTF_SceneRootNode/card texture_0" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_woum2")
 
+[node name="card4" parent="." instance=ExtResource("15_f3tc8")]
+transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.65298396, -0.73025525, -1.9234607)
+
+[node name="Object_4" parent="card4/Sketchfab_model/root/GLTF_SceneRootNode/card texture_0" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_woum2")
+
 [node name="Control" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 15
@@ -248,3 +254,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.57837576, -1.0755553, -1.2
 [editable path="card"]
 [editable path="card2"]
 [editable path="card3"]
+[editable path="card4"]

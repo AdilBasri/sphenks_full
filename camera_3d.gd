@@ -19,8 +19,12 @@ var current_hovered_cell: Node3D = null
 var is_placement_valid: bool = false
 
 var enemy_placement_mode: bool = false
+var knife_mode: bool = false
 var original_camera_transform: Transform3D
 var original_camera_rotation_degrees: Vector3
+
+var current_hovered_part: Node3D = null
+var outline_instance: MeshInstance3D = null
 
 # Shake Params
 var shake_intensity: float = 0.0
@@ -50,7 +54,7 @@ func _ready():
 	setup_viewmodel_rendering()
 	
 	# Kartlara kod üzerinden bir fizik alanı (Hitbox) ekleyelim ki raycast ile tıklayabilelim
-	for card_name in ["card", "card2", "card3"]:
+	for card_name in ["card", "card2", "card3", "card4"]:
 		var card = get_tree().root.find_child(card_name, true, false)
 		if card:
 			var static_body = StaticBody3D.new()
@@ -159,6 +163,44 @@ func _process(_delta):
 	
 	if held_block != null:
 		update_block_preview()
+		
+	if knife_mode:
+		var space_state = get_world_3d().direct_space_state
+		var v_size = get_viewport().get_visible_rect().size
+		var center = v_size / 2.0
+		var origin = project_ray_origin(center)
+		var end = origin + project_ray_normal(center) * ray_length
+		var query = PhysicsRayQueryParameters3D.create(origin, end)
+		var result = space_state.intersect_ray(query)
+		
+		var found_part = null
+		if result and result.collider.has_meta("is_block"):
+			var b_node = result.collider.get_meta("block_node")
+			if b_node and b_node.get_meta("placed"):
+				found_part = result.collider.get_parent()
+		elif result and result.collider.has_meta("is_grid_cell"):
+			var cell_node = result.collider.get_meta("grid_cell_node")
+			if cell_node.has_meta("dolu") and cell_node.get_meta("dolu"):
+				var block_t = _find_block_occupying_cell(cell_node)
+				if block_t:
+					for p in block_t.get_children():
+						if "Part" in p.name:
+							var cs = p.find_child("CollisionShape3D", true, false)
+							if cs:
+								var g = cell_node.get_parent()
+								var m_l = g.to_local(cs.global_position)
+								var c_l = g.to_local(cell_node.global_position)
+								if Vector2(m_l.x, m_l.z).distance_to(Vector2(c_l.x, c_l.z)) < 0.05:
+									found_part = p
+									break
+		
+		if current_hovered_part != found_part:
+			current_hovered_part = found_part
+			_update_knife_hover()
+	else:
+		if current_hovered_part:
+			current_hovered_part = null
+			_update_knife_hover()
 	
 	# Shake logic
 	if shake_duration > 0:
@@ -193,14 +235,115 @@ func interact_with_crosshair():
 	
 	if result:
 		var collider = result.collider
-		if collider.has_meta("is_card"):
+		var target_part_to_delete = null
+		var target_block = null
+		
+		if collider.has_meta("is_grid_cell"):
+			var cell_node = collider.get_meta("grid_cell_node")
+			if knife_mode and cell_node.has_meta("dolu") and cell_node.get_meta("dolu"):
+				target_block = _find_block_occupying_cell(cell_node)
+				if target_block:
+					for p in target_block.get_children():
+						if "Part" in p.name:
+							var cs = p.find_child("CollisionShape3D", true, false)
+							if cs:
+								var g = cell_node.get_parent()
+								var m_l = g.to_local(cs.global_position)
+								var c_l = g.to_local(cell_node.global_position)
+								if Vector2(m_l.x, m_l.z).distance_to(Vector2(c_l.x, c_l.z)) < 0.05:
+									target_part_to_delete = p
+									break
+			
+		elif collider.has_meta("is_card"):
 			var card_node = collider.get_meta("card_node")
 			if card_node:
 				pick_up_card(card_node)
 		elif collider.has_meta("is_block"):
 			var block_node = collider.get_meta("block_node")
-			if block_node and not block_node.get_meta("placed"):
+			if knife_mode and block_node and block_node.get_meta("placed"):
+				target_part_to_delete = collider.get_parent()
+				target_block = block_node
+			elif block_node and not block_node.get_meta("placed"):
 				pick_up_block(block_node)
+				
+		if knife_mode and target_part_to_delete and target_block:
+			_clear_single_part(target_part_to_delete, target_block)
+			knife_mode = false
+			if outline_instance:
+				outline_instance.queue_free()
+				outline_instance = null
+			current_hovered_part = null
+
+func _find_block_occupying_cell(cell_node):
+	for child in get_tree().root.get_children():
+		if child.has_meta("placed") and child.get_meta("placed") == true:
+			if child.has_meta("occupying_cells"):
+				var cells = child.get_meta("occupying_cells")
+				if cells.has(cell_node):
+					return child
+	return null
+
+func _clear_single_part(part_node: Node3D, block_node: Node3D):
+	var c_shape = part_node.find_child("CollisionShape3D", true, false)
+	if c_shape:
+		for g_name in ["OyuncuGrid", "DusmanGrid"]:
+			var g = get_tree().root.find_child(g_name, true, false)
+			if g:
+				var m_local = g.to_local(c_shape.global_position)
+				var closest_cell = null
+				var min_dist = 999.0
+				var b_size = g.get("hucre_boyutu") if g.get("hucre_boyutu") else 0.1
+				var max_dist = b_size / 1.5
+				
+				for c in g.get_children():
+					if "sutun" in c:
+						var c_local = g.to_local(c.global_position)
+						var dist = Vector2(m_local.x, m_local.z).distance_to(Vector2(c_local.x, c_local.z))
+						if dist < min_dist and dist < max_dist:
+							min_dist = dist
+							closest_cell = c
+				
+				if closest_cell:
+					closest_cell.set_meta("dolu", false)
+					if block_node and block_node.has_meta("occupying_cells"):
+						var cells = block_node.get_meta("occupying_cells")
+						if cells.has(closest_cell):
+							cells.erase(closest_cell)
+							block_node.set_meta("occupying_cells", cells)
+					break 
+					
+	part_node.queue_free()
+	
+	if block_node:
+		var has_parts = false
+		for c in block_node.get_children():
+			if c != part_node and "Part" in c.name and !c.is_queued_for_deletion():
+				has_parts = true
+				break
+		if not has_parts:
+			block_node.queue_free()
+
+func _update_knife_hover():
+	if outline_instance and is_instance_valid(outline_instance):
+		outline_instance.queue_free()
+		outline_instance = null
+		
+	if current_hovered_part and is_instance_valid(current_hovered_part):
+		var mesh_node = current_hovered_part.find_child("Mesh*", true, false)
+		if mesh_node and mesh_node is CSGBox3D:
+			outline_instance = MeshInstance3D.new()
+			var box = BoxMesh.new()
+			box.size = mesh_node.size * 1.1 
+			outline_instance.mesh = box
+			
+			var mat = StandardMaterial3D.new()
+			mat.albedo_color = Color(1.0, 1.0, 0.0) 
+			mat.cull_mode = BaseMaterial3D.CULL_FRONT
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			outline_instance.material_override = mat
+			
+			current_hovered_part.add_child(outline_instance)
+			outline_instance.position = mesh_node.position
 
 func pick_up_card(card_node: Node3D):
 	if held_card != null: return
@@ -253,6 +396,12 @@ func create_ghost_block(original_block: Node3D):
 func consume_held_card():
 	if held_card == null: return
 	
+	if held_card.name.to_lower().begins_with("card4") or held_card.name == "card4":
+		knife_mode = true
+		held_card.queue_free()
+		held_card = null
+		return
+		
 	if held_card.name.to_lower().begins_with("card3") or held_card.name == "card3":
 		enemy_placement_mode = true
 		
@@ -503,14 +652,19 @@ func place_held_block():
 		if s.shape is BoxShape3D:
 			s.shape.size.y *= 0.33
 		
-	# Bloğa yerleştirildi damgası vur (Artık raycast ile alılamaz!)
-	held_block.set_meta("placed", true)
-		
 	# Kapladığı bütün hücreleri dolu olarak işaretle
+	var assigned_cells = []
 	if ghost_block.has_meta("target_cells"):
 		var targets = ghost_block.get_meta("target_cells")
 		for t in targets:
 			t.set_meta("dolu", true)
+			assigned_cells.append(t)
+			
+	# Bıçak silmesi için bunları kaydediyoruz
+	held_block.set_meta("occupying_cells", assigned_cells)
+	
+	# Bloğa yerleştirildi damgası vur (Artık raycast ile alılamaz!)
+	held_block.set_meta("placed", true)
 	
 	var temp_block = held_block
 	held_block = null
