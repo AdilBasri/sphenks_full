@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=23 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
@@ -19,6 +19,9 @@
 _data = {
 &"oturma1": ExtResource("2_eeger")
 }
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bbdvs"]
+size = Vector3(1, 2.0062256, 1)
 
 [sub_resource type="Environment" id="Environment_pvvsn"]
 background_mode = 1
@@ -126,6 +129,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0038419962, 0)
 libraries = {
 &"": SubResource("AnimationLibrary_nnjqd")
 }
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Sitting"]
+collision_layer = 3
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Sitting/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5031128, 0)
+shape = SubResource("BoxShape3D_bbdvs")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_pvvsn")
@@ -281,7 +292,7 @@ vertical_alignment = 1
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.57837576, -1.0393274, -1.255328)
 
 [node name="gun" parent="." instance=ExtResource("12_2jv0e")]
-transform = Transform3D(-0.01, -8.7422775e-10, 3.821371e-17, 0, -4.3711387e-10, -0.01, 8.7422775e-10, -0.01, 4.3711387e-10, -0.76596487, -0.7259988, -1.8582165)
+transform = Transform3D(-0.012, -1.8119497e-09, 7.9202835e-17, 0, -5.2453664e-10, -0.012, 1.8119497e-09, -0.012, 5.2453664e-10, -0.76596487, -0.7259988, -1.8582165)
 
 [node name="knife" parent="." instance=ExtResource("13_bbdvs")]
 transform = Transform3D(0.07466382, 0.020446295, -0.06330295, 0, 0.09515944, 0.030735662, 0.06652304, -0.02294842, 0.071049675, 0.24354121, -0.56935096, -1.2527721)

@@ -35,10 +35,15 @@ var shake_offset: Vector3 = Vector3.ZERO
 var is_gun_mode: bool = false
 var gun_node: Node3D = null
 var gun_original_transform: Transform3D
+var gun_original_scale: Vector3 = Vector3.ONE
 var card_data: Dictionary = {} # Keeps track of original parents and transforms
 var discard_label: Label = null
 var trash_node: Node3D = null
 var discard_label_base_pos: Vector2
+var overlay_camera: Camera3D = null
+var overlay_viewport: SubViewport = null
+var bullet_chamber_index: int = -1 # Secret bullet position (0-5)
+var current_chamber_index: int = 0 # Current hammer position (0-5)
 
 func _ready():
 	# Capture mouse (HIDE)
@@ -82,6 +87,7 @@ func _ready():
 	gun_node = get_tree().root.find_child("gun", true, false)
 	if gun_node:
 		gun_original_transform = gun_node.global_transform
+		gun_original_scale = gun_node.scale
 
 	# Setup Enemy Loop
 	var sitting = get_tree().root.find_child("Sitting", true, false)
@@ -109,6 +115,58 @@ func _ready():
 	if discard_label:
 		discard_label_base_pos = discard_label.position
 		discard_label.visible = false
+		
+	setup_viewmodel_overlay()
+	reset_revolver()
+	_setup_enemy_collision()
+
+func _setup_enemy_collision():
+	# Find Sitting node and move its collision to a dedicated Layer (Layer 2)
+	# This avoids "DısDuvar" or other room objects blocking the bullet.
+	var sitting = get_tree().root.find_child("Sitting", true, false)
+	if sitting:
+		_set_collision_layer_recursive(sitting, 2) # Bit 2 (value 2)
+
+func _set_collision_layer_recursive(node: Node, layer: int):
+	if node is CollisionObject3D:
+		node.collision_layer = layer
+	for child in node.get_children():
+		_set_collision_layer_recursive(child, layer)
+
+func reset_revolver():
+	# Randomize bullet position 0-5
+	bullet_chamber_index = randi() % 6
+	current_chamber_index = 0
+	print("REVOLVER SPUN: Bullet is in chamber ", bullet_chamber_index + 1)
+
+func setup_viewmodel_overlay():
+	# 1. Create Viewport Structure for the Gun
+	var control = get_tree().root.find_child("Control", true, false)
+	if not control: return
+	
+	var container = SubViewportContainer.new()
+	container.name = "ViewmodelContainer"
+	container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	container.stretch = true
+	# Add on top of other UI but it shares the viewport output
+	control.add_child(container)
+	
+	overlay_viewport = SubViewport.new()
+	overlay_viewport.transparent_bg = true
+	overlay_viewport.handle_input_locally = false # Inputs go to main
+	overlay_viewport.msaa_3d = Viewport.MSAA_2X # Anti-aliasing for the viewmodel
+	overlay_viewport.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR
+	container.add_child(overlay_viewport)
+	
+	# Link the world so lights and environment are shared!
+	overlay_viewport.world_3d = get_world_3d()
+	
+	overlay_camera = Camera3D.new()
+	overlay_viewport.add_child(overlay_camera)
+	overlay_camera.cull_mask = (1 << 1) # Layer 2 ONLY
+	
+	# Main Camera should NOT see Layer 2
+	cull_mask &= ~(1 << 1) 
 
 func reset_rotation():
 	yaw = start_y
@@ -158,26 +216,22 @@ func setup_mice_animations(mice_node: Node):
 			)
 
 func _apply_no_depth_recursive(node: Node, priority: int):
+	# REVERT: We are now using a scaling-based viewmodel approach.
+	# We no longer need to disable depth test, which broke internal sorting.
 	if node is MeshInstance3D:
 		for i in range(node.get_surface_override_material_count()):
-			var mat = node.get_surface_override_material(i)
-			if not mat:
-				if node.mesh:
-					mat = node.mesh.surface_get_material(i)
-			
-			if mat:
-				var new_mat = mat.duplicate()
-				if new_mat is BaseMaterial3D:
-					new_mat.no_depth_test = true
-					new_mat.render_priority = priority
-				node.set_surface_override_material(i, new_mat)
+			# Just clean up any previous overrides
+			node.set_surface_override_material(i, null)
+			node.material_override = null
 	
 	for child in node.get_children():
 		_apply_no_depth_recursive(child, priority)
 
 func _remove_no_depth_recursive(node: Node):
 	if node is MeshInstance3D:
+		node.material_override = null
 		for i in range(node.get_surface_override_material_count()):
+			node.set_surface_override_material(i, null)
 			node.set_surface_override_material(i, null)
 	
 	for child in node.get_children():
@@ -261,11 +315,12 @@ func _process(_delta):
 	# Shake logic
 	if shake_duration > 0:
 		shake_duration -= _delta
-		var current_intensity = shake_intensity * (shake_duration / shake_duration + 0.1) # Decaying
+		# Linear decay
+		var current_intensity = shake_intensity * (shake_duration / 0.5) 
 		shake_offset = Vector3(
 			randf_range(-1, 1) * current_intensity,
 			randf_range(-1, 1) * current_intensity,
-			0
+			randf_range(-1, 1) * current_intensity * 2.0
 		)
 	else:
 		shake_offset = shake_offset.lerp(Vector3.ZERO, _delta * 10.0)
@@ -275,6 +330,26 @@ func _process(_delta):
 	var breath_yaw = sin(t * 1.1) * 0.12
 	var breath_pitch = cos(t * 0.8) * 0.15
 	var breath_roll = sin(t * 0.5) * 0.08
+	
+	if is_gun_mode and gun_node:
+		# Constant vibration while in gun mode (SYNCED WITH 0.75x SCALE)
+		var scale_factor = 0.75
+		var vib_x = randf_range(-0.002, 0.002)
+		var vib_y = randf_range(-0.002, 0.002)
+		var target_v_pos = Vector3(0.5, -0.4, -0.6) + Vector3(vib_x, vib_y, 0)
+		gun_node.position = gun_node.position.lerp(target_v_pos, _delta * 10.0)
+		
+		# Sync Overlay Camera with Main Camera
+		if overlay_camera:
+			overlay_camera.global_transform = global_transform
+			overlay_camera.fov = fov
+		
+		# Ensure it follows camera perfectly
+		if gun_node.get_parent() != self:
+			var g_trans = gun_node.global_transform
+			if gun_node.get_parent(): gun_node.get_parent().remove_child(gun_node)
+			add_child(gun_node)
+			gun_node.global_transform = g_trans
 	
 	rotation_degrees.y = yaw + breath_yaw + (shake_offset.x * 2.0)
 	rotation_degrees.x = pitch + breath_pitch + (shake_offset.y * 2.0)
@@ -811,10 +886,14 @@ func place_held_block():
 				rotation_degrees = euler
 				is_locked = false
 				
-				# Check if board is full after placement
-				if is_grid_full():
+				# Check if board or a row is full after placement
+				if is_row_complete() or is_grid_full():
 					activate_gun()
 			)
+		else:
+			# Regular placement check
+			if is_row_complete() or is_grid_full():
+				activate_gun()
 	)
 
 func is_grid_full() -> bool:
@@ -822,38 +901,82 @@ func is_grid_full() -> bool:
 	if not grid: return false
 	
 	for cell in grid.get_children():
-		if "sutun" in cell:
+		if cell.has_method("setup"): # GridHucre identifier
 			if not cell.has_meta("dolu") or cell.get_meta("dolu") == false:
 				return false
 	return true
 
-func activate_gun():
-	if not gun_node: return
-	is_gun_mode = true
-	is_locked = true # Lock camera during transition
+func is_row_complete() -> bool:
+	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	if not grid or not grid.get("hucrelerin_sozlugu"): return false
 	
-	# Move to viewmodel position
+	var cells = grid.hucrelerin_sozlugu
+	for r in range(grid.satir_sayisi):
+		var row_full = true
+		for s in range(grid.sutun_sayisi):
+			var cell = cells.get(Vector2i(s, r))
+			if not cell or not cell.has_meta("dolu") or cell.get_meta("dolu") == false:
+				row_full = false
+				break
+		if row_full:
+			return true
+	return false
+
+func activate_gun():
+	if not gun_node or is_gun_mode: return
+	is_gun_mode = true
+	is_locked = true 
+	
+	# THE PRO STRUCTURAL FIX: Overlay Viewport Reparenting
+	if gun_node.get_parent(): gun_node.get_parent().remove_child(gun_node)
+	if overlay_viewport:
+		overlay_viewport.add_child(gun_node)
+	else:
+		add_child(gun_node)
+		
+	# Move Gun to Viewmodel Layer (Layer 2)
+	_set_layer_recursive(gun_node, 2)
+	
+	# BOOSTED SCALE (Visual clarity)
+	var scale_factor = 0.75
+	gun_node.scale = gun_original_scale * scale_factor
+	
+	# Natural Viewmodel Position (Right Middle Bottom)
+	gun_node.position = Vector3(0.5, -1.2, -0.4) # Starting lower for rise
+	gun_node.rotation = Vector3(deg_to_rad(-45), deg_to_rad(-80), 0)
+	
+	# Glow/Highlight
+	_apply_gun_glow_recursive(gun_node, true)
+	
 	var tw = create_tween().set_parallel(true)
-	var target_pos = Vector3(0.3, -0.25, -0.45) # Bottom right of camera
+	var target_pos = Vector3(0.5, -0.4, -0.6) 
 	var target_rot = Vector3(deg_to_rad(0), deg_to_rad(-80), 0)
 	
-	# Add shake/vibration during movement
-	var shake_tw = create_tween().set_loops(10)
-	shake_tw.tween_property(gun_node, "position", Vector3(0.01, 0, 0), 0.05).as_relative()
-	shake_tw.tween_property(gun_node, "position", Vector3(-0.01, 0, 0), 0.05).as_relative()
+	tw.tween_property(gun_node, "position", target_pos, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(gun_node, "rotation", target_rot, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	
-	tw.tween_property(gun_node, "position", target_pos, 0.8).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(gun_node, "rotation", target_rot, 0.8).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# Constant vibration during rise
+	for i in range(12):
+		tw.tween_property(gun_node, "position", Vector3(randf_range(-0.01, 0.01), randf_range(-0.01, 0.01), 0), 0.05).as_relative()
 	
 	await tw.finished
 	is_locked = false
 
+func _set_layer_recursive(node: Node, layer_index: int):
+	if node is VisualInstance3D:
+		node.layers = (1 << (layer_index - 1))
+	for child in node.get_children():
+		_set_layer_recursive(child, layer_index)
+
 func shoot_gun():
 	if not is_gun_mode: return
 	
-	# Roll 1/6 for bullet existence
-	if randi() % 6 == 0:
-		# BULLET EXISTS!
+	# TRUE RUSSIAN ROULETTE LOGIC (Stateful Chamber Check)
+	var is_hit = (current_chamber_index == bullet_chamber_index)
+	print("CLICK! Chamber ", current_chamber_index + 1, " / 6. Result: ", "BANG!" if is_hit else "Empty")
+	
+	if is_hit:
+		# BULLET FIRED!
 		var anim = gun_node.find_child("AnimationPlayer", true, false)
 		if anim:
 			anim.play("Animation") 
@@ -863,32 +986,78 @@ func shoot_gun():
 		var v_size = get_viewport().get_visible_rect().size
 		var center = v_size / 2.0
 		var origin = project_ray_origin(center)
-		var end = origin + project_ray_normal(center) * ray_length
+		# EXTENDED RANGE to 100 meters
+		var end = origin + project_ray_normal(center) * 100.0
 		var query = PhysicsRayQueryParameters3D.create(origin, end)
+		query.collision_mask = 2 # ONLY CHECK LAYER 2 (Enemy)
+		query.collide_with_areas = true 
 		var result = space_state.intersect_ray(query)
 		
 		var aimed_at_enemy = false
 		if result:
 			var node = result.collider
+			print("BULLET HIT SOMETHING: ", node.name, " (at pos: ", result.position, ")")
 			while node != null:
-				if node.name == "Sitting":
+				if "Sitting" in node.name or node.has_meta("is_enemy"):
 					aimed_at_enemy = true
 					break
 				node = node.get_parent()
+		else:
+			print("BULLET HIT NOTHING (Void)")
 		
 		if aimed_at_enemy:
-			print("BULLET HIT ENEMY!")
-			# Future: Handle game over / win
+			print("BULLET HIT ENEMY! SPAWNING AT: ", result.position)
+			# Hit Payoff (JUICE)
+			spawn_blood_vfx(result.position)
+			shake_intensity = 1.0 # Stronger shake
+			shake_duration = 0.5
+			
+			# HUD Hit Polish (Visual Impact)
+			var control = get_tree().root.find_child("Control", true, false)
+			if control:
+				# Screen Flash
+				var flash = ColorRect.new()
+				flash.color = Color(1.0, 0, 0, 0.7) # Saturated Red
+				flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+				control.add_child(flash)
+				
+				# Fade out flash
+				var ftw = create_tween()
+				ftw.tween_property(flash, "color:a", 0.0, 0.2).set_delay(0.05)
+				ftw.tween_callback(flash.queue_free)
+			
+			# GUN RECOIL (Kick)
+			if gun_node:
+				var gtw = create_tween()
+				var recoil_pos = gun_node.position + Vector3(0, 0.05, 0.15)
+				gtw.tween_property(gun_node, "position", recoil_pos, 0.08).set_trans(Tween.TRANS_SINE)
+				gtw.tween_property(gun_node, "position", Vector3(0.5, -0.4, -0.6), 0.2).set_trans(Tween.TRANS_BACK)
+			
+			# SLOW MOTION START (60% slow)
+			Engine.time_scale = 0.4
+			print("SLOW-MO START (1.5s)")
+			
+			# Wait in real-time (not scaled time)
+			await get_tree().create_timer(1.5, true, false, true).timeout 
+			
+			Engine.time_scale = 1.0
+			print("SLOW-MO END")
+			
+			# Bullet fired, reset revolver cycle
+			reset_revolver()
+			reset_game_round()
 		else:
 			print("BULLET WASTED (MISSED)")
-			# Even if miss, maybe we should reset for gameplay flow? 
-			# User says "iki taraftan birisi vurulana kadar bu döngü devam edecek"
-			# I'll reset the board after the bullet is fired to allow next round.
+			# Even if miss, we reset revolver because the bullet is gone
+			reset_revolver()
 			get_tree().create_timer(2.0).timeout.connect(reset_game_round)
 	else:
-		# EMPTY CHAMBER (5/6)
-		print("EMPTY CHAMBER - RESETTING BOARD")
-		# No animation plays
+		# EMPTY CHAMBER (advances to next index)
+		current_chamber_index += 1
+		if current_chamber_index >= 6:
+			reset_revolver()
+			
+		print("CLICK! Empty chamber. Moving to ", current_chamber_index + 1)
 		reset_game_round()
 
 func _handle_discard_hover():
@@ -949,5 +1118,73 @@ func reset_game_round():
 			
 	# Return Gun to Table
 	if gun_node:
+		# Reset visuals
+		_apply_gun_glow_recursive(gun_node, false)
+		_set_layer_recursive(gun_node, 1)
+		
+		# Reset Scale
+		gun_node.scale = gun_original_scale
+		
+		# Reparent back to world
+		var g_trans = gun_node.global_transform
+		if gun_node.get_parent(): gun_node.get_parent().remove_child(gun_node)
+		get_tree().root.add_child(gun_node)
+		gun_node.global_transform = g_trans
+		
 		var tw = create_tween()
 		tw.tween_property(gun_node, "global_transform", gun_original_transform, 0.5).set_trans(Tween.TRANS_SINE)
+
+func spawn_blood_vfx(pos: Vector3):
+	# BULLETPROOF MANUAL SPLATTER BURST
+	# (Bypasses Particle Rendering Bugs)
+	var splat_count = 20
+	for i in range(splat_count):
+		var sphere = MeshInstance3D.new()
+		sphere.mesh = SphereMesh.new()
+		sphere.mesh.radius = randf_range(0.08, 0.18)
+		sphere.mesh.height = sphere.mesh.radius * 2.0
+		
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(1.0, 0, 0)
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.emission_enabled = true
+		mat.emission = Color(1.0, 0, 0)
+		mat.emission_energy_multiplier = 4.0
+		mat.no_depth_test = true # Nuclear visibility
+		mat.render_priority = 120
+		sphere.mesh.material = mat
+		
+		# Add to Viewport or Scene
+		if overlay_viewport:
+			overlay_viewport.add_child(sphere)
+		else:
+			get_tree().current_scene.add_child(sphere)
+			
+		sphere.global_position = pos
+		sphere.layers = (1 << 0) | (1 << 1)
+		
+		# Animate from Head to Camera
+		var cam_local_pos = global_position + Vector3(randf_range(-1, 1), randf_range(-1, 1), 0)
+		var target_pos = lerp(pos, cam_local_pos, 0.9) # Flies towards you but stays slightly in front
+		
+		var btw = create_tween().set_parallel(true)
+		btw.tween_property(sphere, "global_position", target_pos, randf_range(0.3, 0.6)).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+		btw.tween_property(sphere, "scale", Vector3.ZERO, randf_range(0.4, 0.7)).set_delay(0.2)
+		btw.tween_callback(sphere.queue_free).set_delay(0.8)
+
+func _apply_gun_glow_recursive(node: Node, active: bool):
+	if node is MeshInstance3D:
+		for i in range(node.get_surface_override_material_count()):
+			var mat = node.get_surface_override_material(i)
+			if active:
+				if not mat: mat = node.mesh.surface_get_material(i).duplicate()
+				if mat is BaseMaterial3D:
+					mat.emission_enabled = true
+					mat.emission = Color(1.0, 1.0, 0.5) # Yellow glow
+					mat.emission_energy_multiplier = 0.5
+				node.set_surface_override_material(i, mat)
+			else:
+				node.set_surface_override_material(i, null)
+	
+	for child in node.get_children():
+		_apply_gun_glow_recursive(child, active)

@@ -17,6 +17,10 @@ func _on_node_added(node: Node):
 func _process_node(node: Node):
 	# Only target 3D meshes
 	if node is MeshInstance3D:
+		# Layer 2 is reserved for Viewmodels (Gun/Cards)
+		# We preserve the original look if it's already set to Layer 2
+		if node.layers == 2:
+			return
 		_apply_toon_ps1(node)
 	
 	# Recurse for existing children if needed (mostly for _ready() call)
