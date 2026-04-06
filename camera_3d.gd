@@ -234,9 +234,10 @@ func create_ghost_block(original_block: Node3D):
 	ghost_block = original_block.duplicate()
 	get_tree().root.add_child(ghost_block)
 	
-	# Hayaletin çarpışmalarını sil
-	for c in ghost_block.find_children("*", "StaticBody3D"):
-		c.queue_free()
+	# Hayaletin fizik etkileşimini sadece devre dışı bırak, KESİNLİKLE SİLME çünkü yer tespiti için lazım
+	for c in ghost_block.find_children("*", "StaticBody3D", true, false):
+		c.collision_layer = 0
+		c.collision_mask = 0
 	
 	var mat = StandardMaterial3D.new()
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -438,7 +439,8 @@ func update_block_preview():
 		var max_dist = b_size / 1.5 
 		
 		# Artık görseller farklı bir mesh (GLTF) olabileceğinden çarpışma kutularının merkezlerini baz alıyoruz
-		for m in ghost_block.find_children("*", "CollisionShape3D"):
+		# Duplicate işleminde owner silindiği için owned=false zorunludur!
+		for m in ghost_block.find_children("*", "CollisionShape3D", true, false):
 			# Koordinat dönüşümünü grid uzayına çekerek hesaplamayı tablo eğik bile olsa doğru yapalım
 			var m_local = grid_gen.to_local(m.global_position) if grid_gen else m.global_position
 			var closest_cell = null
@@ -469,10 +471,10 @@ func update_block_preview():
 		var color = Color(0, 1, 0, 0.5) if is_placement_valid else Color(1, 0, 0, 0.5)
 		
 		# Hayaletin üstündeki herhangi bir CSGBox veya Mesh varsa rengini boya
-		for m in ghost_block.find_children("*", "CSGBox3D"):
+		for m in ghost_block.find_children("*", "CSGBox3D", true, false):
 			if m.material: m.material.albedo_color = color
 			
-		for m in ghost_block.find_children("*", "MeshInstance3D"):
+		for m in ghost_block.find_children("*", "MeshInstance3D", true, false):
 			if m.get_surface_override_material(0):
 				m.get_surface_override_material(0).albedo_color = color
 				
@@ -497,9 +499,12 @@ func place_held_block():
 	for m in held_block.find_children("*", "CSGBox3D"):
 		tw.tween_property(m, "size:y", m.size.y * 0.33, 0.2).set_trans(Tween.TRANS_SINE)
 		
-	for s in held_block.find_children("*", "CollisionShape3D"):
+	for s in held_block.find_children("*", "CollisionShape3D", true, false):
 		if s.shape is BoxShape3D:
 			s.shape.size.y *= 0.33
+		
+	# Bloğa yerleştirildi damgası vur (Artık raycast ile alılamaz!)
+	held_block.set_meta("placed", true)
 		
 	# Kapladığı bütün hücreleri dolu olarak işaretle
 	if ghost_block.has_meta("target_cells"):
