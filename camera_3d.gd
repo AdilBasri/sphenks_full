@@ -12,6 +12,7 @@ var is_locked: bool = false
 
 var ray_length: float = 10.0
 var held_card: Node3D = null
+var held_block: Node3D = null
 
 # Shake Params
 var shake_intensity: float = 0.0
@@ -123,7 +124,9 @@ func _apply_no_depth_recursive(node: Node, priority: int):
 
 func _input(event):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if held_card != null:
+		if held_block != null:
+			place_held_block()
+		elif held_card != null:
 			consume_held_card()
 		else:
 			interact_with_crosshair()
@@ -144,6 +147,9 @@ func _input(event):
 
 func _process(_delta):
 	if is_locked: return
+	
+	if held_block != null:
+		update_block_preview()
 	
 	# Shake logic
 	if shake_duration > 0:
@@ -182,6 +188,10 @@ func interact_with_crosshair():
 			var card_node = collider.get_meta("card_node")
 			if card_node:
 				pick_up_card(card_node)
+		elif collider.has_meta("is_block"):
+			var block_node = collider.get_meta("block_node")
+			if block_node and not block_node.get_meta("placed"):
+				pick_up_block(block_node)
 
 func pick_up_card(card_node: Node3D):
 	if held_card != null: return
@@ -192,9 +202,14 @@ func pick_up_card(card_node: Node3D):
 	add_child(card_node)
 	card_node.global_transform = g_trans
 	
+	# Masanın altına girmemesi için her şeyin üstünde çizilmesini sağla
+	_apply_no_depth_recursive(card_node, 12)
+	
 	var tw = create_tween().set_parallel(true)
 	var hand_pos = Vector3(0, -0.25, -0.5) # Ekranın alt ortası
-	var hand_rot = Vector3(deg_to_rad(90), 0, 0)
+	
+	# Kartın dikey ve düzgün görünmesi için rotasyonları - gltf modelinin iç koordinatlarına bağlı
+	var hand_rot = Vector3(deg_to_rad(-90), deg_to_rad(180), 0)
 	
 	tw.tween_property(card_node, "position", hand_pos, 0.4).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(card_node, "rotation", hand_rot, 0.4).set_trans(Tween.TRANS_SINE)
@@ -206,7 +221,7 @@ func consume_held_card():
 	held_card.queue_free()
 	held_card = null
 	
-	# Spawn a single block at Marker3D
+	# Spawn a single block at BlokSpawnNoktasi
 	var marker = get_tree().root.find_child("BlokSpawnNoktasi", true, false)
 	if marker:
 		var block = CSGBox3D.new()
@@ -225,5 +240,56 @@ func consume_held_card():
 		
 		marker.get_parent().add_child(block)
 		block.global_position = marker.global_position
+		
+		# Bloğun tıklanabilmesi için hit-box ayarları
+		var static_body = StaticBody3D.new()
+		static_body.set_meta("is_block", true)
+		static_body.set_meta("block_node", block)
+		var c_shape = CollisionShape3D.new()
+		var b_shape = BoxShape3D.new()
+		b_shape.size = Vector3(size, size, size)
+		c_shape.shape = b_shape
+		static_body.add_child(c_shape)
+		block.add_child(static_body)
+		block.set_meta("placed", false)
 	else:
-		print("HATA: Sahnede 'Marker3D' adında bir node bulunamadı! Lütfen tam adını kontrol et.")
+		print("HATA: Sahnede 'BlokSpawnNoktasi' adında bir node bulunamadı! Lütfen tam adını kontrol et.")
+
+func pick_up_block(block_node):
+	held_block = block_node
+	
+	# Elimizde tutarken raycast ışınlarımızı (yere giden) engellemesin diye hit-box'ını kapatıyoruz
+	for c in held_block.get_children():
+		if c is StaticBody3D:
+			c.collision_layer = 0
+			c.collision_mask = 0
+
+func update_block_preview():
+	var space_state = get_world_3d().direct_space_state
+	var v_size = get_viewport().get_visible_rect().size
+	var center = v_size / 2.0
+	var origin = project_ray_origin(center)
+	var end = origin + project_ray_normal(center) * ray_length
+	var query = PhysicsRayQueryParameters3D.create(origin, end)
+	var result = space_state.intersect_ray(query)
+	
+	if result and result.collider.has_meta("is_grid_cell"):
+		var cell_node = result.collider.get_meta("grid_cell_node")
+		# Bloğun boyunu hesapla (CSGBox3D'nin Y boyu)
+		var y_offset = held_block.size.y / 2.0
+		# Bloğu direkt olarak grid hücresinin üzerine tak / kilitle (Snap)
+		held_block.global_position = cell_node.global_position + Vector3(0, y_offset, 0)
+	else:
+		# Grid'e bakmıyorsak sadece crosshair'in hemen önünde uçsun
+		var target_pos = origin + project_ray_normal(center) * 2.0
+		held_block.global_position = held_block.global_position.lerp(target_pos, 0.2)
+
+func place_held_block():
+	# Yerleştirildi, fizik çarpışmasını geri aç ki grid'in üzerinde dursun
+	for c in held_block.get_children():
+		if c is StaticBody3D:
+			c.collision_layer = 1
+			c.collision_mask = 1
+			
+	held_block.set_meta("placed", true)
+	held_block = null

@@ -45,3 +45,15 @@ func refresh_visuals() -> void:
 	# Z-fighting engellemek için çok az yukarı kaydırıyoruz
 	surface_mesh.position.y = 0.001 
 	add_child(surface_mesh)
+	
+	# Raycast için çarpışma kutusu
+	var static_body = StaticBody3D.new()
+	static_body.set_meta("is_grid_cell", true)
+	static_body.set_meta("grid_cell_node", self)
+	
+	var col_shape = CollisionShape3D.new()
+	var box = BoxShape3D.new()
+	box.size = Vector3(boyut, 0.05, boyut)
+	col_shape.shape = box
+	static_body.add_child(col_shape)
+	add_child(static_body)
