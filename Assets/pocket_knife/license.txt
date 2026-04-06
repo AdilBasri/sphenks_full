@@ -1,0 +1,11 @@
+Model Information:
+* title:	Pocket Knife
+* source:	https://sketchfab.com/3d-models/pocket-knife-0c89d84c815942619d1a957f9fe996ae
+* author:	re1monsen (https://sketchfab.com/re1monsen)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Pocket Knife" (https://sketchfab.com/3d-models/pocket-knife-0c89d84c815942619d1a957f9fe996ae) by re1monsen (https://sketchfab.com/re1monsen) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -68,3 +68,17 @@ func print_grid_coords() -> void:
 		var hucre = hucrelerin_sozlugu[coord]
 		print("- Hücre: (%d, %d) @ %s" % [hucre.sutun, hucre.satir, hucre.global_position])
 	print("---------------------------------")
+func clear_grid() -> void:
+	for hucre in hucrelerin_sozlugu.values():
+		hucre.set_meta("dolu", false)
+	
+	# Find and remove blocks associated with this grid
+	# (In camera_3d.gd, blocks are added to the root or a child, 
+	# but we can find them by checking if they are 'placed' and near the grid)
+	for child in get_tree().root.get_children():
+		if child.has_meta("placed") and child.get_meta("placed"):
+			# If any cell in its occupying_cells belongs to this grid, queue_free
+			if child.has_meta("occupying_cells"):
+				var cells = child.get_meta("occupying_cells")
+				if cells.size() > 0 and cells[0].get_parent() == self:
+					child.queue_free()

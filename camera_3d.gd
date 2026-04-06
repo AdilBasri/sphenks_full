@@ -1,8 +1,8 @@
 extends Camera3D
 
-@export var sensitivity = 0.08
-@export var limit_y = 100.0  # Horizontal (Left/Right)
-@export var limit_x = 75.0  # Vertical (Up/Down)
+@export var sensitivity: float = 0.08
+@export var limit_y: float = 100.0  # Horizontal (Left/Right)
+@export var limit_x: float = 75.0  # Vertical (Up/Down)
 
 var yaw: float = 0.0
 var pitch: float = 0.0
@@ -30,6 +30,15 @@ var outline_instance: MeshInstance3D = null
 var shake_intensity: float = 0.0
 var shake_duration: float = 0.0
 var shake_offset: Vector3 = Vector3.ZERO
+
+# New Gameplay Params
+var is_gun_mode: bool = false
+var gun_node: Node3D = null
+var gun_original_transform: Transform3D
+var card_data: Dictionary = {} # Keeps track of original parents and transforms
+var discard_label: Label = null
+var trash_node: Node3D = null
+var discard_label_base_pos: Vector2
 
 func _ready():
 	# Capture mouse (HIDE)
@@ -68,6 +77,38 @@ func _ready():
 			
 			static_body.add_child(collision_shape)
 			card.add_child(static_body)
+
+	# Find Gun
+	gun_node = get_tree().root.find_child("gun", true, false)
+	if gun_node:
+		gun_original_transform = gun_node.global_transform
+
+	# Setup Enemy Loop
+	var sitting = get_tree().root.find_child("Sitting", true, false)
+	if sitting:
+		var enemy_anim = sitting.find_child("AnimationPlayer", true, false)
+		if enemy_anim:
+			enemy_anim.get_animation("oturma1").loop_mode = Animation.LOOP_LINEAR
+			enemy_anim.play("oturma1")
+			
+	# Find and Setup Trash
+	trash_node = get_tree().root.find_child("trash", true, false)
+	if trash_node:
+		var sb = StaticBody3D.new()
+		sb.set_meta("is_trash", true)
+		var cs = CollisionShape3D.new()
+		var box = BoxShape3D.new()
+		box.size = Vector3(250, 400, 250) # The trash can scale is very small (0.001), so internal size should be large or wait...
+		# Adjusting size based on the trash can's relative local space.
+		cs.shape = box
+		sb.add_child(cs)
+		trash_node.add_child(sb)
+
+	# Find Discard Label
+	discard_label = get_tree().root.find_child("DiscardLabel", true, false)
+	if discard_label:
+		discard_label_base_pos = discard_label.position
+		discard_label.visible = false
 
 func reset_rotation():
 	yaw = start_y
@@ -134,9 +175,21 @@ func _apply_no_depth_recursive(node: Node, priority: int):
 	for child in node.get_children():
 		_apply_no_depth_recursive(child, priority)
 
+func _remove_no_depth_recursive(node: Node):
+	if node is MeshInstance3D:
+		for i in range(node.get_surface_override_material_count()):
+			node.set_surface_override_material(i, null)
+	
+	for child in node.get_children():
+		_remove_no_depth_recursive(child)
+
 func _input(event):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if held_block != null:
+		if is_gun_mode:
+			shoot_gun()
+		elif discard_label and discard_label.visible:
+			discard_held_block()
+		elif held_block != null:
 			if is_placement_valid and current_hovered_cell != null:
 				place_held_block()
 		elif held_card != null:
@@ -163,6 +216,9 @@ func _process(_delta):
 	
 	if held_block != null:
 		update_block_preview()
+		_handle_discard_hover()
+	elif discard_label:
+		discard_label.visible = false
 		
 	if knife_mode:
 		var space_state = get_world_3d().direct_space_state
@@ -347,6 +403,15 @@ func _update_knife_hover():
 
 func pick_up_card(card_node: Node3D):
 	if held_card != null: return
+	
+	# Store original desk data BEFORE reparenting
+	if not card_data.has(card_node.name):
+		card_data[card_node.name] = {
+			"parent": card_node.get_parent(),
+			"global_transform": card_node.global_transform,
+			"scale": card_node.scale
+		}
+	
 	held_card = card_node
 	
 	var g_trans = card_node.global_transform
@@ -354,17 +419,22 @@ func pick_up_card(card_node: Node3D):
 	add_child(card_node)
 	card_node.global_transform = g_trans
 	
+	# Disable interaction while held
+	for cs in card_node.find_children("*", "CollisionShape3D", true, false):
+		cs.disabled = true
+	
 	# Masanın altına girmemesi için her şeyin üstünde çizilmesini sağla
 	_apply_no_depth_recursive(card_node, 12)
+
 	var tw = create_tween().set_parallel(true)
+	card_node.set_meta("active_tween", tw)
+	
 	var hand_pos = Vector3(0, -0.1, -0.2) 
 	
 	# Kart eğer fizik objesi ise hareketini donduralım ki gravity etki etmesin
 	if card_node is RigidBody3D:
 		card_node.freeze = true
 	
-	# Eğer X ekseninde 90 döndürmek onu yatay yaptıysa, orijinal hali dikeydir.
-	# Doğrudan kamerasının karşısına dik bir şekilde alalım:
 	var hand_rot = Vector3(0, deg_to_rad(180), 0)
 	
 	tw.tween_property(card_node, "position", hand_pos, 0.4).set_trans(Tween.TRANS_SINE)
@@ -396,132 +466,163 @@ func create_ghost_block(original_block: Node3D):
 func consume_held_card():
 	if held_card == null: return
 	
-	if held_card.name.to_lower().begins_with("card4") or held_card.name == "card4":
-		knife_mode = true
-		held_card.queue_free()
-		held_card = null
-		return
-		
-	if held_card.name.to_lower().begins_with("card3") or held_card.name == "card3":
-		enemy_placement_mode = true
-		
-		# Animasyon ve kamera hareketi başlat
-		var paravan_cam = get_tree().root.find_child("ParavanKamerasi", true, false)
-		var paravan_node = get_tree().root.find_child("paravan", true, false)
-		
-		if paravan_cam and paravan_node:
-			is_locked = true
-			
-			# 1- Önce kamerayı yavaşça default ortalanmış açısına çekelim
-			var rot_tw = create_tween().set_parallel(true)
-			rot_tw.tween_property(self, "rotation_degrees:y", start_y, 0.4).set_trans(Tween.TRANS_SINE)
-			rot_tw.tween_property(self, "rotation_degrees:x", start_x, 0.4).set_trans(Tween.TRANS_SINE)
-			await rot_tw.finished
-			
-			# Temel yerimizi kaydet (Geri dönmek için)
-			original_camera_transform = global_transform
-			original_camera_rotation_degrees = rotation_degrees
-			
-			var anim_player = paravan_node.find_child("AnimationPlayer", true, false)
-			
-			# Güvenlik önlemi: Eğer paravan içinde değilse kök sahnede veya GameRoom'da da arayalim.
-			if not anim_player:
-				anim_player = get_tree().root.find_child("AnimationPlayer", true, false)
-				
-			if anim_player:
-				var target_anim = "paravan_ac"
-				if not anim_player.has_animation(target_anim):
-					target_anim = anim_player.get_animation_list()[0]
-					
-				# Hızı 2 katına çıkar
-				anim_player.speed_scale = 2.0
-				anim_player.play(target_anim)
-				
-				# Animasyonun tam yarısını hesapla (Hız 2 olduğu için bekleyeceğimiz süre / 2 olur)
-				var half_time = anim_player.current_animation_length / 2.0
-				await get_tree().create_timer(half_time / 2.0).timeout
-				
-				# Yarıda dondur (Böylece geriye kalanı dönerken kapanış için oynatılabilecek)
-				anim_player.pause()
-			else:
-				await get_tree().create_timer(1.0).timeout
-			
-			# 2- Paravan yarıya kadar açıldı (durdu), ŞİMDİ kamerayı hareket ettiriyoruz
-			var tw = create_tween()
-			tw.tween_property(self, "global_transform", paravan_cam.global_transform, 1.0).set_trans(Tween.TRANS_SINE)
-			tw.tween_callback(func():
-				var euler = paravan_cam.rotation_degrees
-				start_y = euler.y
-				start_x = euler.x
-				yaw = euler.y
-				pitch = euler.x
-				rotation_degrees = euler
-				is_locked = false # İzin ver etrafa baksın
-				
-				# Çöp objeyi eline alan logic'i tetikliyoruz. Yerde belirmeden!
-				var block_scene = load("res://block_cop.tscn")
-				if block_scene:
-					held_block = block_scene.instantiate()
-					# scale_factor hesabı
-					var size = 0.1 
-					var grid_gen = get_tree().root.find_child("DüşmanGrid", true, false)
-					if grid_gen and grid_gen.get("hucre_boyutu"):
-						size = grid_gen.hucre_boyutu
-					var scale_factor = size / 0.1
-					held_block.scale = Vector3(scale_factor, scale_factor, scale_factor)
-					
-					add_child(held_block)
-					held_block.position = Vector3(-0.25, -0.05, -0.4)
-					held_block.rotation = Vector3(deg_to_rad(20), deg_to_rad(35), 0)
-					
-					for sb in held_block.find_children("*", "StaticBody3D"):
-						sb.collision_layer = 0
-						sb.collision_mask = 0
-						
-					create_ghost_block(held_block)
-			)
-			
-		held_card.queue_free()
-		held_card = null
-		return
+	var card_to_return = held_card
+	held_card = null # Clear immediately to prevent double-click issues
 	
-	held_card.queue_free()
-	held_card = null
+	# 20% Chance for garbage card to enemy (for cards 1, 3, 4)
+	if card_to_return.name in ["card", "card3", "card4"]:
+		if randf() < 0.2:
+			enemy_placement_mode = true
+			return_card_to_table(card_to_return)
+			trigger_paravan_sequence()
+			return
+
+	# Determine block scene
+	var scenes = []
+	if card_to_return.name == "card2":
+		scenes = ["res://block_tek.tscn"]
+	else:
+		scenes = [
+			"res://block_tek.tscn",
+			"res://block_l.tscn",
+			"res://block_t.tscn",
+			"res://block_kare.tscn",
+			"res://block_line.tscn"
+		]
 	
-	# block_tek sahnemizi yüklüyoruz - Artık rastgele sahneler atayabiliriz!
-	var scenes = [
-		"res://block_tek.tscn",
-		"res://block_l.tscn",
-		"res://block_t.tscn",
-		"res://block_kare.tscn",
-		"res://block_line.tscn"
-	]
 	var random_scene = scenes[randi() % scenes.size()]
 	var block_scene = load(random_scene)
 	if block_scene:
-		var spawned_block = block_scene.instantiate()
+		spawn_block_on_table(block_scene)
 		
-		# Spawnda masaya koyacağız (Elden önce sahneye çıkar)
-		var marker = get_tree().root.find_child("BlokSpawnNoktasi", true, false)
-		if marker:
-			marker.get_parent().add_child(spawned_block)
-			spawned_block.global_position = marker.global_position
+	return_card_to_table(card_to_return)
+
+func return_card_to_table(card_node: Node3D):
+	if not card_data.has(card_node.name): 
+		card_node.queue_free()
+		return
+		
+	var data = card_data[card_node.name]
+	
+	# Kill any existing tweens to prevent rubber-banding back to hand
+	if card_node.has_meta("active_tween"):
+		var old_tw = card_node.get_meta("active_tween")
+		if old_tw and old_tw.is_valid():
+			old_tw.kill()
+		card_node.remove_meta("active_tween")
+	
+	# Instant detach from camera
+	if card_node.get_parent():
+		card_node.get_parent().remove_child(card_node)
+	
+	# Instant visual reset
+	_remove_no_depth_recursive(card_node)
+	
+	# Reparent back to table and reset transform immediately
+	data.parent.add_child(card_node)
+	card_node.global_transform = data.global_transform
+	card_node.scale = data.scale
+	
+	# Ensure collision is re-enabled instantly
+	for cs in card_node.find_children("*", "CollisionShape3D", true, false):
+		cs.disabled = false
+
+func trigger_paravan_sequence():
+	# Animasyon ve kamera hareketi başlat
+	var paravan_cam = get_tree().root.find_child("ParavanKamerasi", true, false)
+	var paravan_node = get_tree().root.find_child("paravan", true, false)
+	
+	if paravan_cam and paravan_node:
+		is_locked = true
+		
+		# 1- Önce kamerayı yavaşça default ortalanmış açısına çekelim
+		var rot_tw = create_tween().set_parallel(true)
+		rot_tw.tween_property(self, "rotation_degrees:y", start_y, 0.4).set_trans(Tween.TRANS_SINE)
+		rot_tw.tween_property(self, "rotation_degrees:x", start_x, 0.4).set_trans(Tween.TRANS_SINE)
+		await rot_tw.finished
+		
+		# Temel yerimizi kaydet (Geri dönmek için)
+		original_camera_transform = global_transform
+		original_camera_rotation_degrees = rotation_degrees
+		
+		var anim_player = paravan_node.find_child("AnimationPlayer", true, false)
+		
+		# Güvenlik önlemi: Eğer paravan içinde değilse kök sahnede veya GameRoom'da da arayalim.
+		if not anim_player:
+			anim_player = get_tree().root.find_child("AnimationPlayer", true, false)
 			
-			var size = 0.1 
-			var grid_gen = get_tree().root.find_child("OyuncuGrid", true, false)
-			if grid_gen and grid_gen.get("hucre_boyutu"):
-				size = grid_gen.hucre_boyutu
+		if anim_player:
+			var target_anim = "paravan_ac"
+			if not anim_player.has_animation(target_anim):
+				target_anim = anim_player.get_animation_list()[0]
 				
-			var scale_factor = size / 0.1
-			spawned_block.scale = Vector3(scale_factor, scale_factor, scale_factor)
+			# Hızı 2 katına çıkar
+			anim_player.speed_scale = 2.0
+			anim_player.play(target_anim)
 			
-			# Tıklanabilmesi için hit-box oluştur (zaten statik bodyleri var block sahnelerinde! Meta verelim yeterli)
-			for sb in spawned_block.find_children("*", "StaticBody3D"):
-				sb.set_meta("is_block", true)
-				sb.set_meta("block_node", spawned_block)
-			spawned_block.set_meta("placed", false)
+			# Animasyonun tam yarısını hesapla (Hız 2 olduğu için bekleyeceğimiz süre / 2 olur)
+			var half_time = anim_player.current_animation_length / 2.0
+			await get_tree().create_timer(half_time / 2.0).timeout
+			
+			# Yarıda dondur (Böylece geriye kalanı dönerken kapanış için oynatılabilecek)
+			anim_player.pause()
 		else:
-			print("HATA: Sahnede 'BlokSpawnNoktasi' adında bir node bulunamadı! Lütfen tam adını kontrol et.")
+			await get_tree().create_timer(1.0).timeout
+		
+		# 2- Paravan yarıya kadar açıldı (durdu), ŞİMDİ kamerayı hareket ettiriyoruz
+		var tw = create_tween()
+		tw.tween_property(self, "global_transform", paravan_cam.global_transform, 1.0).set_trans(Tween.TRANS_SINE)
+		tw.tween_callback(func():
+			var euler = paravan_cam.rotation_degrees
+			start_y = euler.y
+			start_x = euler.x
+			yaw = euler.y
+			pitch = euler.x
+			rotation_degrees = euler
+			is_locked = false # İzin ver etrafa baksın
+			
+			# Çöp objeyi eline alan logic'i tetikliyoruz. Yerde belirmeden!
+			var block_scene = load("res://block_cop.tscn")
+			if block_scene:
+				held_block = block_scene.instantiate()
+				# scale_factor hesabı
+				var size = 0.1 
+				var grid_gen = get_tree().root.find_child("DüşmanGrid", true, false)
+				if grid_gen and grid_gen.get("hucre_boyutu"):
+					size = grid_gen.hucre_boyutu
+				var scale_factor = size / 0.1
+				held_block.scale = Vector3(scale_factor, scale_factor, scale_factor)
+				
+				add_child(held_block)
+				held_block.position = Vector3(-0.25, -0.05, -0.4)
+				held_block.rotation = Vector3(deg_to_rad(20), deg_to_rad(35), 0)
+				
+				for sb in held_block.find_children("*", "StaticBody3D"):
+					sb.collision_layer = 0
+					sb.collision_mask = 0
+					
+				create_ghost_block(held_block)
+		)
+
+func spawn_block_on_table(block_scene: PackedScene):
+	var spawned_block = block_scene.instantiate()
+	var marker = get_tree().root.find_child("BlokSpawnNoktasi", true, false)
+	if marker:
+		marker.get_parent().add_child(spawned_block)
+		spawned_block.global_position = marker.global_position
+		
+		var size = 0.1 
+		var grid_gen = get_tree().root.find_child("OyuncuGrid", true, false)
+		if grid_gen and grid_gen.get("hucre_boyutu"):
+			size = grid_gen.hucre_boyutu
+			
+		var scale_factor = size / 0.1
+		spawned_block.scale = Vector3(scale_factor, scale_factor, scale_factor)
+		
+		for sb in spawned_block.find_children("*", "StaticBody3D"):
+			sb.set_meta("is_block", true)
+			sb.set_meta("block_node", spawned_block)
+		spawned_block.set_meta("placed", false)
 
 func pick_up_block(block_node):
 	held_block = block_node
@@ -709,5 +810,144 @@ func place_held_block():
 				pitch = euler.x
 				rotation_degrees = euler
 				is_locked = false
+				
+				# Check if board is full after placement
+				if is_grid_full():
+					activate_gun()
 			)
 	)
+
+func is_grid_full() -> bool:
+	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	if not grid: return false
+	
+	for cell in grid.get_children():
+		if "sutun" in cell:
+			if not cell.has_meta("dolu") or cell.get_meta("dolu") == false:
+				return false
+	return true
+
+func activate_gun():
+	if not gun_node: return
+	is_gun_mode = true
+	is_locked = true # Lock camera during transition
+	
+	# Move to viewmodel position
+	var tw = create_tween().set_parallel(true)
+	var target_pos = Vector3(0.3, -0.25, -0.45) # Bottom right of camera
+	var target_rot = Vector3(deg_to_rad(0), deg_to_rad(-80), 0)
+	
+	# Add shake/vibration during movement
+	var shake_tw = create_tween().set_loops(10)
+	shake_tw.tween_property(gun_node, "position", Vector3(0.01, 0, 0), 0.05).as_relative()
+	shake_tw.tween_property(gun_node, "position", Vector3(-0.01, 0, 0), 0.05).as_relative()
+	
+	tw.tween_property(gun_node, "position", target_pos, 0.8).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(gun_node, "rotation", target_rot, 0.8).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	
+	await tw.finished
+	is_locked = false
+
+func shoot_gun():
+	if not is_gun_mode: return
+	
+	# Roll 1/6 for bullet existence
+	if randi() % 6 == 0:
+		# BULLET EXISTS!
+		var anim = gun_node.find_child("AnimationPlayer", true, false)
+		if anim:
+			anim.play("Animation") 
+		
+		# Hit detection
+		var space_state = get_world_3d().direct_space_state
+		var v_size = get_viewport().get_visible_rect().size
+		var center = v_size / 2.0
+		var origin = project_ray_origin(center)
+		var end = origin + project_ray_normal(center) * ray_length
+		var query = PhysicsRayQueryParameters3D.create(origin, end)
+		var result = space_state.intersect_ray(query)
+		
+		var aimed_at_enemy = false
+		if result:
+			var node = result.collider
+			while node != null:
+				if node.name == "Sitting":
+					aimed_at_enemy = true
+					break
+				node = node.get_parent()
+		
+		if aimed_at_enemy:
+			print("BULLET HIT ENEMY!")
+			# Future: Handle game over / win
+		else:
+			print("BULLET WASTED (MISSED)")
+			# Even if miss, maybe we should reset for gameplay flow? 
+			# User says "iki taraftan birisi vurulana kadar bu döngü devam edecek"
+			# I'll reset the board after the bullet is fired to allow next round.
+			get_tree().create_timer(2.0).timeout.connect(reset_game_round)
+	else:
+		# EMPTY CHAMBER (5/6)
+		print("EMPTY CHAMBER - RESETTING BOARD")
+		# No animation plays
+		reset_game_round()
+
+func _handle_discard_hover():
+	if not discard_label: return
+	
+	var space_state = get_world_3d().direct_space_state
+	var v_size = get_viewport().get_visible_rect().size
+	var center = v_size / 2.0
+	var origin = project_ray_origin(center)
+	var end = origin + project_ray_normal(center) * ray_length
+	var query = PhysicsRayQueryParameters3D.create(origin, end)
+	var result = space_state.intersect_ray(query)
+	
+	if result and result.collider.has_meta("is_trash"):
+		discard_label.visible = true
+		# Vibration effect
+		var offset = Vector2(randf_range(-3, 3), randf_range(-3, 3))
+		discard_label.position = discard_label_base_pos + offset
+	else:
+		discard_label.visible = false
+
+func discard_held_block():
+	if not held_block: return
+	
+	var block_to_discard = held_block
+	held_block = null
+	
+	if ghost_block:
+		ghost_block.queue_free()
+		ghost_block = null
+		
+	var tw = create_tween().set_parallel(true)
+	var target_pos = trash_node.global_position if trash_node else global_position + Vector3(0, -2, 0)
+	
+	tw.tween_property(block_to_discard, "global_position", target_pos, 0.4).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(block_to_discard, "scale", Vector3.ZERO, 0.4).set_trans(Tween.TRANS_SINE)
+	tw.set_parallel(false)
+	tw.tween_callback(block_to_discard.queue_free)
+	
+	if discard_label:
+		discard_label.visible = false
+
+func reset_game_round():
+	is_gun_mode = false
+	
+	# Clear Player Grid
+	var p_grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	if p_grid: p_grid.clear_grid()
+	
+	# Clear Enemy Grid
+	var e_grid = get_tree().root.find_child("DüşmanGrid", true, false)
+	if e_grid: e_grid.clear_grid()
+	
+	# Clear any other blocks in root
+	for child in get_tree().root.get_children():
+		if child.has_meta("placed") and child.get_meta("placed"):
+			child.queue_free()
+			
+	# Return Gun to Table
+	if gun_node:
+		var tw = create_tween()
+		tw.tween_property(gun_node, "global_transform", gun_original_transform, 0.5).set_trans(Tween.TRANS_SINE)

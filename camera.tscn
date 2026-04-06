@@ -1,14 +1,17 @@
-[gd_scene load_steps=18 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=22 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
 [ext_resource type="Animation" uid="uid://c3w5olixra7ns" path="res://oturma1.res" id="2_eeger"]
 [ext_resource type="Script" uid="uid://wuvldqmhm6c6" path="res://camera_3d.gd" id="4_pbwbf"]
 [ext_resource type="Script" uid="uid://0rccufjia2dw" path="res://grid_generator.gd" id="11_grid"]
-[ext_resource type="Texture2D" uid="uid://be4hi8tsld53t" path="res://Assets/cursor/Cursor.png" id="11_motcw"]
+[ext_resource type="Texture2D" uid="uid://be4hi8tsld53t" path="res://Assets/Cursor/Cursor.png" id="11_motcw"]
+[ext_resource type="PackedScene" uid="uid://b0v0foxqxk1jl" path="res://Assets/cardboard_gun/scene.gltf" id="12_2jv0e"]
 [ext_resource type="PackedScene" uid="uid://dsh2b6624y0hk" path="res://Assets/screen/scene.gltf" id="12_gyfrk"]
 [ext_resource type="PackedScene" uid="uid://cjmioknigrhq5" path="res://Assets/a_table/scene.gltf" id="13_2jv0e"]
+[ext_resource type="PackedScene" uid="uid://dr6h188evkbgm" path="res://Assets/pocket_knife/scene.gltf" id="13_bbdvs"]
 [ext_resource type="PackedScene" uid="uid://berst0pur28ff" path="res://Assets/chair/scene.gltf" id="14_bbdvs"]
+[ext_resource type="PackedScene" uid="uid://c2fcswwmw52l7" path="res://Assets/trash_can/scene.gltf" id="14_w2vvk"]
 [ext_resource type="PackedScene" uid="uid://b2fdkeid834us" path="res://Assets/card/scene.gltf" id="15_f3tc8"]
 [ext_resource type="Texture2D" uid="uid://50tu8f6bkdqr" path="res://Assets/card/L.png" id="16_bi1g6"]
 
@@ -37,6 +40,12 @@ albedo_color = Color(0, 0, 0, 1)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_woum2"]
 albedo_texture = ExtResource("16_bi1g6")
 uv1_scale = Vector3(1, 2, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_discard"]
+font_size = 36
+font_color = Color(1, 0, 0, 1)
+outline_size = 8
+outline_color = Color(0, 0, 0, 1)
 
 [node name="GameRoom" type="Node3D"]
 
@@ -143,6 +152,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15051156, 0.6931714, 2.818
 light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
 light_energy = 5.0
 
+[node name="OmniLight3D4" type="OmniLight3D" parent="WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.68188083, -0.8958916, -1.288084)
+light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
+light_energy = 5.0
+
 [node name="CharacterBody3D" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11820468, -3.305133)
 
@@ -204,19 +218,19 @@ transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0
 surface_material_override/0 = SubResource("StandardMaterial3D_woum2")
 
 [node name="card2" parent="." instance=ExtResource("15_f3tc8")]
-transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.76855356, -0.73025525, -1.7041852)
+transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.8194414, -0.73025525, -1.7041852)
 
 [node name="Object_4" parent="card2/Sketchfab_model/root/GLTF_SceneRootNode/card texture_0" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_woum2")
 
 [node name="card3" parent="." instance=ExtResource("15_f3tc8")]
-transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.90408736, -0.73025525, -1.7041852)
+transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.63277006, -0.72256655, -1.7041852)
 
 [node name="Object_4" parent="card3/Sketchfab_model/root/GLTF_SceneRootNode/card texture_0" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_woum2")
 
 [node name="card4" parent="." instance=ExtResource("15_f3tc8")]
-transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.65298396, -0.73025525, -1.9234607)
+transform = Transform3D(-3.059797e-09, 0.07, -3.059797e-09, 0, -3.059797e-09, -0.07, -0.07, -3.059797e-09, 1.3374798e-16, 0.65298396, -0.71226424, -1.707993)
 
 [node name="Object_4" parent="card4/Sketchfab_model/root/GLTF_SceneRootNode/card texture_0" index="0"]
 transform = Transform3D(1, -1.0587912e-22, 0, -4.2351647e-22, 1, 1.6703742e-22, 0, 4.1759355e-23, 1, 0, 0, 0.1857729)
@@ -247,8 +261,34 @@ pivot_offset = Vector2(5, 5)
 texture = ExtResource("11_motcw")
 expand_mode = 1
 
+[node name="DiscardLabel" type="Label" parent="Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -84.0
+offset_top = 50.0
+offset_right = 84.0
+offset_bottom = 100.0
+grow_horizontal = 2
+text = "DISCARD"
+label_settings = SubResource("LabelSettings_discard")
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="BlokSpawnNoktasi" type="Marker3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.57837576, -1.0755553, -1.2357945)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.57837576, -1.0393274, -1.255328)
+
+[node name="gun" parent="." instance=ExtResource("12_2jv0e")]
+transform = Transform3D(-0.01, -8.7422775e-10, 3.821371e-17, 0, -4.3711387e-10, -0.01, 8.7422775e-10, -0.01, 4.3711387e-10, -0.76596487, -0.7259988, -1.8582165)
+
+[node name="knife" parent="." instance=ExtResource("13_bbdvs")]
+transform = Transform3D(0.07466382, 0.020446295, -0.06330295, 0, 0.09515944, 0.030735662, 0.06652304, -0.02294842, 0.071049675, 0.24354121, -0.56935096, -1.2527721)
+visible = false
+
+[node name="trash" parent="." instance=ExtResource("14_w2vvk")]
+transform = Transform3D(0.001, 0, 0, 0, 0.001, 0, 0, 0, 0.001, 0.6757211, -1.25, -1.3234996)
 
 [editable path="Sitting"]
 [editable path="paravan"]
