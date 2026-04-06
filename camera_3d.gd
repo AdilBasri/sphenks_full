@@ -14,6 +14,10 @@ var ray_length: float = 10.0
 var held_card: Node3D = null
 var held_block: Node3D = null
 
+var ghost_block: Node3D = null
+var current_hovered_cell: Node3D = null
+var is_placement_valid: bool = false
+
 # Shake Params
 var shake_intensity: float = 0.0
 var shake_duration: float = 0.0
@@ -114,7 +118,7 @@ func _apply_no_depth_recursive(node: Node, priority: int):
 			
 			if mat:
 				var new_mat = mat.duplicate()
-				if new_mat is StandardMaterial3D:
+				if new_mat is BaseMaterial3D:
 					new_mat.no_depth_test = true
 					new_mat.render_priority = priority
 				node.set_surface_override_material(i, new_mat)
@@ -125,7 +129,8 @@ func _apply_no_depth_recursive(node: Node, priority: int):
 func _input(event):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if held_block != null:
-			place_held_block()
+			if is_placement_valid and current_hovered_cell != null:
+				place_held_block()
 		elif held_card != null:
 			consume_held_card()
 		else:
@@ -204,16 +209,41 @@ func pick_up_card(card_node: Node3D):
 	
 	# Masanın altına girmemesi için her şeyin üstünde çizilmesini sağla
 	_apply_no_depth_recursive(card_node, 12)
-	
 	var tw = create_tween().set_parallel(true)
-	var hand_pos = Vector3(0, -0.25, -0.5) # Ekranın alt ortası
+	var hand_pos = Vector3(0, -0.1, -0.2) 
 	
-	# Kartın dikey ve düzgün görünmesi için rotasyonları - gltf modelinin iç koordinatlarına bağlı
-	var hand_rot = Vector3(deg_to_rad(-90), deg_to_rad(180), 0)
+	# Kart eğer fizik objesi ise hareketini donduralım ki gravity etki etmesin
+	if card_node is RigidBody3D:
+		card_node.freeze = true
+	
+	# Eğer X ekseninde 90 döndürmek onu yatay yaptıysa, orijinal hali dikeydir.
+	# Doğrudan kamerasının karşısına dik bir şekilde alalım:
+	var hand_rot = Vector3(0, deg_to_rad(180), 0)
 	
 	tw.tween_property(card_node, "position", hand_pos, 0.4).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(card_node, "rotation", hand_rot, 0.4).set_trans(Tween.TRANS_SINE)
-	tw.tween_property(card_node, "scale", Vector3(0.07, 0.07, 0.07) * 1.5, 0.4).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(card_node, "scale", card_node.scale.abs() * 0.4, 0.4).set_trans(Tween.TRANS_SINE)
+
+func create_ghost_block(original_block: Node3D):
+	if ghost_block: ghost_block.queue_free()
+	
+	ghost_block = original_block.duplicate()
+	get_tree().root.add_child(ghost_block)
+	
+	# Hayaletin çarpışmalarını sil
+	for c in ghost_block.find_children("*", "StaticBody3D"):
+		c.queue_free()
+	
+	var mat = StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(0, 1, 0, 0.5) # Yeşil
+	
+	for m in ghost_block.find_children("*", "CSGBox3D"):
+		m.material = mat
+		# Yassı önizleme için Y boyutunu baştan kıs
+		m.size.y *= 0.33
+	
+	ghost_block.visible = false
 
 func consume_held_card():
 	if held_card == null: return
@@ -221,50 +251,70 @@ func consume_held_card():
 	held_card.queue_free()
 	held_card = null
 	
-	# Spawn a single block at BlokSpawnNoktasi
-	var marker = get_tree().root.find_child("BlokSpawnNoktasi", true, false)
-	if marker:
-		var block = CSGBox3D.new()
-		# GridScene varsa hücre boyutunu alalım, yoksa varsayılan 0.1 yapalım
-		var size = 0.1 
-		var grid_gen = get_tree().root.find_child("OyuncuGrid", true, false)
-		if grid_gen and grid_gen.get("hucre_boyutu"):
-			size = grid_gen.hucre_boyutu
+	# block_tek sahnemizi yüklüyoruz - Artık rastgele sahneler atayabiliriz!
+	var scenes = [
+		"res://block_tek.tscn",
+		"res://block_l.tscn",
+		"res://block_t.tscn",
+		"res://block_kare.tscn",
+		"res://block_line.tscn"
+	]
+	var random_scene = scenes[randi() % scenes.size()]
+	var block_scene = load(random_scene)
+	if block_scene:
+		var spawned_block = block_scene.instantiate()
+		
+		# Spawnda masaya koyacağız (Elden önce sahneye çıkar)
+		var marker = get_tree().root.find_child("BlokSpawnNoktasi", true, false)
+		if marker:
+			marker.get_parent().add_child(spawned_block)
+			spawned_block.global_position = marker.global_position
 			
-		block.size = Vector3(size, size, size)
-		
-		# Görsellik için basit bir materyal
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.2, 0.6, 1.0) # Açık mavi bir küp
-		block.material = mat
-		
-		marker.get_parent().add_child(block)
-		block.global_position = marker.global_position
-		
-		# Bloğun tıklanabilmesi için hit-box ayarları
-		var static_body = StaticBody3D.new()
-		static_body.set_meta("is_block", true)
-		static_body.set_meta("block_node", block)
-		var c_shape = CollisionShape3D.new()
-		var b_shape = BoxShape3D.new()
-		b_shape.size = Vector3(size, size, size)
-		c_shape.shape = b_shape
-		static_body.add_child(c_shape)
-		block.add_child(static_body)
-		block.set_meta("placed", false)
-	else:
-		print("HATA: Sahnede 'BlokSpawnNoktasi' adında bir node bulunamadı! Lütfen tam adını kontrol et.")
+			var size = 0.1 
+			var grid_gen = get_tree().root.find_child("OyuncuGrid", true, false)
+			if grid_gen and grid_gen.get("hucre_boyutu"):
+				size = grid_gen.hucre_boyutu
+				
+			var scale_factor = size / 0.1
+			spawned_block.scale = Vector3(scale_factor, scale_factor, scale_factor)
+			
+			# Tıklanabilmesi için hit-box oluştur (zaten statik bodyleri var block sahnelerinde! Meta verelim yeterli)
+			for sb in spawned_block.find_children("*", "StaticBody3D"):
+				sb.set_meta("is_block", true)
+				sb.set_meta("block_node", spawned_block)
+			spawned_block.set_meta("placed", false)
+		else:
+			print("HATA: Sahnede 'BlokSpawnNoktasi' adında bir node bulunamadı! Lütfen tam adını kontrol et.")
 
 func pick_up_block(block_node):
 	held_block = block_node
 	
-	# Elimizde tutarken raycast ışınlarımızı (yere giden) engellemesin diye hit-box'ını kapatıyoruz
-	for c in held_block.get_children():
-		if c is StaticBody3D:
-			c.collision_layer = 0
-			c.collision_mask = 0
+	# Block'u kameraya bağla
+	var g_trans = held_block.global_transform
+	held_block.get_parent().remove_child(held_block)
+	add_child(held_block)
+	held_block.global_transform = g_trans
+	
+	# Anlayabileceğimiz çok iyi bir açıyla (isometric) ekranın biraz daha sol/aşağı kısmına koyalım
+	var tw = create_tween().set_parallel(true)
+	tw.tween_property(held_block, "position", Vector3(-0.25, -0.05, -0.4), 0.3).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(held_block, "rotation", Vector3(deg_to_rad(20), deg_to_rad(35), 0), 0.3).set_trans(Tween.TRANS_SINE)
+	
+	# Tutarken tüm parçaların çarpışmasını kapat
+	for sb in held_block.find_children("*", "StaticBody3D"):
+		sb.collision_layer = 0
+		sb.collision_mask = 0
+		
+	var size = 0.1
+	var grid_gen = get_tree().root.find_child("OyuncuGrid", true, false)
+	if grid_gen and grid_gen.get("hucre_boyutu"):
+		size = grid_gen.hucre_boyutu
+		
+	create_ghost_block(held_block)
 
 func update_block_preview():
+	if ghost_block == null: return
+	
 	var space_state = get_world_3d().direct_space_state
 	var v_size = get_viewport().get_visible_rect().size
 	var center = v_size / 2.0
@@ -273,23 +323,104 @@ func update_block_preview():
 	var query = PhysicsRayQueryParameters3D.create(origin, end)
 	var result = space_state.intersect_ray(query)
 	
+	current_hovered_cell = null
+	is_placement_valid = false
+	ghost_block.visible = false
+	
 	if result and result.collider.has_meta("is_grid_cell"):
-		var cell_node = result.collider.get_meta("grid_cell_node")
-		# Bloğun boyunu hesapla (CSGBox3D'nin Y boyu)
-		var y_offset = held_block.size.y / 2.0
-		# Bloğu direkt olarak grid hücresinin üzerine tak / kilitle (Snap)
-		held_block.global_position = cell_node.global_position + Vector3(0, y_offset, 0)
-	else:
-		# Grid'e bakmıyorsak sadece crosshair'in hemen önünde uçsun
-		var target_pos = origin + project_ray_normal(center) * 2.0
-		held_block.global_position = held_block.global_position.lerp(target_pos, 0.2)
+		ghost_block.visible = true
+		current_hovered_cell = result.collider.get_meta("grid_cell_node")
+		
+		# Pivotu merkeze hizala, azıcık yukarı kaldır ve döndürmeyi sıfırla/hizala
+		var base_y_offset = 0.0165
+		ghost_block.global_position = current_hovered_cell.global_position + Vector3(0, base_y_offset, 0)
+		ghost_block.global_rotation = current_hovered_cell.global_rotation
+		
+		# Çok hücreli (Multi-mesh) bloklar için tam doğrulama
+		is_placement_valid = true
+		var target_cells = []
+		
+		var grid_gen = get_tree().root.find_child("OyuncuGrid", true, false)
+		var b_size = 0.1
+		if grid_gen and grid_gen.get("hucre_boyutu"):
+			b_size = grid_gen.hucre_boyutu
+			
+		var max_dist = b_size / 1.5 
+		
+		for m in ghost_block.find_children("*", "CSGBox3D"):
+			# Koordinat dönüşümünü grid uzayına çekerek hesaplamayı tablo eğik bile olsa doğru yapalım
+			var m_local = grid_gen.to_local(m.global_position) if grid_gen else m.global_position
+			var closest_cell = null
+			var min_dist = 999.0
+			
+			if grid_gen:
+				for c in grid_gen.get_children():
+					if "sutun" in c: # GridHucre düğümü olduğunu anlamak için
+						var c_local = grid_gen.to_local(c.global_position)
+						var dist = Vector2(m_local.x, m_local.z).distance_to(Vector2(c_local.x, c_local.z))
+						if dist < min_dist and dist < max_dist:
+							min_dist = dist
+							closest_cell = c
+							
+			if closest_cell:
+				var is_full = closest_cell.get_meta("dolu") if closest_cell.has_meta("dolu") else false
+				if is_full:
+					is_placement_valid = false
+					break
+				else:
+					if not target_cells.has(closest_cell):
+						target_cells.append(closest_cell)
+			else:
+				# Taşıyor (Uygun bir hücre bulunamadı)
+				is_placement_valid = false
+				break
+				
+		var color = Color(0, 1, 0, 0.5) if is_placement_valid else Color(1, 0, 0, 0.5)
+		for m in ghost_block.find_children("*", "CSGBox3D"):
+			m.material.albedo_color = color
+			
+		ghost_block.set_meta("target_cells", target_cells)
 
 func place_held_block():
-	# Yerleştirildi, fizik çarpışmasını geri aç ki grid'in üzerinde dursun
-	for c in held_block.get_children():
-		if c is StaticBody3D:
-			c.collision_layer = 1
-			c.collision_mask = 1
-			
-	held_block.set_meta("placed", true)
+	# Sol üstteki bloğu siluet(ghost) bloğun pozisyonuna doğru uçur (fırlat)
+	var tw = create_tween()
+	var target_global_pos = ghost_block.global_position
+	var target_global_rot = Vector3.ZERO
+	
+	# Bloğu kameradan çıkar, dünyaya ekle ki bağımsız dursun
+	var g_trans = held_block.global_transform
+	remove_child(held_block)
+	get_tree().root.add_child(held_block)
+	held_block.global_transform = g_trans
+	
+	tw.tween_property(held_block, "global_position", target_global_pos, 0.2).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(held_block, "rotation", target_global_rot, 0.2).set_trans(Tween.TRANS_SINE)
+	
+	# Yere inerken tüm çocuk meshleri 1x0.33x1'e yassılaşsın
+	for m in held_block.find_children("*", "CSGBox3D"):
+		tw.tween_property(m, "size:y", m.size.y * 0.33, 0.2).set_trans(Tween.TRANS_SINE)
+		
+	for s in held_block.find_children("*", "CollisionShape3D"):
+		if s.shape is BoxShape3D:
+			s.shape.size.y *= 0.33
+		
+	# Kapladığı bütün hücreleri dolu olarak işaretle
+	if ghost_block.has_meta("target_cells"):
+		var targets = ghost_block.get_meta("target_cells")
+		for t in targets:
+			t.set_meta("dolu", true)
+	
+	var temp_block = held_block
 	held_block = null
+	
+	if ghost_block: 
+		ghost_block.queue_free()
+		ghost_block = null
+		
+	# Yere indiğinde tüm fizik alanlarını aç ki tıklanabilsin (diğer objeler çarpabilsin)
+	tw.tween_callback(func():
+		if temp_block and is_instance_valid(temp_block):
+			for sb in temp_block.find_children("*", "StaticBody3D"):
+				sb.collision_layer = 1
+				sb.collision_mask = 1
+	)
