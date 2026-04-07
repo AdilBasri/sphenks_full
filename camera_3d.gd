@@ -881,6 +881,8 @@ func spawn_block_on_table(block_scene: PackedScene):
 			sb.set_meta("is_block", true)
 			sb.set_meta("block_node", spawned_block)
 		spawned_block.set_meta("placed", false)
+		# Track all spawned blocks for cleanup
+		spawned_block.add_to_group("placed_blocks")
 
 func pick_up_block(block_node):
 	held_block = block_node
@@ -1024,6 +1026,8 @@ func place_held_block():
 	
 	# Bloğa yerleştirildi damgası vur (Artık raycast ile alılamaz!)
 	held_block.set_meta("placed", true)
+	if not held_block.is_in_group("placed_blocks"):
+		held_block.add_to_group("placed_blocks")
 	
 	var temp_block = held_block
 	held_block = null
@@ -1070,31 +1074,31 @@ func place_held_block():
 				is_locked = false
 				
 				# Check if board or a row is full after placement
-				if is_row_complete() or is_grid_full():
+				var g = get_tree().root.find_child("DüşmanGrid" if enemy_placement_mode else "OyuncuGrid", true, false)
+				if is_row_complete(g) or is_grid_full(g):
 					activate_gun()
 				else:
 					switch_turn()
 			)
 		else:
 			# Regular placement check
-			if is_row_complete() or is_grid_full():
+			var g = get_tree().root.find_child("OyuncuGrid", true, false)
+			if is_row_complete(g) or is_grid_full(g):
 				activate_gun()
 			else:
 				switch_turn()
 	)
 
-func is_grid_full() -> bool:
-	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+func is_grid_full(grid: GridOlusturucu) -> bool:
 	if not grid: return false
 	
 	for cell in grid.get_children():
-		if cell.has_method("setup"): # GridHucre identifier
+		if "sutun" in cell: # GridHucre identifier
 			if not cell.has_meta("dolu") or cell.get_meta("dolu") == false:
 				return false
 	return true
 
-func is_row_complete() -> bool:
-	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+func is_row_complete(grid: GridOlusturucu) -> bool:
 	if not grid or not grid.get("hucrelerin_sozlugu"): return false
 	
 	var cells = grid.hucrelerin_sozlugu
@@ -1299,19 +1303,25 @@ func discard_held_block():
 
 func reset_game_round():
 	is_gun_mode = false
+	enemy_placement_mode = false # Reset if turn was skipped or mid-placement
 	
-	# Clear Player Grid
-	var p_grid = get_tree().root.find_child("OyuncuGrid", true, false)
-	if p_grid: p_grid.clear_grid()
+	# Clear both grids (which now uses the 'placed_blocks' group internally)
+	for grid_name in ["OyuncuGrid", "DüşmanGrid"]:
+		var g = get_tree().root.find_child(grid_name, true, false)
+		if g: g.clear_grid()
 	
-	# Clear Enemy Grid
-	var e_grid = get_tree().root.find_child("DüşmanGrid", true, false)
-	if e_grid: e_grid.clear_grid()
-	
-	# Clear any other blocks in root
-	for child in get_tree().root.get_children():
-		if child.has_meta("placed") and child.get_meta("placed"):
-			child.queue_free()
+	# Forced cleanup for any blocks that might have missed grid association
+	for block in get_tree().get_nodes_in_group("placed_blocks"):
+		if is_instance_valid(block):
+			block.queue_free()
+			
+	# Safety: Clear held/ghost blocks if any
+	if held_block:
+		held_block.queue_free()
+		held_block = null
+	if ghost_block:
+		ghost_block.queue_free()
+		ghost_block = null
 			
 	# Return Gun to Table
 	if gun_node:
@@ -1466,12 +1476,16 @@ func find_ai_move(block_node: Node3D, grid: GridOlusturucu) -> Dictionary:
 			for m in block_node.find_children("*", "CollisionShape3D", true, false):
 				var m_local = grid.to_local(m.global_position)
 				var closest_cell = null
+				var min_dist = 999.0
 				
-				# Use dictionary for faster/safer lookup instead of distance to ALL children
-				var s = round((m_local.x + (grid.hucre_boyutu * (grid.sutun_sayisi - 1) / 2.0)) / (grid.hucre_boyutu + grid.bosluk))
-				var r = round((m_local.z + (grid.hucre_boyutu * (grid.satir_sayisi - 1) / 2.0)) / (grid.hucre_boyutu + grid.bosluk))
-				
-				closest_cell = grid.hucrelerin_sozlugu.get(Vector2i(s, r))
+				# Iterate through cells to find the closest one (Symmetry with player logic)
+				for c in grid.get_children():
+					if "sutun" in c:
+						var c_local = grid.to_local(c.global_position)
+						var dist = Vector2(m_local.x, m_local.z).distance_to(Vector2(c_local.x, c_local.z))
+						if dist < min_dist and dist < max_dist:
+							min_dist = dist
+							closest_cell = c
 				
 				if closest_cell and not closest_cell.get_meta("dolu", false):
 					if not target_cells.has(closest_cell):
@@ -1542,37 +1556,19 @@ func ai_place_block(block_node: Node3D, move: Dictionary, grid: GridOlusturucu, 
 	
 	block_node.set_meta("placed", true)
 	block_node.set_meta("occupying_cells", move.target_cells)
+	block_node.add_to_group("placed_blocks")
 	
 	# Small delay before next action
 	await get_tree().create_timer(0.5).timeout
 	
 	if trigger_trash:
 		ai_process_trash_only()
-	elif is_row_complete_on_grid(grid) or is_grid_full_on_grid(grid):
+	elif is_row_complete(grid) or is_grid_full(grid):
 		enemy_shoot_sequence()
 	else:
 		switch_turn()
 
-func is_row_complete_on_grid(grid: GridOlusturucu) -> bool:
-	if not grid or not grid.get("hucrelerin_sozlugu"): return false
-	var cells = grid.hucrelerin_sozlugu
-	for r in range(grid.satir_sayisi):
-		var row_full = true
-		for s in range(grid.sutun_sayisi):
-			var cell = cells.get(Vector2i(s, r))
-			if not cell or not cell.has_meta("dolu") or cell.get_meta("dolu") == false:
-				row_full = false
-				break
-		if row_full: return true
-	return false
-
-func is_grid_full_on_grid(grid: GridOlusturucu) -> bool:
-	if not grid: return false
-	for cell in grid.get_children():
-		if "sutun" in cell:
-			if not cell.has_meta("dolu") or cell.get_meta("dolu") == false:
-				return false
-	return true
+# Removed redundant grid completion check functions (unified with is_row_complete)
 
 func enemy_shoot_sequence():
 	var sitting = get_tree().root.find_child("Sitting", true, false)
@@ -1668,6 +1664,7 @@ func enemy_send_trash_to_player(block_node: Node3D, move_data: Dictionary):
 	# Set occupation
 	block_node.set_meta("placed", true)
 	block_node.set_meta("occupying_cells", move_data.target_cells)
+	block_node.add_to_group("placed_blocks")
 	for t in move_data.target_cells:
 		t.set_meta("dolu", true)
 		

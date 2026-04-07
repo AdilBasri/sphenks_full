@@ -3,10 +3,14 @@ extends Node
 # Preload shaders to ensure they are ready
 const BASE_SHADER = preload("res://Shaders/toon_ps1.gdshader")
 const OUTLINE_SHADER = preload("res://Shaders/toon_ps1_outline.gdshader")
+const BARREL_SHADER = preload("res://Shaders/barrel_distortion.gdshader")
 
 func _ready():
 	# Apply to everything currently in the tree
 	_process_node(get_tree().root)
+	
+	# SETUP GLOBAL OVERLAY (Barrel Distortion)
+	_setup_screen_effects()
 	
 	# Listen for future nodes entering the world
 	get_tree().node_added.connect(_on_node_added)
@@ -69,3 +73,47 @@ func _apply_toon_ps1(mesh: MeshInstance3D):
 
 	# 4. Override
 	mesh.material_override = toon_mat
+
+func _setup_screen_effects():
+	print("[GlobalShaderApplier] Setting up CRT Barrel Distortion Overlay...")
+	# 1. Create a CanvasLayer to ensure it's drawn on top
+	# Special: Adding it to the root window directly to override local viewports
+	var cl = CanvasLayer.new()
+	cl.name = "PostProcessLayer"
+	cl.layer = 150 # Extremely high layer to be on top of EVERYTHING
+	get_tree().root.add_child.call_deferred(cl)
+	
+	# 2. Add a BackBufferCopy just in case for older renderers or complex viewport setups
+	var bbc = BackBufferCopy.new()
+	bbc.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT
+	cl.add_child(bbc)
+	
+	# 3. Create the ColorRect that covers the screen
+	var rect = ColorRect.new()
+	rect.name = "BarrelDistortionOverlay"
+	
+	# Matching viewport size exactly to ensure UV 0.5 is the screen center
+	var update_size = func():
+		rect.size = get_viewport().get_visible_rect().size
+	
+	update_size.call()
+	get_viewport().size_changed.connect(update_size)
+	
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE # Don't block clicking!
+	cl.add_child(rect)
+	
+	# 4. Apply the Barrel Distortion Shader
+	var mat = ShaderMaterial.new()
+	mat.shader = BARREL_SHADER
+	
+	# CRT Preset Values:
+	mat.set_shader_parameter("distortion_strength", 0.15) 
+	mat.set_shader_parameter("scale", 0.95) 
+	mat.set_shader_parameter("scanline_intensity", 0.12)
+	mat.set_shader_parameter("noise_intensity", 0.05)
+	mat.set_shader_parameter("chromatic_aberration", 0.003)
+	mat.set_shader_parameter("vignette_intensity", 0.45)
+	mat.set_shader_parameter("brightness", 1.1)
+	
+	rect.material = mat
+	print("[GlobalShaderApplier] CRT Effect Active.")

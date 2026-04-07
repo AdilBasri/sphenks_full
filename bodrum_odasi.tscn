@@ -288,7 +288,7 @@ transform = Transform3D(-2.1855694e-10, 0, 0.005, 0, 0.005, 0, -0.005, 0, -2.185
 visible = false
 
 [node name="vent" parent="." instance=ExtResource("5_s3ge8")]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 2.2169755, 0.43136078, 0.38480926)
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 2.1498215, 0.43136078, 0.38480926)
 
 [node name="shelves" parent="." instance=ExtResource("6_jlete")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.9043, -1.2045481, 2.256663)

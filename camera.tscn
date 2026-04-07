@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=28 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://c2fcswwmw52l7" path="res://Assets/trash_can/scene.gltf" id="14_w2vvk"]
 [ext_resource type="PackedScene" uid="uid://b2fdkeid834us" path="res://Assets/card/scene.gltf" id="15_f3tc8"]
 [ext_resource type="Texture2D" uid="uid://50tu8f6bkdqr" path="res://Assets/card/L.png" id="16_bi1g6"]
+[ext_resource type="PackedScene" uid="uid://c8ol3v3ugs1om" path="res://Assets/horror_stairway_gameready/scene.gltf" id="18_woum2"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
 _data = {
@@ -55,6 +56,9 @@ font_size = 36
 font_color = Color(1, 0, 0, 1)
 outline_size = 8
 outline_color = Color(0, 0, 0, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bi1g6"]
+size = Vector3(0.54833984, 2.2666626, 5.513794)
 
 [node name="GameRoom" type="Node3D"]
 
@@ -171,6 +175,11 @@ light_energy = 5.0
 
 [node name="OmniLight3D4" type="OmniLight3D" parent="WorldEnvironment"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.68188083, -0.8958916, -1.288084)
+light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
+light_energy = 5.0
+
+[node name="OmniLight3D5" type="OmniLight3D" parent="WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.073132, 0.27785105, 2.3718586)
 light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
 light_energy = 5.0
 
@@ -306,6 +315,31 @@ visible = false
 
 [node name="trash" parent="." instance=ExtResource("14_w2vvk")]
 transform = Transform3D(0.001, 0, 0, 0, 0.001, 0, 0, 0, 0.001, 0.6757211, -1.25, -1.3234996)
+
+[node name="Collisionlar" type="Node3D" parent="."]
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Collisionlar"]
+collision_layer = 255
+collision_mask = 255
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Collisionlar/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9938886, -0.095671415, -1.0236206)
+shape = SubResource("BoxShape3D_bi1g6")
+
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="Collisionlar/StaticBody3D"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.26698852, -0.095671415, 3.3522606)
+shape = SubResource("BoxShape3D_bi1g6")
+
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="Collisionlar/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2872987, -0.095671415, 0.091430664)
+shape = SubResource("BoxShape3D_bi1g6")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="Collisionlar/StaticBody3D"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.1600225, -0.095671415, -3.2010584)
+shape = SubResource("BoxShape3D_bi1g6")
+
+[node name="stairway" parent="." instance=ExtResource("18_woum2")]
+transform = Transform3D(0.007, 0, 0, 0, 0.007, 0, 0, 0, 0.007, 31.277828, -0.72203207, 38.91188)
 
 [editable path="Sitting"]
 [editable path="paravan"]

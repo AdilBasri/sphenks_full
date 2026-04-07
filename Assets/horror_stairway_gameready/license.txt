@@ -1,0 +1,11 @@
+Model Information:
+* title:	Horror stairway gameready
+* source:	https://sketchfab.com/3d-models/horror-stairway-gameready-66108789cdde49329a55ae523c7ef79e
+* author:	Katydid (https://sketchfab.com/Katydid.)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Horror stairway gameready" (https://sketchfab.com/3d-models/horror-stairway-gameready-66108789cdde49329a55ae523c7ef79e) by Katydid (https://sketchfab.com/Katydid.) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
