@@ -5,7 +5,7 @@
 [ext_resource type="Animation" uid="uid://c3w5olixra7ns" path="res://oturma1.res" id="2_eeger"]
 [ext_resource type="Script" uid="uid://wuvldqmhm6c6" path="res://camera_3d.gd" id="4_pbwbf"]
 [ext_resource type="Script" uid="uid://0rccufjia2dw" path="res://grid_generator.gd" id="11_grid"]
-[ext_resource type="Texture2D" uid="uid://be4hi8tsld53t" path="res://Assets/Cursor/Cursor.png" id="11_motcw"]
+[ext_resource type="Texture2D" uid="uid://be4hi8tsld53t" path="res://Assets/cursor/Cursor.png" id="11_motcw"]
 [ext_resource type="PackedScene" uid="uid://b0v0foxqxk1jl" path="res://Assets/cardboard_gun/scene.gltf" id="12_2jv0e"]
 [ext_resource type="PackedScene" uid="uid://dsh2b6624y0hk" path="res://Assets/screen/scene.gltf" id="12_gyfrk"]
 [ext_resource type="PackedScene" uid="uid://cjmioknigrhq5" path="res://Assets/a_table/scene.gltf" id="13_2jv0e"]
