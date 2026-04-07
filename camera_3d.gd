@@ -1442,8 +1442,14 @@ func ai_process_trash_only():
 		switch_turn()
 
 func find_ai_move(block_node: Node3D, grid: GridOlusturucu) -> Dictionary:
+	var possible_moves = []
 	var cell_list = grid.hucrelerin_sozlugu.values()
-	cell_list.shuffle()
+	
+	var is_sabotage = (grid.name == "OyuncuGrid")
+	
+	# Temporary attach to tree to get global transforms
+	if not block_node.is_inside_tree():
+		get_tree().current_scene.add_child(block_node)
 	
 	var b_size = grid.hucre_boyutu
 	var max_dist = b_size / 1.5
@@ -1451,26 +1457,21 @@ func find_ai_move(block_node: Node3D, grid: GridOlusturucu) -> Dictionary:
 	for start_cell in cell_list:
 		for rot_idx in range(4):
 			block_node.rotation_degrees.y = rot_idx * 90
+			block_node.global_position = start_cell.global_position
+			
 			var can_place = true
 			var target_cells = []
 			
-			# Temporary attach to tree to get global transforms
-			if not block_node.is_inside_tree():
-				get_tree().current_scene.add_child(block_node)
-			
+			# Check all parts
 			for m in block_node.find_children("*", "CollisionShape3D", true, false):
-				block_node.global_position = start_cell.global_position
 				var m_local = grid.to_local(m.global_position)
 				var closest_cell = null
-				var min_dist = 999.0
 				
-				for c in grid.get_children():
-					if "sutun" in c:
-						var c_local = grid.to_local(c.global_position)
-						var dist = Vector2(m_local.x, m_local.z).distance_to(Vector2(c_local.x, c_local.z))
-						if dist < min_dist and dist < max_dist:
-							min_dist = dist
-							closest_cell = c
+				# Use dictionary for faster/safer lookup instead of distance to ALL children
+				var s = round((m_local.x + (grid.hucre_boyutu * (grid.sutun_sayisi - 1) / 2.0)) / (grid.hucre_boyutu + grid.bosluk))
+				var r = round((m_local.z + (grid.hucre_boyutu * (grid.satir_sayisi - 1) / 2.0)) / (grid.hucre_boyutu + grid.bosluk))
+				
+				closest_cell = grid.hucrelerin_sozlugu.get(Vector2i(s, r))
 				
 				if closest_cell and not closest_cell.get_meta("dolu", false):
 					if not target_cells.has(closest_cell):
@@ -1480,11 +1481,47 @@ func find_ai_move(block_node: Node3D, grid: GridOlusturucu) -> Dictionary:
 					break
 			
 			if can_place and target_cells.size() > 0:
-				# Detach before returning so it can be handled by the caller
-				if block_node.get_parent(): block_node.get_parent().remove_child(block_node)
-				return {"cell": start_cell, "rotation": block_node.rotation_degrees.y, "target_cells": target_cells}
-	
+				# SCORE THIS MOVE
+				var score = randf() * 10.0 # Some randomness
+				
+				# 1. Row Completion Check
+				var completed_rows = 0
+				for row_idx in range(grid.satir_sayisi):
+					var row_cells = []
+					for col_idx in range(grid.sutun_sayisi):
+						row_cells.append(grid.hucrelerin_sozlugu.get(Vector2i(col_idx, row_idx)))
+					
+					var is_full = true
+					for rc in row_cells:
+						if not rc.get_meta("dolu", false) and not target_cells.has(rc):
+							is_full = false
+							break
+					if is_full: completed_rows += 1
+				
+				score += completed_rows * 500.0
+				
+				# 2. Clumping (if own grid) or Scattering (if trash)
+				for tc in target_cells:
+					for neighbor in [Vector2i(0,1), Vector2i(0,-1), Vector2i(1,0), Vector2i(-1,0)]:
+						var n_coord = Vector2i(tc.sutun, tc.satir) + neighbor
+						var n_cell = grid.hucrelerin_sozlugu.get(n_coord)
+						if n_cell and n_cell.get_meta("dolu", false):
+							score += 20.0 if not is_sabotage else -10.0
+				
+				possible_moves.append({
+					"score": score,
+					"cell": start_cell,
+					"rotation": block_node.rotation_degrees.y,
+					"target_cells": target_cells
+				})
+				
 	if block_node.get_parent(): block_node.get_parent().remove_child(block_node)
+	
+	if possible_moves.size() > 0:
+		possible_moves.sort_custom(func(a, b): return a.score > b.score)
+		print("AI found ", possible_moves.size(), " moves. Top score: ", possible_moves[0].score)
+		return possible_moves[0]
+		
 	return {}
 
 func ai_place_block(block_node: Node3D, move: Dictionary, grid: GridOlusturucu, trigger_trash: bool = false):
@@ -1547,24 +1584,32 @@ func enemy_shoot_sequence():
 		return
 
 	# 1. STAND UP (Geri otur tersten)
-	# Move Sitting node forward to avoid clipping into the wall
-	var sit_tw = create_tween()
-	sit_tw.tween_property(sitting, "global_position:z", sitting.global_position.z + 0.5, 0.5).set_trans(Tween.TRANS_SINE)
+	# User request corrected: x 0, y -1.248, z -2.444
+	var original_sit_pos = sitting.position
+	var shoot_stance_pos = Vector3(0, -1.248, -2.444)
+	
+	var sit_tw = create_tween().set_parallel(true)
+	# Stance coordinates x 0, y -1.248, z -2.444
+	sit_tw.tween_property(sitting, "position", shoot_stance_pos, 0.6).set_trans(Tween.TRANS_SINE)
 	
 	anim_player.play("geri_otur", -1, -2.0, true)
 	await anim_player.animation_finished
 	
-	# 2. TAKE GUN
+	# 2. TAKE GUN (Move to final stance)
+	var final_tw = create_tween()
+	final_tw.tween_property(sitting, "position", shoot_stance_pos, 0.4).set_trans(Tween.TRANS_SINE)
+	
 	anim_player.play("take_gun")
-	# Visually move gun to enemy's general direction
+	# Visually move gun to enemy's general direction (now relative to shoot_stance_pos)
 	var gun_tw = create_tween().set_parallel(true)
-	gun_tw.tween_property(gun_node, "global_position", sitting.global_position + Vector3(0, 1.0, 0.5), 0.5)
+	gun_tw.tween_property(gun_node, "global_position", sitting.global_position + Vector3(0, 0.8, 0.4), 0.5)
 	gun_tw.tween_property(gun_node, "global_rotation", Vector3(0, deg_to_rad(180), 0), 0.5)
 	await anim_player.animation_finished
 
-	# 3. FIRE
+	# 3. FIRE (Delayed check to match animation)
 	anim_player.play("enemy_gun")
-	await get_tree().create_timer(0.4).timeout # Wait for bang moment in animation
+	# We wait a bit longer to ensure the gun "fire" moment is seen
+	await get_tree().create_timer(0.6).timeout
 	
 	# 4. RESULTS
 	var is_hit = (current_chamber_index == bullet_chamber_index)
@@ -1582,9 +1627,7 @@ func enemy_shoot_sequence():
 		
 		# Sit back down
 		var sit_ret_tw = create_tween()
-		sit_ret_tw.tween_property(sitting, "global_position:z", sitting.global_position.z - 0.5, 0.5).set_trans(Tween.TRANS_SINE)
-		
-		anim_player.play("geri_otur")
+		sit_ret_tw.tween_property(sitting, "position", original_sit_pos, 0.6).set_trans(Tween.TRANS_SINE).set_delay(0.2)
 		await anim_player.animation_finished
 		anim_player.play("oturma1")
 		
