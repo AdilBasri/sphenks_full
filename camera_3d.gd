@@ -10,7 +10,10 @@ var start_y: float = 0.0
 var start_x: float = 0.0
 var is_locked: bool = false
 enum PlayerState {SEATED, STANDING, TRANSITIONING}
+enum Turn { PLAYER, ENEMY }
+var current_turn: Turn = Turn.PLAYER
 var current_state: PlayerState = PlayerState.SEATED
+var is_game_over: bool = false
 var seated_position: Vector3
 var seated_body_position: Vector3
 var seated_rotation: Vector3
@@ -109,6 +112,22 @@ func _ready():
 	if sitting:
 		var enemy_anim = sitting.find_child("AnimationPlayer", true, false)
 		if enemy_anim:
+			# Load and register animations
+			var lib = enemy_anim.get_animation_library("")
+			if not lib:
+				lib = AnimationLibrary.new()
+				enemy_anim.add_animation_library("", lib)
+				
+			var anim_otur1 = load("res://oturma1.res")
+			var anim_geri = load("res://geri_otur.res")
+			var anim_take = load("res://take_gun.res")
+			var anim_egun = load("res://enemy_gun.res")
+			
+			if anim_otur1: lib.add_animation("oturma1", anim_otur1)
+			if anim_geri: lib.add_animation("geri_otur", anim_geri)
+			if anim_take: lib.add_animation("take_gun", anim_take)
+			if anim_egun: lib.add_animation("enemy_gun", anim_egun)
+			
 			enemy_anim.get_animation("oturma1").loop_mode = Animation.LOOP_LINEAR
 			enemy_anim.play("oturma1")
 			
@@ -134,6 +153,10 @@ func _ready():
 	setup_viewmodel_overlay()
 	reset_revolver()
 	_setup_enemy_collision()
+	
+	# Reset state if reloaded
+	Engine.time_scale = 1.0
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _setup_enemy_collision():
 	# Find Sitting node and move its collision to a dedicated Layer (Layer 2)
@@ -328,7 +351,11 @@ func _remove_no_depth_recursive(node: Node):
 		_remove_no_depth_recursive(child)
 
 func _input(event):
+	if is_game_over: return
+	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if current_turn != Turn.PLAYER: return # CANNOT ACT DURING ENEMY TURN
+		
 		if is_gun_mode:
 			shoot_gun()
 		elif discard_label and discard_label.visible:
@@ -1045,11 +1072,15 @@ func place_held_block():
 				# Check if board or a row is full after placement
 				if is_row_complete() or is_grid_full():
 					activate_gun()
+				else:
+					switch_turn()
 			)
 		else:
 			# Regular placement check
 			if is_row_complete() or is_grid_full():
 				activate_gun()
+			else:
+				switch_turn()
 	)
 
 func is_grid_full() -> bool:
@@ -1203,11 +1234,15 @@ func shoot_gun():
 			reset_revolver()
 			reset_game_round()
 			stand_up()
+			# No switch turn here, player wins/stands up
 		else:
 			print("BULLET WASTED (MISSED)")
 			# Even if miss, we reset revolver because the bullet is gone
 			reset_revolver()
-			get_tree().create_timer(2.0).timeout.connect(reset_game_round)
+			get_tree().create_timer(2.0).timeout.connect(func():
+				reset_game_round()
+				switch_turn() # Switches to Enemy
+			)
 	else:
 		# EMPTY CHAMBER (advances to next index)
 		current_chamber_index += 1
@@ -1215,7 +1250,10 @@ func shoot_gun():
 			reset_revolver()
 			
 		print("CLICK! Empty chamber. Moving to ", current_chamber_index + 1)
-		reset_game_round()
+		get_tree().create_timer(1.0).timeout.connect(func():
+			reset_game_round()
+			switch_turn() # Switches to Enemy
+		)
 
 func _handle_discard_hover():
 	if not discard_label: return
@@ -1256,6 +1294,8 @@ func discard_held_block():
 	
 	if discard_label:
 		discard_label.visible = false
+	
+	switch_turn()
 
 func reset_game_round():
 	is_gun_mode = false
@@ -1285,7 +1325,7 @@ func reset_game_round():
 		# Reparent back to world
 		var g_trans = gun_node.global_transform
 		if gun_node.get_parent(): gun_node.get_parent().remove_child(gun_node)
-		get_tree().root.add_child(gun_node)
+		get_tree().current_scene.add_child(gun_node)
 		gun_node.global_transform = g_trans
 		
 		var tw = create_tween()
@@ -1345,3 +1385,311 @@ func _apply_gun_glow_recursive(node: Node, active: bool):
 	
 	for child in node.get_children():
 		_apply_gun_glow_recursive(child, active)
+
+func switch_turn():
+	if is_game_over: return
+	
+	if current_turn == Turn.PLAYER:
+		current_turn = Turn.ENEMY
+		print("--- ENEMY TURN ---")
+		start_enemy_turn()
+	else:
+		current_turn = Turn.PLAYER
+		print("--- PLAYER TURN ---")
+
+func start_enemy_turn():
+	await get_tree().create_timer(1.5).timeout # Thinking delay
+	
+	# 20% Chance for trash card to player
+	var target_grid_name = "DüşmanGrid"
+	var is_trash_attempt = (randf() < 0.2)
+	
+	# Determine block scene
+	var scenes = [
+		"res://block_tek.tscn",
+		"res://block_l.tscn",
+		"res://block_t.tscn",
+		"res://block_kare.tscn",
+		"res://block_line.tscn"
+	]
+	var block_scene = load(scenes[randi() % scenes.size()])
+	var temp_block = block_scene.instantiate()
+	
+	var grid = get_tree().root.find_child("DüşmanGrid", true, false)
+	var move = find_ai_move(temp_block, grid)
+	
+	if move.size() > 0:
+		# Always place its own block first
+		ai_place_block(temp_block, move, grid, is_trash_attempt)
+	else:
+		# AI couldn't find a move
+		temp_block.queue_free()
+		if is_trash_attempt:
+			# Even if no regular move, maybe can send trash? 
+			# But usually AI should always have a move early on.
+			ai_process_trash_only()
+		else:
+			switch_turn()
+
+func ai_process_trash_only():
+	var trash_block = load("res://block_cop.tscn").instantiate()
+	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	var move = find_ai_move(trash_block, grid)
+	if move.size() > 0:
+		enemy_send_trash_to_player(trash_block, move)
+	else:
+		trash_block.queue_free()
+		switch_turn()
+
+func find_ai_move(block_node: Node3D, grid: GridOlusturucu) -> Dictionary:
+	var cell_list = grid.hucrelerin_sozlugu.values()
+	cell_list.shuffle()
+	
+	var b_size = grid.hucre_boyutu
+	var max_dist = b_size / 1.5
+	
+	for start_cell in cell_list:
+		for rot_idx in range(4):
+			block_node.rotation_degrees.y = rot_idx * 90
+			var can_place = true
+			var target_cells = []
+			
+			# Temporary attach to tree to get global transforms
+			if not block_node.is_inside_tree():
+				get_tree().current_scene.add_child(block_node)
+			
+			for m in block_node.find_children("*", "CollisionShape3D", true, false):
+				block_node.global_position = start_cell.global_position
+				var m_local = grid.to_local(m.global_position)
+				var closest_cell = null
+				var min_dist = 999.0
+				
+				for c in grid.get_children():
+					if "sutun" in c:
+						var c_local = grid.to_local(c.global_position)
+						var dist = Vector2(m_local.x, m_local.z).distance_to(Vector2(c_local.x, c_local.z))
+						if dist < min_dist and dist < max_dist:
+							min_dist = dist
+							closest_cell = c
+				
+				if closest_cell and not closest_cell.get_meta("dolu", false):
+					if not target_cells.has(closest_cell):
+						target_cells.append(closest_cell)
+				else:
+					can_place = false
+					break
+			
+			if can_place and target_cells.size() > 0:
+				# Detach before returning so it can be handled by the caller
+				if block_node.get_parent(): block_node.get_parent().remove_child(block_node)
+				return {"cell": start_cell, "rotation": block_node.rotation_degrees.y, "target_cells": target_cells}
+	
+	if block_node.get_parent(): block_node.get_parent().remove_child(block_node)
+	return {}
+
+func ai_place_block(block_node: Node3D, move: Dictionary, grid: GridOlusturucu, trigger_trash: bool = false):
+	get_tree().current_scene.add_child(block_node)
+	block_node.global_position = move.cell.global_position
+	block_node.rotation_degrees.y = move.rotation
+	
+	var scale_factor = grid.hucre_boyutu / 0.1
+	block_node.scale = Vector3(scale_factor, scale_factor, scale_factor)
+	
+	for m in block_node.find_children("*", "CSGBox3D"):
+		m.size.y *= 0.33
+	for s in block_node.find_children("*", "CollisionShape3D", true, false):
+		if s.shape is BoxShape3D: s.shape.size.y *= 0.33
+	
+	for t in move.target_cells:
+		t.set_meta("dolu", true)
+	
+	block_node.set_meta("placed", true)
+	block_node.set_meta("occupying_cells", move.target_cells)
+	
+	# Small delay before next action
+	await get_tree().create_timer(0.5).timeout
+	
+	if trigger_trash:
+		ai_process_trash_only()
+	elif is_row_complete_on_grid(grid) or is_grid_full_on_grid(grid):
+		enemy_shoot_sequence()
+	else:
+		switch_turn()
+
+func is_row_complete_on_grid(grid: GridOlusturucu) -> bool:
+	if not grid or not grid.get("hucrelerin_sozlugu"): return false
+	var cells = grid.hucrelerin_sozlugu
+	for r in range(grid.satir_sayisi):
+		var row_full = true
+		for s in range(grid.sutun_sayisi):
+			var cell = cells.get(Vector2i(s, r))
+			if not cell or not cell.has_meta("dolu") or cell.get_meta("dolu") == false:
+				row_full = false
+				break
+		if row_full: return true
+	return false
+
+func is_grid_full_on_grid(grid: GridOlusturucu) -> bool:
+	if not grid: return false
+	for cell in grid.get_children():
+		if "sutun" in cell:
+			if not cell.has_meta("dolu") or cell.get_meta("dolu") == false:
+				return false
+	return true
+
+func enemy_shoot_sequence():
+	var sitting = get_tree().root.find_child("Sitting", true, false)
+	var anim_player = null
+	if sitting: anim_player = sitting.find_child("AnimationPlayer", true, false)
+	
+	if not anim_player:
+		switch_turn()
+		return
+
+	# 1. STAND UP (Geri otur tersten)
+	# Move Sitting node forward to avoid clipping into the wall
+	var sit_tw = create_tween()
+	sit_tw.tween_property(sitting, "global_position:z", sitting.global_position.z + 0.5, 0.5).set_trans(Tween.TRANS_SINE)
+	
+	anim_player.play("geri_otur", -1, -2.0, true)
+	await anim_player.animation_finished
+	
+	# 2. TAKE GUN
+	anim_player.play("take_gun")
+	# Visually move gun to enemy's general direction
+	var gun_tw = create_tween().set_parallel(true)
+	gun_tw.tween_property(gun_node, "global_position", sitting.global_position + Vector3(0, 1.0, 0.5), 0.5)
+	gun_tw.tween_property(gun_node, "global_rotation", Vector3(0, deg_to_rad(180), 0), 0.5)
+	await anim_player.animation_finished
+
+	# 3. FIRE
+	anim_player.play("enemy_gun")
+	await get_tree().create_timer(0.4).timeout # Wait for bang moment in animation
+	
+	# 4. RESULTS
+	var is_hit = (current_chamber_index == bullet_chamber_index)
+	if is_hit:
+		# BLOOD STRIKE ON PLAYER (Camera FX)
+		trigger_player_death()
+	else:
+		# CLICK!
+		current_chamber_index += 1
+		if current_chamber_index >= 6: reset_revolver()
+		
+		# Return Gun
+		var ret_tw = create_tween()
+		ret_tw.tween_property(gun_node, "global_transform", gun_original_transform, 0.5)
+		
+		# Sit back down
+		var sit_ret_tw = create_tween()
+		sit_ret_tw.tween_property(sitting, "global_position:z", sitting.global_position.z - 0.5, 0.5).set_trans(Tween.TRANS_SINE)
+		
+		anim_player.play("geri_otur")
+		await anim_player.animation_finished
+		anim_player.play("oturma1")
+		
+		reset_game_round()
+		switch_turn()
+
+func enemy_send_trash_to_player(block_node: Node3D, move_data: Dictionary):
+	# Paravan opens, player sees trash falling onto their grid
+	print("ENEMY SENDING TRASH...")
+	
+	# 1. Trigger Paravan sequence visually for the player
+	var paravan_node = get_tree().root.find_child("paravan", true, false)
+	var anim_player = null
+	if paravan_node: anim_player = paravan_node.find_child("AnimationPlayer", true, false)
+	
+	if anim_player:
+		var target_anim = "paravan_ac"
+		if not anim_player.has_animation(target_anim):
+			target_anim = anim_player.get_animation_list()[0]
+			
+		anim_player.speed_scale = 2.0
+		anim_player.play(target_anim) 
+		await get_tree().create_timer(0.5).timeout
+		
+	# 2. Spawn Block
+	get_tree().current_scene.add_child(block_node)
+	block_node.global_position = move_data.cell.global_position + Vector3(0, 0.5, 0) # Drop from above
+	block_node.rotation_degrees.y = move_data.rotation
+	var scale_factor = 0.1 # Default scale
+	var p_grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	if p_grid: scale_factor = p_grid.hucre_boyutu / 0.1
+	block_node.scale = Vector3(scale_factor, scale_factor, scale_factor)
+	
+	# Drop Tween
+	var tw = create_tween()
+	tw.tween_property(block_node, "global_position", move_data.cell.global_position, 0.5).set_trans(Tween.TRANS_BOUNCE)
+	
+	# Set occupation
+	block_node.set_meta("placed", true)
+	block_node.set_meta("occupying_cells", move_data.target_cells)
+	for t in move_data.target_cells:
+		t.set_meta("dolu", true)
+		
+	# 3. Close Paravan
+	await get_tree().create_timer(0.5).timeout
+	if anim_player:
+		var target_anim = "paravan_ac"
+		if not anim_player.has_animation(target_anim):
+			target_anim = anim_player.get_animation_list()[0]
+			
+		anim_player.play_backwards(target_anim)
+		await anim_player.animation_finished
+		
+	switch_turn()
+
+func trigger_player_death():
+	is_game_over = true
+	is_locked = true
+	
+	# FALL DOWN
+	var tw = create_tween().set_parallel(true)
+	tw.tween_property(self, "rotation_degrees:z", 75.0, 1.2).set_trans(Tween.TRANS_BOUNCE)
+	tw.tween_property(self, "rotation_degrees:x", 15.0, 1.2).set_trans(Tween.TRANS_BOUNCE)
+	tw.tween_property(self, "position:y", position.y - 0.4, 1.2).set_trans(Tween.TRANS_BOUNCE)
+	
+	# RED BLOOM
+	var control = get_tree().root.find_child("Control", true, false)
+	var red = ColorRect.new()
+	red.color = Color(1, 0, 0, 0)
+	red.set_anchors_preset(Control.PRESET_FULL_RECT)
+	control.add_child(red)
+	tw.tween_property(red, "color:a", 0.6, 0.4)
+	
+	# FADE TO BLACK
+	var black = ColorRect.new()
+	black.color = Color(0, 0, 0, 0)
+	black.set_anchors_preset(Control.PRESET_FULL_RECT)
+	control.add_child(black)
+	
+	tw.set_parallel(false)
+	tw.tween_property(black, "color:a", 1.0, 2.0).set_delay(1.0)
+	
+	tw.tween_callback(setup_death_menu)
+
+func setup_death_menu():
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	var control = get_tree().root.find_child("Control", true, false)
+	
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	# Center it
+	vbox.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	vbox.grow_vertical = Control.GROW_DIRECTION_BOTH
+	control.add_child(vbox)
+	
+	var try_again = Button.new()
+	try_again.text = "TRY AGAIN"
+	try_again.pressed.connect(func(): get_tree().reload_current_scene())
+	vbox.add_child(try_again)
+	
+	var quit = Button.new()
+	quit.text = "QUIT"
+	quit.pressed.connect(func(): get_tree().quit())
+	vbox.add_child(quit)
+	
+	# Styling buttons
+	for b in [try_again, quit]:
+		b.custom_minimum_size = Vector2(200, 60)
