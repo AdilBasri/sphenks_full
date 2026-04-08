@@ -25,11 +25,9 @@ func _process_node(node: Node):
 		if node.layers == 2:
 			return
 		
-		# Skip chess pieces (Pawn folder and related meta/groups)
-		if _is_chess_piece(node):
-			return
-			
-		_apply_toon_ps1(node)
+		# Detect if this mesh belongs to a chess piece (Pawn folder, etc.)
+		var is_piece = _is_chess_piece(node)
+		_apply_toon_ps1(node, is_piece)
 	
 	# Recurse for existing children if needed (mostly for _ready() call)
 	for child in node.get_children():
@@ -40,57 +38,80 @@ func _is_chess_piece(node: Node) -> bool:
 	if node is SatrancTasi or node.is_in_group("satranc_taslari") or node.has_meta("is_chess_piece"):
 		return true
 		
-	# Check the owner (root of the instantiated scene)
-	var owner_node = node.owner
-	if owner_node:
-		if owner_node is SatrancTasi or owner_node.is_in_group("satranc_taslari") or owner_node.has_meta("is_chess_piece"):
+	# Traverse up to find if it belongs to a Pawn scene
+	var p = node
+	while p:
+		if p is SatrancTasi or p.is_in_group("satranc_taslari"):
 			return true
-		if owner_node.scene_file_path.contains("/Pawn/"):
+		var path = p.scene_file_path
+		if path != "" and path.contains("/Pawn/"):
 			return true
+		# Also check node name for common piece names just in case
+		var lower_name = p.name.to_lower()
+		if "white" in lower_name or "black" in lower_name:
+			if "piyon" in lower_name or "bishop" in lower_name or "horse" in lower_name or "castle" in lower_name or "king" in lower_name or "queen" in lower_name:
+				return true
+		p = p.get_parent()
 			
 	return false
 
-func _apply_toon_ps1(mesh: MeshInstance3D):
-	# Skip if we already have this shader (prevents infinite loops if script is re-run)
+func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
+	# Skip if we already have this shader
 	if mesh.material_override and mesh.material_override is ShaderMaterial:
 		if mesh.material_override.shader == BASE_SHADER:
 			return
 
-	# 1. Try to extract original material properties
+	# 1. Extract original material properties
 	var original_material = mesh.get_active_material(0)
 	var tex = null
 	var color = Color.WHITE
 	
-	if original_material is StandardMaterial3D:
-		tex = original_material.albedo_texture
-		color = original_material.albedo_color
-	elif original_material is ORMMaterial3D:
+	if original_material is StandardMaterial3D or original_material is ORMMaterial3D:
 		tex = original_material.albedo_texture
 		color = original_material.albedo_color
 
-	# 2. Create the New Base Material
+	# 2. Configure parameters based on whether it's a piece or environment
+	var jitter = 0.08
+	var resolution = 480.0
+	var steps = 5
+	var dither = 0.35
+	var light_int = 1.0
+	var affine = 0.5
+	
+	if is_piece:
+		# Pieces need much higher clarity and less blowout
+		jitter = 0.015   # Very stable
+		steps = 14       # Much smoother gradients
+		light_int = 0.75 # Prevent white blowout
+		dither = 0.2     # Cleaner look
+		affine = 0.2     # Less texture warping for detail
+		
+		# If it's a white piece (pure white or very bright), tone down the albedo slightly
+		if color.r > 0.9 and color.g > 0.9 and color.b > 0.9:
+			color = Color(0.85, 0.85, 0.85)
+
+	# 3. Create the New Base Material
 	var toon_mat = ShaderMaterial.new()
 	toon_mat.shader = BASE_SHADER
 	toon_mat.set_shader_parameter("albedo_texture", tex)
 	toon_mat.set_shader_parameter("albedo_color", color)
-	toon_mat.set_shader_parameter("jitter_strength", 0.08) # Slightly smoother
-	toon_mat.set_shader_parameter("resolution_scale", 480.0) # Matched to new res
-	toon_mat.set_shader_parameter("color_steps", 5) # Slightly more color depth
-	toon_mat.set_shader_parameter("dither_grain", 0.35) # A bit cleaner
-	toon_mat.set_shader_parameter("affine_warp", 0.5) # Reduced warping for clarity
+	toon_mat.set_shader_parameter("jitter_strength", jitter)
+	toon_mat.set_shader_parameter("resolution_scale", resolution)
+	toon_mat.set_shader_parameter("color_steps", steps)
+	toon_mat.set_shader_parameter("dither_grain", dither)
+	toon_mat.set_shader_parameter("affine_warp", affine)
+	toon_mat.set_shader_parameter("light_intensity", light_int)
 
-	# 3. Create the Outline Material (Next Pass)
+	# 4. Create the Outline Material (Next Pass)
+	# Pieces get a thinner, subtler outline
 	var outline_mat = ShaderMaterial.new()
 	outline_mat.shader = OUTLINE_SHADER
-	outline_mat.set_shader_parameter("outline_color", Color.BLACK * 0.5) # Murky outline
-	outline_mat.set_shader_parameter("outline_width", 1.2)
-	outline_mat.set_shader_parameter("jitter_strength", 0.1)
+	outline_mat.set_shader_parameter("outline_color", Color.BLACK * (0.3 if is_piece else 0.5))
+	outline_mat.set_shader_parameter("outline_width", 0.6 if is_piece else 1.2)
+	outline_mat.set_shader_parameter("jitter_strength", jitter)
 	outline_mat.set_shader_parameter("resolution_scale", 256.0)
 
-	# Attach outline as a next pass
 	toon_mat.next_pass = outline_mat
-
-	# 4. Override
 	mesh.material_override = toon_mat
 
 func _setup_screen_effects():

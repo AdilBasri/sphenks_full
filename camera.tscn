@@ -186,8 +186,8 @@ transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0.19101596, 1.0415931, 0.1361
 [node name="light3" parent="WorldEnvironment" instance=ExtResource("7_2jv0e")]
 transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, -0.1290336, 0.9348762, 2.647094)
 
-[node name="Sketchfab_Scene" parent="WorldEnvironment" instance=ExtResource("8_bbdvs")]
-transform = Transform3D(0.5819385, 0, 0.14610806, 0, 0.59999996, 0, -0.14610806, 0, 0.5819385, -0.3470999, -0.70473886, -1.6800722)
+[node name="candles" parent="WorldEnvironment" instance=ExtResource("8_bbdvs")]
+transform = Transform3D(0.5819385, 0, 0.14610806, 0, 0.59999996, 0, -0.14610806, 0, 0.5819385, -0.3470999, -0.70473886, -1.7271398)
 
 [node name="CharacterBody3D" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11820468, -3.558596)
@@ -208,7 +208,7 @@ sutun_sayisi = 5
 satir_sayisi = 5
 hucre_boyutu = 0.1
 bosluk = 0.01
-renk_ana = Color(0.30980393, 0.5294118, 0.5647059, 1)
+renk_ana = Color(0.5411765, 0.5294118, 0.5647059, 1)
 renk_alternatif = Color(0.29586652, 0.2958665, 0.2958665, 1)
 
 [node name="Grid" type="Node3D" parent="."]

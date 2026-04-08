@@ -8,6 +8,7 @@ uniform float resolution_scale : hint_range(16.0, 1024.0) = 256.0;
 uniform int color_steps : hint_range(2, 32) = 4;
 uniform float dither_grain : hint_range(0.0, 1.0) = 0.45;
 uniform float affine_warp : hint_range(0.0, 1.0) = 0.8; // PS1 texture "swimming"
+uniform float light_intensity : hint_range(0.0, 2.0) = 1.0;
 
 // Bayer 4x4 matrix for PS1-style dithering
 const mat4 bayer_matrix = mat4(
@@ -73,5 +74,5 @@ void light() {
     // Step the lighting (Even more aggressive steps)
     float light_ramp = floor(dot_nl * float(color_steps)) / float(color_steps);
     
-    DIFFUSE_LIGHT += light_ramp * ATTENUATION * LIGHT_COLOR;
+    DIFFUSE_LIGHT += light_ramp * ATTENUATION * LIGHT_COLOR * light_intensity;
 }
