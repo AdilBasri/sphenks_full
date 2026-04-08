@@ -202,9 +202,6 @@ transform = Transform3D(1, 0, 0, 0, 0.95325404, 0.30217025, 0, -0.30217025, 0.95
 fov = 80.0
 script = ExtResource("4_pbwbf")
 
-[node name="Node3D" parent="CharacterBody3D" instance=ExtResource("11_f3tc8")]
-transform = Transform3D(-0.9012579, 0.040870205, 0.43135104, 0.013106489, 0.99765724, -0.06714284, -0.4330846, -0.054859504, -0.8996821, 0.109349936, -0.388945, 1.9613422)
-
 [node name="OyuncuGrid" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7, -1.9395472)
 script = ExtResource("11_grid")
@@ -307,6 +304,10 @@ transform = Transform3D(0.44068, 0, 0, 0, 0.9397346, -0.34190482, 0, 0.34190482,
 
 [node name="LockS" parent="box/Sketchfab_model/Root/BoiteA" index="2"]
 transform = Transform3D(0.14656, 0, 0, 0, 0.010498764, 0.06660159, 0, -0.0074957297, 0.09328437, -0.00055, -2.02035, 0.05038)
+
+[node name="Node3D" parent="." instance=ExtResource("11_f3tc8")]
+transform = Transform3D(-0.9012579, 0.040870205, 0.43135104, 0.013106489, 0.99765724, -0.06714284, -0.4330846, -0.054859504, -0.8996821, 0.109349936, -0.5071497, -1.5972537)
+visible = false
 
 [editable path="Sitting"]
 [editable path="box"]

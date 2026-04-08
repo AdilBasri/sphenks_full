@@ -288,10 +288,10 @@ func pick_up_piece(piece: Node3D, scene_path: String):
 	# Taşı kameraya "bağlayalım"
 	held_piece.reparent(self)
 	
-	# Kullanıcının manuel olarak ayarlayıp ekran görüntüsünü attığı tam değerler:
-	held_piece.position = Vector3(0.109, -0.389, 1.961) 
+	# Kullanıcının istediği "yakın ve büyük" görünüm için optimize edilmiş değerler:
+	held_piece.position = Vector3(0.4, -0.4, -0.6) 
 	held_piece.rotation_degrees = Vector3(3.8, 154.4, 0.8)
-	held_piece.scale = Vector3(1.0, 1.0, 1.0) # Ekran görüntüsünde scale 1.0 görünüyor
+	held_piece.scale = Vector3(7.0, 7.0, 7.0)
 
 func _process_placement_preview():
 	var space_state = get_world_3d().direct_space_state

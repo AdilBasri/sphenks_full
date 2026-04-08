@@ -88,13 +88,13 @@ func spawn_random_white_piece():
 	# Kutudan yükselme
 	piece.global_position = box.global_position + Vector3(0, 0.4, 0)
 	
-	# Oyuncunun önüne (Seçilen açıya) gelme animasyonu
-	var target_pos = camera.global_position + (camera.global_transform.basis.x * 0.109) + (camera.global_transform.basis.y * -0.389) + (camera.global_transform.basis.z * 1.961)
+	# Oyuncunun önüne (Yeni yakın ve büyük açı) gelme animasyonu
+	var target_pos = camera.global_position + (camera.global_transform.basis.x * 0.4) + (camera.global_transform.basis.y * -0.4) + (camera.global_transform.basis.z * -0.6)
 	
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(piece, "global_position", target_pos, 1.5).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
 	tween.tween_property(piece, "rotation_degrees", camera.rotation_degrees + Vector3(3.8, 154.4, 0.8), 1.5)
-	tween.tween_property(piece, "scale", Vector3(1.0, 1.0, 1.0), 1.5)
+	tween.tween_property(piece, "scale", Vector3(7.0, 7.0, 7.0), 1.5)
 	
 	await tween.finished
 	
