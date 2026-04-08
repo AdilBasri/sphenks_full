@@ -28,6 +28,10 @@ var shake_intensity: float = 0.0
 var shake_duration: float = 0.0
 var shake_offset: Vector3 = Vector3.ZERO
 
+var held_piece: Node3D = null
+var held_piece_scene: String = ""
+var last_highlighted_cell: GridHucre = null
+
 func _ready():
 	# Capture mouse (HIDE)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -126,7 +130,18 @@ func _input(event):
 	if is_game_over: return
 	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		interact_with_crosshair()
+		if held_piece:
+			place_held_piece()
+		else:
+			interact_with_crosshair()
+	
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_G: # 'G' tuşu ile kutuyu açalım (Test için)
+			var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+			if manager: 
+				manager.start_chest_sequence()
+			else:
+				print("OyunYoneticisi bulunamadı!")
 
 	if is_locked: return
 	if event is InputEventMouseMotion:
@@ -179,6 +194,9 @@ func _process(_delta):
 	
 	if current_state == PlayerState.STANDING:
 		_process_chair_interaction()
+	
+	if held_piece:
+		_process_placement_preview()
 
 func _physics_process(_delta):
 	if current_state == PlayerState.STANDING:
@@ -247,6 +265,85 @@ func interact_with_crosshair():
 		var collider = result.collider
 		if collider.has_meta("is_chair"):
 			sit_down()
+		elif is_node_part_of_box(collider):
+			print("Kutu tıklandı: ", collider.name)
+			var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+			if manager: 
+				manager.start_chest_sequence()
+			else:
+				print("OyunYoneticisi bulunamadı!")
+		else:
+			print("Tıklanan obje: ", collider.name)
+		
+		if collider.has_meta("is_grid_cell"):
+			var hucre = collider.get_meta("grid_cell_node")
+			if hucre.mevcut_tas:
+				print("Taş seçildi: %s (%s, %d, %d)" % [hucre.mevcut_tas.name, "Beyaz" if hucre.mevcut_tas.get("renk") == 0 else "Siyah", hucre.sutun, hucre.satir])
+			else:
+				print("Boş hücre: (%d, %d)" % [hucre.sutun, hucre.satir])
+
+func pick_up_piece(piece: Node3D, scene_path: String):
+	held_piece = piece
+	held_piece_scene = scene_path
+	# Taşı kameraya "bağlayalım" (görsel olarak)
+	held_piece.reparent(self)
+	held_piece.position = Vector3(0.5, -0.4, -1.0) # Sağ alt köşe
+	held_piece.rotation = Vector3.ZERO
+
+func _process_placement_preview():
+	var space_state = get_world_3d().direct_space_state
+	var v_size = get_viewport().get_visible_rect().size
+	var center = v_size / 2.0
+	var origin = project_ray_origin(center)
+	var end = origin + project_ray_normal(center) * ray_length
+	var query = PhysicsRayQueryParameters3D.create(origin, end)
+	var result = space_state.intersect_ray(query)
+	
+	if last_highlighted_cell:
+		last_highlighted_cell.set_highlight(false)
+		last_highlighted_cell.set_preview_piece("")
+		last_highlighted_cell = null
+		
+	if result:
+		var collider = result.collider
+		if collider.has_meta("is_grid_cell"):
+			var hucre = collider.get_meta("grid_cell_node")
+			if not hucre.mevcut_tas:
+				hucre.set_highlight(true, Color(0, 1, 0, 0.4)) # Yeşil önizleme
+				hucre.set_preview_piece(held_piece_scene)
+				last_highlighted_cell = hucre
+
+func is_node_part_of_box(node: Node) -> bool:
+	var current = node
+	while current and current != get_tree().root:
+		if "box" in current.name.to_lower():
+			return true
+		current = current.get_parent()
+	return false
+
+func place_held_piece():
+	if not last_highlighted_cell: return
+	
+	var target_hucre = last_highlighted_cell
+	var target_pos = target_hucre.global_position
+	
+	# Taşı grid'e taşıyalım
+	held_piece.reparent(get_tree().root)
+	
+	var tween = create_tween()
+	tween.tween_property(held_piece, "global_position", target_pos, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(held_piece, "scale", Vector3(1, 1, 1), 0.5)
+	
+	target_hucre.mevcut_tas = held_piece
+	held_piece = null
+	held_piece_scene = ""
+	
+	# Hücredeki önizlemeyi temizle
+	target_hucre.set_preview_piece("")
+	target_hucre.set_highlight(false)
+	last_highlighted_cell = null
+	
+	print("Taş yerleştirildi.")
 
 func apply_shake(intensity: float, duration: float):
 	shake_intensity = intensity

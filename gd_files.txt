@@ -1,0 +1,5 @@
+./camera_3d.gd
+./satranc_tasi.gd
+./grid_generator.gd
+./Shaders/GlobalShaderApplier.gd
+./grid_hucre.gd

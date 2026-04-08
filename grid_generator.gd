@@ -31,6 +31,10 @@ func _ready() -> void:
 	# Grid koordinatlarını konsola yazdır (Oyun başladığında)
 	if not Engine.is_editor_hint():
 		print_grid_coords()
+		# Taşları bulup gridle ilişkilendirelim
+		# Biraz bekliyoruz ki sahnede her şey tam yüklensin
+		await get_tree().create_timer(0.1).timeout
+		taslari_gridle_eslestir()
 
 func olustur_grid() -> void:
 	if not is_inside_tree(): return
@@ -70,4 +74,45 @@ func print_grid_coords() -> void:
 	print("---------------------------------")
 func clear_grid() -> void:
 	for hucre in hucrelerin_sozlugu.values():
-		hucre.set_meta("dolu", false)
+		hucre.mevcut_tas = null
+
+func taslari_gridle_eslestir() -> void:
+	print("--- Taşlar Gridle Eşleştiriliyor ---")
+	
+	# Sahnedeki TÜM satranç taşlarını bulalım. 
+	# Önce gruptakilere bakalım (en hızlısı)
+	var taslar = get_tree().get_nodes_in_group("satranc_taslari")
+	
+	# Eğer grup boşsa veya bazı taşlar eksikse, sahne ağacını tamamen tarayalım
+	# Not: get_parent() yerine ana sahne köküne kadar çıkabiliriz.
+	var ana_sahne = get_tree().current_scene
+	if ana_sahne:
+		# Sahnedeki tüm node'ları gezerek isim-tabanlı veya script-tabanlı bulalım
+		var tum_node_lar = ana_sahne.find_children("*", "Node3D", true, false)
+		for node in tum_node_lar:
+			if node in taslar: continue # Zaten gruptan bulduysak atla
+			
+			var lower_name = node.name.to_lower()
+			if "black" in lower_name or "white" in lower_name or node.has_meta("is_chess_piece") or node is SatrancTasi:
+				taslar.append(node)
+	
+	for tas in taslar:
+		var en_yakin_hucre: GridHucre = null
+		var en_yakin_mesafe: float = 9999.0
+		
+		# Her bir taş için en yakın hücreyi bul
+		for hucre in hucrelerin_sozlugu.values():
+			var mesafe = tas.global_position.distance_to(hucre.global_position)
+			if mesafe < en_yakin_mesafe:
+				en_yakin_mesafe = mesafe
+				en_yakin_hucre = hucre
+		
+		# Eğer mesafe makul ise (hücre boyutunun yarısından azsa) oraya yerleştir
+		if en_yakin_hucre and en_yakin_mesafe < hucre_boyutu:
+			en_yakin_hucre.mevcut_tas = tas
+			# Taşı hücrenin tam merkezine hizala (Opsiyonel ama temiz durur)
+			tas.global_position.x = en_yakin_hucre.global_position.x
+			tas.global_position.z = en_yakin_hucre.global_position.z
+			print("- %s -> (%d, %d) hücresine yerleşti." % [tas.name, en_yakin_hucre.sutun, en_yakin_hucre.satir])
+	
+	print("---------------------------------")
