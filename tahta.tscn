@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://blrq6p0010bbs"]
+
+[ext_resource type="PackedScene" uid="uid://blmos5l4r0hrw" path="res://Assets/chess/scene.gltf" id="1_w3ynk"]
+
+[node name="Sketchfab_Scene" instance=ExtResource("1_w3ynk")]
+
+[node name="Bishop WHITE_0" parent="Sketchfab_model/root/GLTF_SceneRootNode" index="0"]
+transform = Transform3D(-0.99993825, 0, 0.011110768, 0, 1, 0, -0.011110768, 0, -0.99993825, 0.089999996, 0.16478817, 0.21)
+
+[node name="Castle WHITE_1" parent="Sketchfab_model/root/GLTF_SceneRootNode" index="1"]
+transform = Transform3D(-0.99993825, 0, 0.011110768, 0, 1, 0, -0.011110768, 0, -0.99993825, 0.21, 0.17681742, 0.21)
+
+[node name="King WHITE_2" parent="Sketchfab_model/root/GLTF_SceneRootNode" index="2"]
+transform = Transform3D(-0.99993825, 0, 0.011110768, 0, 1, 0, -0.011110768, 0, -0.99993825, 0.03, 0.17970684, 0.21)
+
+[node name="Knight WHITE_3" parent="Sketchfab_model/root/GLTF_SceneRootNode" index="3"]
+transform = Transform3D(-0.99993825, 0, 0.011110768, 0, 1, 0, -0.011110768, 0, -0.99993825, 0.14999999, 0.17573182, 0.21)
+
+[node name="Object_37" parent="Sketchfab_model/root/GLTF_SceneRootNode/Board_16" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0012020767, 0, 9.7736716e-05)

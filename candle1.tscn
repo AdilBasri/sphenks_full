@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=3 uid="uid://b5mlgov7d0c4n"]
+
+[ext_resource type="PackedScene" uid="uid://blw4ymtsh4brt" path="res://Assets/candle1/scene.gltf" id="1_ekqw7"]
+
+[node name="Sketchfab_Scene" instance=ExtResource("1_ekqw7")]
+
+[node name="mesh_6" parent="Sketchfab_model/root/GLTF_SceneRootNode/Flame_3_6" index="0"]
+blend_shapes/morph_0 = 1.0
+
+[node name="mesh_7" parent="Sketchfab_model/root/GLTF_SceneRootNode/Flame_2_7" index="0"]
+blend_shapes/morph_0 = 1.0
+
+[node name="mesh_8" parent="Sketchfab_model/root/GLTF_SceneRootNode/Flame_1_8" index="0"]
+blend_shapes/morph_0 = 1.0
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05439903, 0.16933, -0.03502047)
+light_color = Color(1, 0.53333336, 0.29411766, 1)
+light_energy = 0.5
+
+[node name="OmniLight3D3" type="OmniLight3D" parent="." index="3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.06493016, 0.09737001, 0.055703536)
+light_color = Color(1, 0.53333336, 0.29411766, 1)
+light_energy = 0.5
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="." index="4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05033219, 0.19854254, -0.0005975254)
+light_color = Color(1, 0.53333336, 0.29411766, 1)

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Crocodile Light
+* source:	https://sketchfab.com/3d-models/crocodile-light-f999868f2aef4ddaa5c4e5341fec1c06
+* author:	Lucy Greenhill (https://sketchfab.com/Leafalu)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Crocodile Light" (https://sketchfab.com/3d-models/crocodile-light-f999868f2aef4ddaa5c4e5341fec1c06) by Lucy Greenhill (https://sketchfab.com/Leafalu) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
