@@ -8,15 +8,17 @@ var boyut: float = 1.0
 var mevcut_tas: Node3D = null # Bu hücredeki satranç taşı
 var highlight_mesh: MeshInstance3D = null
 var preview_tas: Node3D = null # Önizleme için geçici taş
+var hucre_rengi: Color = Color(0.8, 0.8, 0.8)
 
 func _ready() -> void:
 	# Bu hücrenin görselini oluşturur.
 	refresh_visuals()
 
-func setup(p_sutun: int, p_satir: int, p_boyut: float = 1.0) -> void:
+func setup(p_sutun: int, p_satir: int, p_boyut: float = 1.0, p_renk: Color = Color(0.8, 0.8, 0.8)) -> void:
 	sutun = p_sutun
 	satir = p_satir
 	boyut = p_boyut
+	hucre_rengi = p_renk
 	name = "Hucre_%d_%d" % [sutun, satir]
 	refresh_visuals()
 
@@ -57,7 +59,7 @@ func refresh_visuals() -> void:
 	surface_plane.size = Vector2(boyut * 0.95, boyut * 0.95)
 	surface_mesh.mesh = surface_plane
 	var surface_mat = StandardMaterial3D.new()
-	surface_mat.albedo_color = Color(0.8, 0.8, 0.8)
+	surface_mat.albedo_color = hucre_rengi
 	surface_mesh.material_override = surface_mat
 	surface_mesh.position.y = 0.001 
 	add_child(surface_mesh)

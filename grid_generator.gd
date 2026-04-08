@@ -21,6 +21,22 @@ class_name GridOlusturucu
 	set(v):
 		bosluk = v
 		olustur_grid()
+		
+@export_group("Görünüm")
+@export var damali_aktif: bool = true:
+	set(v):
+		damali_aktif = v
+		olustur_grid()
+
+@export var renk_ana: Color = Color(0.8, 0.8, 0.8):
+	set(v):
+		renk_ana = v
+		olustur_grid()
+
+@export var renk_alternatif: Color = Color(0.4, 0.4, 0.4):
+	set(v):
+		renk_alternatif = v
+		olustur_grid()
 
 var hucrelerin_sozlugu: Dictionary = {}
 
@@ -54,8 +70,14 @@ func olustur_grid() -> void:
 	for s in range(sutun_sayisi):
 		for r in range(satir_sayisi):
 			var hucre = GridHucre.new()
-			# Setup çağrısında boyutu da geçiyoruz!
-			hucre.setup(s, r, hucre_boyutu)
+			
+			# Renk seçimi (Damalı desen)
+			var renk = renk_ana
+			if damali_aktif and (s + r) % 2 == 1:
+				renk = renk_alternatif
+				
+			# Setup çağrısında boyutu ve rengi de geçiyoruz!
+			hucre.setup(s, r, hucre_boyutu, renk)
 			add_child(hucre)
 			
 			# Pozisyonu ayarla (merkezli)

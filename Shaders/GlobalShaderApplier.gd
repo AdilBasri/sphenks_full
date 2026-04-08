@@ -22,14 +22,33 @@ func _process_node(node: Node):
 	# Only target 3D meshes
 	if node is MeshInstance3D:
 		# Layer 2 is reserved for Viewmodels (Gun/Cards)
-		# We preserve the original look if it's already set to Layer 2
 		if node.layers == 2:
 			return
+		
+		# Skip chess pieces (Pawn folder and related meta/groups)
+		if _is_chess_piece(node):
+			return
+			
 		_apply_toon_ps1(node)
 	
 	# Recurse for existing children if needed (mostly for _ready() call)
 	for child in node.get_children():
 		_process_node(child)
+
+func _is_chess_piece(node: Node) -> bool:
+	# Check the node itself
+	if node is SatrancTasi or node.is_in_group("satranc_taslari") or node.has_meta("is_chess_piece"):
+		return true
+		
+	# Check the owner (root of the instantiated scene)
+	var owner_node = node.owner
+	if owner_node:
+		if owner_node is SatrancTasi or owner_node.is_in_group("satranc_taslari") or owner_node.has_meta("is_chess_piece"):
+			return true
+		if owner_node.scene_file_path.contains("/Pawn/"):
+			return true
+			
+	return false
 
 func _apply_toon_ps1(mesh: MeshInstance3D):
 	# Skip if we already have this shader (prevents infinite loops if script is re-run)
