@@ -1,15 +1,16 @@
-[gd_scene load_steps=24 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=25 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
-[ext_resource type="Script" path="res://OyunYoneticisi.gd" id="1_w2vvk"]
+[ext_resource type="Script" uid="uid://bnwkp11hmc7n" path="res://OyunYoneticisi.gd" id="1_w2vvk"]
 [ext_resource type="Animation" uid="uid://c3w5olixra7ns" path="res://oturma1.res" id="2_eeger"]
 [ext_resource type="Animation" uid="uid://bvdvopdnjdm5w" path="res://enemy_gun.res" id="4_bi1g6"]
 [ext_resource type="Script" uid="uid://wuvldqmhm6c6" path="res://camera_3d.gd" id="4_pbwbf"]
 [ext_resource type="Animation" uid="uid://b70e1rtqi4x57" path="res://geri_otur.res" id="5_woum2"]
 [ext_resource type="Animation" uid="uid://chhb1wxyk0mns" path="res://take_gun.res" id="6_aw76i"]
 [ext_resource type="PackedScene" uid="uid://wouv23y55lsa" path="res://Assets/light/scene.gltf" id="7_2jv0e"]
-[ext_resource type="PackedScene" uid="uid://b5mlgov7d0c4n" path="res://candle1.tscn" id="8_bbdvs"]
+[ext_resource type="PackedScene" path="res://candle1.tscn" id="8_bbdvs"]
+[ext_resource type="PackedScene" path="res://king_white.tscn" id="11_f3tc8"]
 [ext_resource type="Script" uid="uid://0rccufjia2dw" path="res://grid_generator.gd" id="11_grid"]
 [ext_resource type="Texture2D" uid="uid://dqardmtjbbmbf" path="res://Assets/cursor/Cursor.png" id="11_motcw"]
 [ext_resource type="PackedScene" uid="uid://berst0pur28ff" path="res://Assets/chair/scene.gltf" id="14_bbdvs"]
@@ -197,9 +198,12 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.7267997, 2.163490
 shape = SubResource("CapsuleShape3D_6acwk")
 
 [node name="Camera3D" type="Camera3D" parent="CharacterBody3D"]
-transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, -0.31322035, 2.0847573)
+transform = Transform3D(1, 0, 0, 0, 0.95325404, 0.30217025, 0, -0.30217025, 0.95325404, 0, -0.31322035, 2.0847573)
 fov = 80.0
 script = ExtResource("4_pbwbf")
+
+[node name="Node3D" parent="CharacterBody3D" instance=ExtResource("11_f3tc8")]
+transform = Transform3D(-0.9012579, 0.040870205, 0.43135104, 0.013106489, 0.99765724, -0.06714284, -0.4330846, -0.054859504, -0.8996821, 0.109349936, -0.388945, 1.9613422)
 
 [node name="OyuncuGrid" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7, -1.9395472)

@@ -285,10 +285,13 @@ func interact_with_crosshair():
 func pick_up_piece(piece: Node3D, scene_path: String):
 	held_piece = piece
 	held_piece_scene = scene_path
-	# Taşı kameraya "bağlayalım" (görsel olarak)
+	# Taşı kameraya "bağlayalım"
 	held_piece.reparent(self)
-	held_piece.position = Vector3(0.5, -0.4, -1.0) # Sağ alt köşe
-	held_piece.rotation = Vector3.ZERO
+	
+	# Kullanıcının manuel olarak ayarlayıp ekran görüntüsünü attığı tam değerler:
+	held_piece.position = Vector3(0.109, -0.389, 1.961) 
+	held_piece.rotation_degrees = Vector3(3.8, 154.4, 0.8)
+	held_piece.scale = Vector3(1.0, 1.0, 1.0) # Ekran görüntüsünde scale 1.0 görünüyor
 
 func _process_placement_preview():
 	var space_state = get_world_3d().direct_space_state
@@ -330,9 +333,10 @@ func place_held_piece():
 	# Taşı grid'e taşıyalım
 	held_piece.reparent(get_tree().root)
 	
-	var tween = create_tween()
+	var tween = create_tween().set_parallel(true)
 	tween.tween_property(held_piece, "global_position", target_pos, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_property(held_piece, "scale", Vector3(1, 1, 1), 0.5)
+	tween.tween_property(held_piece, "rotation_degrees", Vector3.ZERO, 0.5)
 	
 	target_hucre.mevcut_tas = held_piece
 	held_piece = null
