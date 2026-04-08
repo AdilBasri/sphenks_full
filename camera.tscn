@@ -11,8 +11,8 @@
 [ext_resource type="PackedScene" uid="uid://b5mlgov7d0c4n" path="res://candle1.tscn" id="8_bbdvs"]
 [ext_resource type="Script" uid="uid://0rccufjia2dw" path="res://grid_generator.gd" id="11_grid"]
 [ext_resource type="Texture2D" uid="uid://dqardmtjbbmbf" path="res://Assets/cursor/Cursor.png" id="11_motcw"]
-[ext_resource type="PackedScene" uid="uid://dmup7thn7lreb" path="res://Assets/pouch/scene.gltf" id="12_gyfrk"]
 [ext_resource type="PackedScene" uid="uid://berst0pur28ff" path="res://Assets/chair/scene.gltf" id="14_bbdvs"]
+[ext_resource type="PackedScene" uid="uid://bthkggqs1ca4q" path="res://Assets/box/scene.gltf" id="14_w2vvk"]
 [ext_resource type="PackedScene" uid="uid://c8ol3v3ugs1om" path="res://Assets/horror_stairway_gameready/scene.gltf" id="18_woum2"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
@@ -185,7 +185,7 @@ transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0.19101596, 1.0415931, 0.1361
 transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, -0.1290336, 0.9348762, 2.647094)
 
 [node name="Sketchfab_Scene" parent="WorldEnvironment" instance=ExtResource("8_bbdvs")]
-transform = Transform3D(0.5819385, 0, 0.14610806, 0, 0.59999996, 0, -0.14610806, 0, 0.5819385, -0.3470999, -0.70473886, -1.8506469)
+transform = Transform3D(0.5819385, 0, 0.14610806, 0, 0.59999996, 0, -0.14610806, 0, 0.5819385, -0.3470999, -0.70473886, -1.6800722)
 
 [node name="CharacterBody3D" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11820468, -3.558596)
@@ -291,7 +291,8 @@ shape = SubResource("BoxShape3D_bi1g6")
 [node name="stairway" parent="." instance=ExtResource("18_woum2")]
 transform = Transform3D(0.007, 0, 0, 0, 0.007, 0, 0, 0, 0.007, 31.277828, -0.72203207, 38.91188)
 
-[node name="pouch" parent="." instance=ExtResource("12_gyfrk")]
-transform = Transform3D(0.0075542307, 0, -0.0026331746, 0, 0.008, 0, 0.0026331746, 0, 0.0075542307, -0.3476847, -0.70201695, -1.6437331)
+[node name="box" parent="." instance=ExtResource("14_w2vvk")]
+transform = Transform3D(0.034878254, 0, 0.49878204, 0, 0.5, 0, -0.49878204, 0, 0.034878254, -0.35025346, -0.7010992, -1.9459783)
 
 [editable path="Sitting"]
+[editable path="box"]
