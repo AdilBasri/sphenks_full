@@ -7,6 +7,7 @@ extends Camera3D
 var yaw: float = 0.0
 var pitch: float = 0.0
 var start_y: float = 0.0
+
 var start_x: float = 0.0
 var is_locked: bool = false
 enum PlayerState {SEATED, STANDING, TRANSITIONING}
