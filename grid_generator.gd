@@ -71,12 +71,3 @@ func print_grid_coords() -> void:
 func clear_grid() -> void:
 	for hucre in hucrelerin_sozlugu.values():
 		hucre.set_meta("dolu", false)
-	
-	# Find and remove blocks associated with this grid using the global 'placed_blocks' group
-	var placed_blocks = get_tree().get_nodes_in_group("placed_blocks")
-	for block in placed_blocks:
-		if is_instance_valid(block) and block.has_meta("occupying_cells"):
-			var cells = block.get_meta("occupying_cells")
-			# If the block occupies any cell belonging to THIS grid, remove it
-			if cells.size() > 0 and is_instance_valid(cells[0]) and cells[0].get_parent() == self:
-				block.queue_free()

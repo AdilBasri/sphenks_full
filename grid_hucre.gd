@@ -15,7 +15,6 @@ func setup(p_sutun: int, p_satir: int, p_boyut: float = 1.0) -> void:
 	satir = p_satir
 	boyut = p_boyut
 	name = "Hucre_%d_%d" % [sutun, satir]
-	set_meta("dolu", false)
 	refresh_visuals()
 
 func refresh_visuals() -> void:
