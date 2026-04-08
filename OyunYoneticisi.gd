@@ -85,22 +85,61 @@ func spawn_random_white_piece():
 	var piece = piece_scene.instantiate()
 	get_tree().root.add_child(piece)
 	
-	# Kutudan yükselme
-	piece.global_position = box.global_position + Vector3(0, 0.4, 0)
+	# Adım 1: Taşı tam olarak sandığın merkezinde oluşturalım
+	piece.global_position = box.global_position
+	piece.scale = Vector3(0.1, 0.1, 0.1) # Sandıktan çıkarken başta küçük olsun
 	
-	# Oyuncunun önüne (Yeni yakın ve büyük açı) gelme animasyonu
-	var target_pos = camera.global_position + (camera.global_transform.basis.x * 0.4) + (camera.global_transform.basis.y * -0.4) + (camera.global_transform.basis.z * -0.6)
+	# ÖNEMLİ: Taşın her şeyin üzerinde görünmesi için materyal ayarlarını hemen yapalım
+	set_piece_render_priority(piece, 100, true)
 	
-	var tween = create_tween().set_parallel(true)
-	tween.tween_property(piece, "global_position", target_pos, 1.5).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
-	tween.tween_property(piece, "rotation_degrees", camera.rotation_degrees + Vector3(3.8, 154.4, 0.8), 1.5)
-	tween.tween_property(piece, "scale", Vector3(7.0, 7.0, 7.0), 1.5)
+	# Adım 2: Sandıktan önce hafifçe yukarı yükselme animasyonu (0.4 saniye)
+	var rise_tween = create_tween().set_parallel(true)
+	rise_tween.tween_property(piece, "global_position", box.global_position + Vector3(0, 0.3, 0), 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	rise_tween.tween_property(piece, "scale", Vector3(7.0, 7.0, 7.0), 0.5)
 	
-	await tween.finished
+	await rise_tween.finished
+	
+	# Adım 3: Şimdi kameraya bağlayıp eldeki konuma süzülmesini sağlayalım
+	piece.reparent(camera)
+	
+	var drift_tween = create_tween().set_parallel(true)
+	# Kameraya göre yerel konuma gidiyoruz (Pürüzsüz geçiş)
+	drift_tween.tween_property(piece, "position", Vector3(0.4, -0.4, -0.6), 1.0).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+	drift_tween.tween_property(piece, "rotation_degrees", Vector3(3.8, 154.4, 0.8), 1.0)
+	
+	await drift_tween.finished
 	
 	# Kamera scriptine bildirim gönder
 	if camera.has_method("pick_up_piece"):
 		camera.pick_up_piece(piece, random_path)
+
+# Taşın materyallerini "en üstte" görünecek şekilde ayarla (Priority 100 ve Force Material)
+func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
+	if node is MeshInstance3D:
+		for i in range(node.get_surface_override_material_count()):
+			var mat = node.get_surface_override_material(i)
+			if not mat:
+				mat = node.mesh.surface_get_material(i)
+			
+			if mat and mat is StandardMaterial3D:
+				# Materyali unique yapalım ki sadece bu taş etkilensin
+				var new_mat = mat.duplicate()
+				new_mat.render_priority = priority
+				new_mat.no_depth_test = x_ray
+				node.set_surface_override_material(i, new_mat)
+		
+		# Eğer override yoksa ana mesh materyallerini de override olarak atayalım
+		if node.mesh:
+			for i in range(node.mesh.get_surface_count()):
+				var mat = node.mesh.surface_get_material(i)
+				if mat and mat is StandardMaterial3D:
+					var new_mat = mat.duplicate()
+					new_mat.render_priority = priority
+					new_mat.no_depth_test = x_ray
+					node.set_surface_override_material(i, new_mat)
+	
+	for child in node.get_children():
+		set_piece_render_priority(child, priority, x_ray)
 	
 	# Kutu kapansın (Animasyonun devamı)
 	# Eğer animasyon durdurulmuşsa devam ettir

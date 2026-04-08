@@ -338,6 +338,9 @@ func place_held_piece():
 	tween.tween_property(held_piece, "scale", Vector3(1, 1, 1), 0.5)
 	tween.tween_property(held_piece, "rotation_degrees", Vector3.ZERO, 0.5)
 	
+	# Taşı yerleştirdiğimizde derinlik önceliğini sıfırlayalım (Normal görünsün)
+	set_piece_render_priority(held_piece, 0, false)
+	
 	target_hucre.mevcut_tas = held_piece
 	held_piece = null
 	held_piece_scene = ""
@@ -348,6 +351,23 @@ func place_held_piece():
 	last_highlighted_cell = null
 	
 	print("Taş yerleştirildi.")
+
+# Taşın materyallerini ayarlama yardımcısı (X-Ray desteği eklendi)
+func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
+	if node is MeshInstance3D:
+		for i in range(node.get_surface_override_material_count()):
+			var mat = node.get_surface_override_material(i)
+			if mat and mat is StandardMaterial3D:
+				mat.render_priority = priority
+				mat.no_depth_test = x_ray
+		if node.mesh:
+			for i in range(node.mesh.get_surface_count()):
+				var mat = node.mesh.surface_get_material(i)
+				if mat and mat is StandardMaterial3D:
+					mat.render_priority = priority
+					mat.no_depth_test = x_ray
+	for child in node.get_children():
+		set_piece_render_priority(child, priority, x_ray)
 
 func apply_shake(intensity: float, duration: float):
 	shake_intensity = intensity
