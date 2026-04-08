@@ -1,0 +1,11 @@
+Model Information:
+* title:	Replica Lewis Chess Pieces on Chessboard
+* source:	https://sketchfab.com/3d-models/replica-lewis-chess-pieces-on-chessboard-95a5545c8cd34042af8579d0cf972373
+* author:	Thomas Flynn (https://sketchfab.com/nebulousflynn)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Replica Lewis Chess Pieces on Chessboard" (https://sketchfab.com/3d-models/replica-lewis-chess-pieces-on-chessboard-95a5545c8cd34042af8579d0cf972373) by Thomas Flynn (https://sketchfab.com/nebulousflynn) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
