@@ -38,6 +38,8 @@ var shake_offset: Vector3 = Vector3.ZERO
 var held_piece: Node3D = null
 var held_piece_scene: String = ""
 var last_highlighted_cell: GridHucre = null
+var selected_hucre: GridHucre = null
+var move_highlights: Array[GridHucre] = []
 
 func _ready():
 	# Capture mouse (HIDE)
@@ -175,19 +177,19 @@ func _input(event):
 	if is_game_over: return
 	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if held_piece:
-			place_held_piece()
+		if event.double_click:
+			_handle_double_click()
 		else:
-			interact_with_crosshair()
+			if held_piece:
+				place_held_piece()
+			else:
+				interact_with_crosshair()
+	
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+		# Deselect on right click
+		_clear_selection()
 	
 	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_G: # 'G' tuşu ile kutuyu açalım (Test için)
-			var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
-			if manager: 
-				manager.start_chest_sequence()
-			else:
-				print("OyunYoneticisi bulunamadı!")
-		
 		# Camera Switching Logic (W to Zoom, S to Back)
 		if current_state == PlayerState.SEATED and not is_transitioning_view:
 			if event.keycode == KEY_W and not is_zoomed_view:
@@ -362,6 +364,11 @@ func _process_chair_interaction():
 		interact_label.visible = false
 
 func interact_with_crosshair():
+	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+	if not manager or manager.current_turn != manager.GameTurn.PLAYER:
+		print("Sıra sizde değil!")
+		return
+		
 	var space_state = get_world_3d().direct_space_state
 	var v_size = get_viewport().get_visible_rect().size
 	var crosshair_pos = get_viewport().get_mouse_position() if current_state == PlayerState.SEATED else v_size / 2.0
@@ -373,35 +380,145 @@ func interact_with_crosshair():
 	if result:
 		var collider = result.collider
 		
-		# Prevent picking up immovable pieces (like Kings)
-		if collider.has_meta("is_immovable"):
-			print("Bu taş hareket ettirilemez!")
-			return
-			
-		if collider.has_meta("is_chair"):
-			sit_down()
-		elif is_node_part_of_box(collider):
-			print("Kutu tıklandı: ", collider.name)
-			var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
-			if manager: 
-				manager.start_chest_sequence()
-			else:
-				print("OyunYoneticisi bulunamadı!")
-		else:
-			print("Tıklanan obje: ", collider.name)
-		
 		if collider.has_meta("is_grid_cell"):
 			var hucre = collider.get_meta("grid_cell_node")
-			if hucre.mevcut_tas:
-				print("Taş seçildi: %s (%s, %d, %d)" % [hucre.mevcut_tas.name, "Beyaz" if hucre.mevcut_tas.get("renk") == 0 else "Siyah", hucre.sutun, hucre.satir])
+			
+			# If we clicked a move highlight
+			if hucre in move_highlights:
+				_execute_move(selected_hucre, hucre)
+				return
 				
-				# Re-Inspection Logic
+			# If we clicked a piece
+			if hucre.mevcut_tas:
 				var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
-				if path != "" and has_node("/root/InspectUI"):
-					get_node("/root/InspectUI").show_piece(path)
-					get_viewport().set_input_as_handled() # STOP propagation
+				
+				# Only select player pieces (white side)
+				if "white" in path.to_lower():
+					if hucre.mevcut_tas.has_meta("is_immovable"):
+						return
+					_select_hucre(hucre)
+				else:
+					print("Düşman taşı seçilemez! (Path: %s)" % path)
+					_clear_selection()
 			else:
-				print("Boş hücre: (%d, %d)" % [hucre.sutun, hucre.satir])
+				_clear_selection()
+
+func _handle_double_click():
+	var space_state = get_world_3d().direct_space_state
+	var crosshair_pos = get_viewport().get_mouse_position()
+	var origin = project_ray_origin(crosshair_pos)
+	var end = origin + project_ray_normal(crosshair_pos) * ray_length
+	var query = PhysicsRayQueryParameters3D.create(origin, end)
+	var result = space_state.intersect_ray(query)
+	
+	if result and result.collider.has_meta("is_grid_cell"):
+		var hucre = result.collider.get_meta("grid_cell_node")
+		if hucre.mevcut_tas:
+			var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
+			if path != "" and has_node("/root/InspectUI"):
+				get_node("/root/InspectUI").show_piece(path)
+				get_viewport().set_input_as_handled()
+
+func _select_hucre(hucre: GridHucre):
+	if selected_hucre: _clear_selection()
+	
+	selected_hucre = hucre
+	# "Titreme" (Shake) effect
+	var piece = hucre.mevcut_tas
+	var tw = create_tween().set_parallel(true)
+	tw.tween_property(piece, "position:y", piece.position.y + 0.1, 0.1).set_trans(Tween.TRANS_SINE)
+	
+	# Show highlights
+	var path = piece.get_meta("scene_path")
+	var valid_coords = PieceDatabase.get_valid_moves(Vector2i(hucre.sutun, hucre.satir), path)
+	
+	var grid = hucre.get_parent()
+	for coord in valid_coords:
+		if grid.hucrelerin_sozlugu.has(coord):
+			var target = grid.hucrelerin_sozlugu[coord]
+			move_highlights.append(target)
+			# Highlight color: Red if occupied by enemy, Green if empty
+			var color = Color(0, 1, 0, 0.5)
+			if target.mevcut_tas:
+				if "black" in target.mevcut_tas.name.to_lower():
+					color = Color(1, 0, 0, 0.5)
+				else:
+					# Friendly piece, skip?
+					continue
+			target.set_highlight(true, color)
+
+func _clear_selection():
+	if selected_hucre and selected_hucre.mevcut_tas:
+		var tw = create_tween()
+		tw.tween_property(selected_hucre.mevcut_tas, "position:y", 0.0, 0.1)
+		
+	selected_hucre = null
+	for h in move_highlights:
+		h.set_highlight(false)
+	move_highlights.clear()
+
+func _execute_move(from: GridHucre, to: GridHucre):
+	var piece = from.mevcut_tas
+	var path = piece.get_meta("scene_path")
+	from.mevcut_tas = null
+	_clear_selection()
+	
+	# Jump animation
+	var tw = create_tween()
+	var start_pos = piece.global_position
+	var end_pos = to.global_position
+	var mid_point = (start_pos + end_pos) / 2.0 + Vector3(0, 0.15, 0)
+	
+	tw.tween_property(piece, "global_position", mid_point, 0.25).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(piece, "global_position", end_pos, 0.25).set_trans(Tween.TRANS_SINE)
+	
+	await tw.finished
+	
+	# Combat Resolution
+	if to.mevcut_tas:
+		var attacker_stats = PieceDatabase.get_piece_stats(path)
+		var defender_path = to.mevcut_tas.get_meta("scene_path")
+		var defender_stats = PieceDatabase.get_piece_stats(defender_path)
+		
+		if attacker_stats["attack"] > defender_stats["defense"]:
+			# Capture!
+			_create_puff(to.global_position)
+			to.mevcut_tas.queue_free()
+			to.mevcut_tas = piece
+		else:
+			# Bounce back!
+			var tw_back = create_tween()
+			tw_back.tween_property(piece, "global_position", from.global_position, 0.3).set_trans(Tween.TRANS_BACK)
+			await tw_back.finished
+			from.mevcut_tas = piece
+	else:
+		to.mevcut_tas = piece
+	
+	# End Player Turn
+	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+	if manager: manager.next_turn()
+
+func _create_puff(pos: Vector3):
+	# Simple code-based puff effect using a Sphere
+	var puff = MeshInstance3D.new()
+	var sphere = SphereMesh.new()
+	sphere.radius = 0.05
+	sphere.height = 0.1
+	puff.mesh = sphere
+	
+	var mat = StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(1, 1, 1, 0.8)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	puff.material_override = mat
+	
+	get_tree().root.add_child(puff)
+	puff.global_position = pos + Vector3(0, 0.1, 0)
+	
+	var tw = create_tween().set_parallel(true)
+	tw.tween_property(puff, "scale", Vector3(3, 3, 3), 0.3).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.tween_property(mat, "albedo_color:a", 0.0, 0.3)
+	tw.chain().tween_callback(puff.queue_free)
 
 func pick_up_piece(piece: Node3D, scene_path: String):
 	held_piece = piece

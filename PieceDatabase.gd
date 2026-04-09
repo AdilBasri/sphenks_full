@@ -92,3 +92,40 @@ func get_piece_display_name(path: String) -> String:
 	if "bishop" in file_name: return "Bishop"
 	if "castle" in file_name or "rook" in file_name: return "Castle"
 	return "Piece"
+
+func get_valid_moves(current_pos: Vector2i, piece_path: String) -> Array[Vector2i]:
+	var file_name = piece_path.get_file().to_lower()
+	var moves: Array[Vector2i] = []
+	
+	var offsets: Array[Vector2i] = []
+	
+	if "piyon" in file_name or "pawn" in file_name or "queen" in file_name:
+		# Pawn and Queen: 1 square in any direction (8 neighbors)
+		offsets = [
+			Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0),
+			Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)
+		]
+	elif "castle" in file_name:
+		# Castle: 1 square straight (4 neighbors)
+		offsets = [Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0)]
+	elif "bishop" in file_name:
+		# Bishop: 1 square diagonal (4 neighbors)
+		offsets = [Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)]
+	elif "horse" in file_name:
+		# Horse: Straight and Diagonal, 2 actions (Up to distance 2)
+		# We'll include all neighbors within radius 2
+		for x in range(-2, 3):
+			for y in range(-2, 3):
+				if x == 0 and y == 0: continue
+				offsets.append(Vector2i(x, y))
+	elif "king" in file_name:
+		# King: Immovable
+		return []
+
+	# Calculate final coordinates and clamp to grid (5x5)
+	for offset in offsets:
+		var target = current_pos + offset
+		if target.x >= 0 and target.x < 5 and target.y >= 0 and target.y < 5:
+			moves.append(target)
+			
+	return moves

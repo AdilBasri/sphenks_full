@@ -14,7 +14,7 @@
 [ext_resource type="PackedScene" uid="uid://b5mlgov7d0c4n" path="res://candle1.tscn" id="8_bbdvs"]
 [ext_resource type="PackedScene" uid="uid://c5e7b2v7x8y1" path="res://InspectUI.tscn" id="11_bi1g6"]
 [ext_resource type="PackedScene" uid="uid://d3lxhgiwslk0a" path="res://king_white.tscn" id="11_f3tc8"]
-[ext_resource type="Script" uid="uid://0rccufjia2dw" path="res://grid_generator.gd" id="11_grid"]
+[ext_resource type="Script" path="res://grid_generator.gd" id="11_grid"]
 [ext_resource type="Texture2D" uid="uid://dqardmtjbbmbf" path="res://Assets/cursor/Cursor.png" id="11_motcw"]
 [ext_resource type="PackedScene" uid="uid://berst0pur28ff" path="res://Assets/chair/scene.gltf" id="14_bbdvs"]
 [ext_resource type="PackedScene" uid="uid://bthkggqs1ca4q" path="res://Assets/box/scene.gltf" id="14_w2vvk"]
