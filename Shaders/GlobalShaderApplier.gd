@@ -3,6 +3,8 @@ extends Node
 # Preload shaders to ensure they are ready
 const BASE_SHADER = preload("res://Shaders/toon_ps1.gdshader")
 const OUTLINE_SHADER = preload("res://Shaders/toon_ps1_outline.gdshader")
+const BASE_SHADER_NO_DEPTH = preload("res://Shaders/toon_ps1_no_depth.gdshader")
+const OUTLINE_SHADER_NO_DEPTH = preload("res://Shaders/toon_ps1_outline_no_depth.gdshader")
 const BARREL_SHADER = preload("res://Shaders/barrel_distortion.gdshader")
 
 func _ready():
@@ -56,10 +58,22 @@ func _is_chess_piece(node: Node) -> bool:
 	return false
 
 func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
-	# Skip if we already have this shader
+	# 0. Check for "render on top" override
+	var render_on_top = false
+	var p = mesh
+	while p:
+		if p.has_meta("render_on_top") and p.get_meta("render_on_top") == true:
+			render_on_top = true
+			break
+		p = p.get_parent()
+
+	# Skip if we already have a shader, UNLESS we need to switch types
 	if mesh.material_override and mesh.material_override is ShaderMaterial:
-		if mesh.material_override.shader == BASE_SHADER:
-			return
+		var current_shader = mesh.material_override.shader
+		if render_on_top:
+			if current_shader == BASE_SHADER_NO_DEPTH: return
+		else:
+			if current_shader == BASE_SHADER: return
 
 	# 1. Extract original material properties
 	var original_material = mesh.get_active_material(0)
@@ -92,7 +106,9 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 
 	# 3. Create the New Base Material
 	var toon_mat = ShaderMaterial.new()
-	toon_mat.shader = BASE_SHADER
+	toon_mat.shader = BASE_SHADER_NO_DEPTH if render_on_top else BASE_SHADER
+	toon_mat.render_priority = 100 if render_on_top else 0
+	
 	toon_mat.set_shader_parameter("albedo_texture", tex)
 	toon_mat.set_shader_parameter("albedo_color", color)
 	toon_mat.set_shader_parameter("jitter_strength", jitter)
@@ -105,7 +121,9 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 	# 4. Create the Outline Material (Next Pass)
 	# Pieces get a thinner, subtler outline
 	var outline_mat = ShaderMaterial.new()
-	outline_mat.shader = OUTLINE_SHADER
+	outline_mat.shader = OUTLINE_SHADER_NO_DEPTH if render_on_top else OUTLINE_SHADER
+	outline_mat.render_priority = 101 if render_on_top else 0
+	
 	outline_mat.set_shader_parameter("outline_color", Color.BLACK * (0.3 if is_piece else 0.5))
 	outline_mat.set_shader_parameter("outline_width", 0.6 if is_piece else 1.2)
 	outline_mat.set_shader_parameter("jitter_strength", jitter)

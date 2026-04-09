@@ -83,14 +83,18 @@ func spawn_random_white_piece():
 		return
 		
 	var piece = piece_scene.instantiate()
-	get_tree().root.add_child(piece)
 	
 	# Adım 1: Taşı tam olarak sandığın merkezinde oluşturalım
 	piece.global_position = box.global_position
 	piece.scale = Vector3(0.1, 0.1, 0.1) # Sandıktan çıkarken başta küçük olsun
 	
-	# ÖNEMLİ: Taşın her şeyin üzerinde görünmesi için materyal ayarlarını hemen yapalım
+	# ÖNEMLİ: Taşın her şeyin üzerinde görünmesi için meta verisini hemen SAHNEYE EKLEMEDEN ÖNCE verelim
+	piece.set_meta("render_on_top", true)
+	
+	# Materyal ayarlarını da yapalım (StandardMaterial kullanan taşlar için)
 	set_piece_render_priority(piece, 100, true)
+	
+	get_tree().root.add_child(piece)
 	
 	# Adım 2: Sandıktan önce hafifçe yukarı yükselme animasyonu (0.4 saniye)
 	var rise_tween = create_tween().set_parallel(true)
@@ -113,30 +117,48 @@ func spawn_random_white_piece():
 	if camera.has_method("pick_up_piece"):
 		camera.pick_up_piece(piece, random_path)
 
-# Taşın materyallerini "en üstte" görünecek şekilde ayarla (Priority 100 ve Force Material)
+# Taşın materyallerini ayarlama yardımcısı
 func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
 	if node is MeshInstance3D:
+		# Meta verisini güncelle ki GlobalShaderApplier fark etsin (Eğer dinamik değişirse)
+		node.set_meta("render_on_top", x_ray)
+		
+		# Override materyalleri gez
 		for i in range(node.get_surface_override_material_count()):
 			var mat = node.get_surface_override_material(i)
 			if not mat:
 				mat = node.mesh.surface_get_material(i)
 			
-			if mat and mat is StandardMaterial3D:
+			if mat:
 				# Materyali unique yapalım ki sadece bu taş etkilensin
+				# (Daha önce yapılmışsa duplicate() masrafından kaçınmak için kontrol edilebilir ama şimdilik güvenli yol)
 				var new_mat = mat.duplicate()
 				new_mat.render_priority = priority
-				new_mat.no_depth_test = x_ray
+				
+				if new_mat is StandardMaterial3D:
+					new_mat.no_depth_test = x_ray
+				elif new_mat is ShaderMaterial:
+					# ShaderMaterial'da no_depth_test shader kodundadır, 
+					# GlobalShaderApplier bunu 'render_on_top' meta verisine bakarak shader değiştirerek halledecek.
+					pass
+					
 				node.set_surface_override_material(i, new_mat)
 		
-		# Eğer override yoksa ana mesh materyallerini de override olarak atayalım
+		# Eğer override yoksa mesh'in kendisindeki materyalleri override olarak atayalım
 		if node.mesh:
 			for i in range(node.mesh.get_surface_count()):
 				var mat = node.mesh.surface_get_material(i)
-				if mat and mat is StandardMaterial3D:
+				if mat:
 					var new_mat = mat.duplicate()
 					new_mat.render_priority = priority
-					new_mat.no_depth_test = x_ray
+					if new_mat is StandardMaterial3D:
+						new_mat.no_depth_test = x_ray
 					node.set_surface_override_material(i, new_mat)
+		
+		# GlobalShaderApplier'ı manuel tetikleyelim ki shader'ı (no-depth) hemen güncellesin
+		var applier = get_tree().root.find_child("GlobalShaderApplier", true, false)
+		if applier and applier.has_method("_apply_toon_ps1"):
+			applier._apply_toon_ps1(node, true)
 	
 	for child in node.get_children():
 		set_piece_render_priority(child, priority, x_ray)

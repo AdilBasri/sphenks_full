@@ -355,17 +355,36 @@ func place_held_piece():
 # Taşın materyallerini ayarlama yardımcısı (X-Ray desteği eklendi)
 func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
 	if node is MeshInstance3D:
+		# Meta verisini güncelle ki GlobalShaderApplier fark etsin
+		node.set_meta("render_on_top", x_ray)
+		
 		for i in range(node.get_surface_override_material_count()):
 			var mat = node.get_surface_override_material(i)
-			if mat and mat is StandardMaterial3D:
-				mat.render_priority = priority
-				mat.no_depth_test = x_ray
+			if not mat:
+				mat = node.mesh.surface_get_material(i)
+			
+			if mat:
+				var new_mat = mat.duplicate()
+				new_mat.render_priority = priority
+				if new_mat is StandardMaterial3D:
+					new_mat.no_depth_test = x_ray
+				node.set_surface_override_material(i, new_mat)
+				
 		if node.mesh:
 			for i in range(node.mesh.get_surface_count()):
 				var mat = node.mesh.surface_get_material(i)
-				if mat and mat is StandardMaterial3D:
-					mat.render_priority = priority
-					mat.no_depth_test = x_ray
+				if mat:
+					var new_mat = mat.duplicate()
+					new_mat.render_priority = priority
+					if new_mat is StandardMaterial3D:
+						new_mat.no_depth_test = x_ray
+					node.set_surface_override_material(i, new_mat)
+		
+		# GlobalShaderApplier'ı manuel tetikleyelim
+		var applier = get_tree().root.find_child("GlobalShaderApplier", true, false)
+		if applier and applier.has_method("_apply_toon_ps1"):
+			applier._apply_toon_ps1(node, true)
+
 	for child in node.get_children():
 		set_piece_render_priority(child, priority, x_ray)
 
