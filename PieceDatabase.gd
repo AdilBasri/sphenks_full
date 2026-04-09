@@ -82,3 +82,13 @@ func upgrade_piece(type_key: String, is_white: bool, stat_name: String, amount: 
 	if stats_source.has(type_key) and stats_source[type_key].has(stat_name):
 		stats_source[type_key][stat_name] += amount
 		print("[PieceDatabase] Upgraded %s %s: %s +%d" % ["White" if is_white else "Black", type_key, stat_name, amount])
+
+func get_piece_display_name(path: String) -> String:
+	var file_name = path.get_file().to_lower()
+	if "king" in file_name: return "King"
+	if "queen" in file_name: return "Queen"
+	if "horse" in file_name: return "Horse"
+	if "piyon" in file_name or "pawn" in file_name: return "Pawn"
+	if "bishop" in file_name: return "Bishop"
+	if "castle" in file_name or "rook" in file_name: return "Castle"
+	return "Piece"

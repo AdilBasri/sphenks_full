@@ -188,9 +188,6 @@ transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0.19101596, 1.0415931, 0.1361
 [node name="light3" parent="WorldEnvironment" instance=ExtResource("7_2jv0e")]
 transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, -0.1290336, 0.9348762, 2.647094)
 
-[node name="candles" parent="WorldEnvironment" instance=ExtResource("8_bbdvs")]
-transform = Transform3D(0.5819385, 0, 0.14610806, 0, 0.59999996, 0, -0.14610806, 0, 0.5819385, -0.3470999, -0.70473886, -1.7271398)
-
 [node name="CharacterBody3D" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11820468, -3.558596)
 
@@ -202,6 +199,9 @@ shape = SubResource("CapsuleShape3D_6acwk")
 transform = Transform3D(1, 0, 0, 0, 0.95325404, 0.30217025, 0, -0.30217025, 0.95325404, 0, -0.31322035, 2.0847573)
 fov = 80.0
 script = ExtResource("4_pbwbf")
+sensitivity = null
+limit_y = null
+limit_x = null
 
 [node name="InspectUI" parent="CharacterBody3D/Camera3D" instance=ExtResource("11_bi1g6")]
 
@@ -315,6 +315,9 @@ transform = Transform3D(0.14656, 0, 0, 0, 0.010498764, 0.06660159, 0, -0.0074957
 [node name="Node3D" parent="." instance=ExtResource("11_f3tc8")]
 transform = Transform3D(-0.9012579, 0.040870205, 0.43135104, 0.013106489, 0.99765724, -0.06714284, -0.4330846, -0.054859504, -0.8996821, 0.109349936, -0.5071497, -1.5972537)
 visible = false
+
+[node name="candles" parent="." instance=ExtResource("8_bbdvs")]
+transform = Transform3D(0.5819385, 0, 0.14610806, 0, 0.59999996, 0, -0.14610806, 0, 0.5819385, -0.3470999, -0.70473886, -1.7271398)
 
 [editable path="Sitting"]
 [editable path="box"]

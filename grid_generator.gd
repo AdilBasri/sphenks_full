@@ -166,5 +166,6 @@ func _spawn_king_to_cell(s: int, r: int, scene_path: String) -> void:
 		king.global_position = hucre.global_position
 		king.set_meta("is_immovable", true)
 		king.set_meta("is_king", true)
+		king.set_meta("scene_path", scene_path)
 		hucre.mevcut_tas = king
 		print("- King (%s) -> (%d, %d) yerleştirildi." % [scene_path.get_file(), s, r])

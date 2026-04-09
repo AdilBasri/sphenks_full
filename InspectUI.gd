@@ -12,6 +12,7 @@ var is_active: bool = false
 var viewport_piece: Node3D = null
 var rotation_speed: float = 0.5
 var sensitivity: float = 0.2
+var _can_dismiss: bool = false
 
 signal dismissed
 
@@ -71,6 +72,10 @@ func show_piece(piece_scene_path: String):
 	var tween = create_tween().set_parallel(true)
 	tween.tween_method(func(val): blur_rect.material.set_shader_parameter("blur_amount", val), 0.0, 4.0, 0.5)
 	tween.tween_property(margin_container, "modulate:a", 1.0, 0.5)
+	
+	# Prevent instant dismissal from the same click
+	_can_dismiss = false
+	get_tree().create_timer(0.2).timeout.connect(func(): _can_dismiss = true)
 
 func _apply_ps1_to_viewport_piece(node: Node):
 	var applier = get_tree().root.find_child("GlobalShaderApplier", true, false)
@@ -103,5 +108,6 @@ func _input(event):
 		
 	# Dismiss Logic - Consume the click so main camera doesn't place piece
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		get_viewport().set_input_as_handled()
-		hide_piece()
+		if _can_dismiss:
+			get_viewport().set_input_as_handled()
+			hide_piece()

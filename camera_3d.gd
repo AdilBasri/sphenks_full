@@ -24,6 +24,7 @@ var interact_label: Label = null
 var ray_length: float = 10.0
 @onready var crosshair_ui: TextureRect = get_tree().root.find_child("Crosshair", true, false)
 @onready var camera2: Camera3D = get_parent().get_node("Camera3D2") if get_parent().has_node("Camera3D2") else null
+var piece_name_label: Label = null
 
 var is_zoomed_view: bool = false
 var is_transitioning_view: bool = false
@@ -97,6 +98,18 @@ func setup_chair_interaction():
 		interact_label.position.y += 100
 		interact_label.visible = false
 		control.add_child(interact_label)
+		
+		# Create Piece Info Label
+		piece_name_label = Label.new()
+		piece_name_label.name = "PieceInfoLabel"
+		var settings = LabelSettings.new()
+		settings.font_size = 24
+		settings.font_color = Color.WHITE
+		settings.outline_size = 6
+		settings.outline_color = Color.BLACK
+		piece_name_label.label_settings = settings
+		piece_name_label.visible = false
+		control.add_child(piece_name_label)
 
 func stand_up():
 	if current_state != PlayerState.SEATED: return
@@ -226,6 +239,31 @@ func _process(_delta):
 	
 	# Update Crosshair Position
 	_update_crosshair_position()
+	_update_piece_hover_info()
+
+func _update_piece_hover_info():
+	if not piece_name_label: return
+	
+	var space_state = get_world_3d().direct_space_state
+	var v_size = get_viewport().get_visible_rect().size
+	var crosshair_pos = get_viewport().get_mouse_position() if current_state == PlayerState.SEATED else v_size / 2.0
+	var origin = project_ray_origin(crosshair_pos)
+	var end = origin + project_ray_normal(crosshair_pos) * ray_length
+	var query = PhysicsRayQueryParameters3D.create(origin, end)
+	var result = space_state.intersect_ray(query)
+	
+	if result and result.collider.has_meta("is_grid_cell"):
+		var hucre = result.collider.get_meta("grid_cell_node")
+		if hucre and hucre.mevcut_tas:
+			var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
+			if path != "":
+				var display_name = PieceDatabase.get_piece_display_name(path)
+				piece_name_label.text = display_name
+				piece_name_label.global_position = crosshair_pos + Vector2(20, -20)
+				piece_name_label.visible = true
+				return
+				
+	piece_name_label.visible = false
 
 func _update_crosshair_position():
 	if not crosshair_ui: return
@@ -328,6 +366,12 @@ func interact_with_crosshair():
 			var hucre = collider.get_meta("grid_cell_node")
 			if hucre.mevcut_tas:
 				print("Taş seçildi: %s (%s, %d, %d)" % [hucre.mevcut_tas.name, "Beyaz" if hucre.mevcut_tas.get("renk") == 0 else "Siyah", hucre.sutun, hucre.satir])
+				
+				# Re-Inspection Logic
+				var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
+				if path != "" and has_node("/root/InspectUI"):
+					get_node("/root/InspectUI").show_piece(path)
+					get_viewport().set_input_as_handled() # STOP propagation
 			else:
 				print("Boş hücre: (%d, %d)" % [hucre.sutun, hucre.satir])
 
@@ -396,6 +440,9 @@ func place_held_piece():
 	
 	# Taşı yerleştirdiğimizde derinlik önceliğini sıfırlayalım (Normal görünsün)
 	set_piece_render_priority(held_piece, 0, false)
+	
+	# Sahne yolunu saklayalım ki ilerde hover-click ile tanıyabilelim
+	held_piece.set_meta("scene_path", held_piece_scene)
 	
 	target_hucre.mevcut_tas = held_piece
 	held_piece = null
