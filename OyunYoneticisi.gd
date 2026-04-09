@@ -81,17 +81,34 @@ func start_current_turn_logic():
 	# Draw Piece if round is odd (1, 3, 5...)
 	if round_number % 2 != 0:
 		start_chest_sequence()
-	# Check for valid moves in even rounds (Move Only)
-	if round_number % 2 == 0:
+	else:
+		# Check for valid moves in even rounds (Move Only)
 		var is_white = (current_turn == GameTurn.PLAYER)
 		if not _has_side_any_moves(is_white):
 			print("--- Tarafın yapabileceği hamle yok, sıra geçiliyor... ---")
 			await get_tree().create_timer(1.0).timeout
 			next_turn()
-			return
-			
-		if current_turn == GameTurn.ENEMY:
-			_process_enemy_move_only()
+		else:
+			if current_turn == GameTurn.ENEMY:
+				_process_enemy_move_only()
+
+func cleanup_board():
+	print("Oyun bitti, tahta temizleniyor...")
+	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	if not grid: return
+	
+	for hucre in grid.hucrelerin_sozlugu.values():
+		if hucre.mevcut_tas:
+			if not hucre.mevcut_tas.has_meta("is_king"):
+				hucre.mevcut_tas.queue_free()
+				hucre.mevcut_tas = null
+			else:
+				# Reset king and its defense
+				var king = hucre.mevcut_tas
+				var path = king.get_meta("scene_path")
+				var stats = PieceDatabase.get_piece_stats(path)
+				if not stats.is_empty():
+					king.set_meta("current_defense", stats["defense"])
 
 func next_turn():
 	if current_turn == GameTurn.PLAYER:

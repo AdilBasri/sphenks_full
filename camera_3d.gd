@@ -151,6 +151,12 @@ func stand_up():
 	print("PLAYER STANDING")
 
 func sit_down():
+	if is_game_over:
+		print("Oyun bittiği için baştan yükleniyor...")
+		Engine.time_scale = 1.0
+		get_tree().reload_current_scene()
+		return
+		
 	if current_state != PlayerState.STANDING: return
 	
 	if interact_label: interact_label.visible = false
@@ -635,6 +641,10 @@ func trigger_win():
 	is_game_over = true
 	# Force player to stand up
 	stand_up()
+	# Board cleanup
+	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+	if manager: manager.cleanup_board()
+	
 	# Maybe add a small overlay or slow motion
 	Engine.time_scale = 0.5
 	await get_tree().create_timer(1.0).timeout
@@ -748,6 +758,11 @@ func trigger_loss():
 	
 	# Notify UI (will be created in root by OyunYoneticisi or here)
 	var ui = get_node_or_null("/root/GameOverUI")
+	
+	# Board cleanup
+	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+	if manager: manager.cleanup_board()
+	
 	if ui:
 		ui.show_game_over()
 	else:
