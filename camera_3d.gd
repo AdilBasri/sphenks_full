@@ -193,6 +193,8 @@ func _input(event):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		if is_game_over: return
 		# Deselect on right click
+		if held_piece:
+			SesYoneticisi.play_error()
 		_clear_selection()
 	
 	if event is InputEventKey and event.pressed:
@@ -340,6 +342,8 @@ func _process_movement(_delta):
 	
 	var move_dir = (forward * -input_dir.y + right * input_dir.x).normalized()
 	
+	SesYoneticisi.set_walking(move_dir != Vector3.ZERO)
+	
 	if move_dir:
 		body.velocity = move_dir * walk_speed
 		# Head Bobbing
@@ -480,6 +484,8 @@ func _execute_move(from: GridHucre, to: GridHucre):
 	
 	await tw.finished
 	
+	SesYoneticisi.play_place_block()
+	
 	# Impact Shake
 	if to.mevcut_tas:
 		apply_shake(0.2, 0.3)
@@ -603,7 +609,9 @@ func is_node_part_of_box(node: Node) -> bool:
 	return false
 
 func place_held_piece():
-	if not last_highlighted_cell: return
+	if not last_highlighted_cell:
+		SesYoneticisi.play_error()
+		return
 	
 	var target_hucre = last_highlighted_cell
 	var target_pos = target_hucre.global_position
@@ -617,6 +625,9 @@ func place_held_piece():
 	tween.tween_property(held_piece, "rotation_degrees", Vector3.ZERO, 0.5)
 	
 	await tween.finished
+	
+	SesYoneticisi.play_place_block()
+	
 	if held_piece:
 		held_piece.reparent(target_hucre)
 		held_piece.position = Vector3.ZERO
@@ -753,6 +764,7 @@ func trigger_loss():
 	tw.tween_property(self, "rotation_degrees:x", -10.0, 0.6)
 	
 	apply_shake(0.5, 0.8)
+	SesYoneticisi.play_fall()
 	
 	await tw.finished
 	

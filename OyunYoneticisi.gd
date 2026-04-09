@@ -171,6 +171,8 @@ func spawn_random_white_piece():
 	piece.global_position = box.global_position
 	piece.scale = Vector3(0.1, 0.1, 0.1) # Sandıktan çıkarken başta küçük olsun
 	
+	SesYoneticisi.play_handing()
+	
 	# Materyal ayarlarını da yapalım (StandardMaterial kullanan taşlar için)
 	set_piece_render_priority(piece, 100, true)
 	
@@ -212,6 +214,9 @@ func _spawn_random_black_piece_for_enemy():
 	
 	piece.global_position = box.global_position
 	piece.scale = Vector3(0.1, 0.1, 0.1)
+	
+	SesYoneticisi.play_handing()
+	
 	set_piece_render_priority(piece, 100, true)
 	
 	# Initialize persistent health
@@ -372,6 +377,8 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 	tw.tween_property(piece, "global_position", mid_point, 0.25).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(piece, "global_position", end_pos, 0.25).set_trans(Tween.TRANS_SINE)
 	await tw.finished
+	
+	SesYoneticisi.play_place_block()
 	
 	# Combat Resolution (Same as player's)
 	if to.mevcut_tas:
