@@ -51,6 +51,7 @@ func _ready() -> void:
 		# Biraz bekliyoruz ki sahnede her şey tam yüklensin
 		await get_tree().create_timer(0.1).timeout
 		taslari_gridle_eslestir()
+		spawn_kings()
 
 func olustur_grid() -> void:
 	if not is_inside_tree(): return
@@ -138,3 +139,32 @@ func taslari_gridle_eslestir() -> void:
 			print("- %s -> (%d, %d) hücresine yerleşti." % [tas.name, en_yakin_hucre.sutun, en_yakin_hucre.satir])
 	
 	print("---------------------------------")
+
+func spawn_kings() -> void:
+	print("--- Krallar Yerleştiriliyor ---")
+	
+	# White King (Row 4, Col 2) - Player Side
+	_spawn_king_to_cell(2, 4, "res://Pawn/king_white.tscn")
+	
+	# Black King (Row 0, Col 2) - AI Side
+	_spawn_king_to_cell(2, 0, "res://Pawn/king_black.tscn")
+	
+	print("-------------------------------")
+
+func _spawn_king_to_cell(s: int, r: int, scene_path: String) -> void:
+	var coord = Vector2i(s, r)
+	if not hucrelerin_sozlugu.has(coord): return
+	
+	var hucre = hucrelerin_sozlugu[coord]
+	if hucre.mevcut_tas: 
+		hucre.mevcut_tas.queue_free()
+	
+	var scene = load(scene_path)
+	if scene:
+		var king = scene.instantiate()
+		add_child(king) # Add to grid so it stays in the world
+		king.global_position = hucre.global_position
+		king.set_meta("is_immovable", true)
+		king.set_meta("is_king", true)
+		hucre.mevcut_tas = king
+		print("- King (%s) -> (%d, %d) yerleştirildi." % [scene_path.get_file(), s, r])

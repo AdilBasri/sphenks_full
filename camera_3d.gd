@@ -289,6 +289,12 @@ func interact_with_crosshair():
 	
 	if result:
 		var collider = result.collider
+		
+		# Prevent picking up immovable pieces (like Kings)
+		if collider.has_meta("is_immovable"):
+			print("Bu taş hareket ettirilemez!")
+			return
+			
 		if collider.has_meta("is_chair"):
 			sit_down()
 		elif is_node_part_of_box(collider):
@@ -343,7 +349,8 @@ func _process_placement_preview():
 		var collider = result.collider
 		if collider.has_meta("is_grid_cell"):
 			var hucre = collider.get_meta("grid_cell_node")
-			if not hucre.mevcut_tas:
+			# Check if cell is an allowed placement square
+			if not hucre.mevcut_tas and _is_cell_valid_for_placement(hucre):
 				hucre.set_highlight(true, Color(0, 1, 0, 0.4)) # Yeşil önizleme
 				hucre.set_preview_piece(held_piece_scene)
 				last_highlighted_cell = hucre
@@ -423,6 +430,17 @@ func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
 
 	for child in node.get_children():
 		set_piece_render_priority(child, priority, x_ray)
+
+func _is_cell_valid_for_placement(hucre: GridHucre) -> bool:
+	# Player's Side (Row 4 is closest to camera, Row 3 is in front of it)
+	if hucre.satir == 4:
+		# Can place anywhere in Row 4 EXCEPT the king's spot (Col 2)
+		return hucre.sutun != 2
+	elif hucre.satir == 3:
+		# Can ONLY place in front of the king (Col 2)
+		return hucre.sutun == 2
+	
+	return false
 
 func _on_inspect_dismissed():
 	if held_piece:
