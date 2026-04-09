@@ -52,10 +52,15 @@ func _ready():
 		start_y = yaw
 		start_x = pitch
 	
-	seated_position = position
+	seated_position = Vector3(0, -0.313, 2.085)
+	seated_rotation = Vector3(-17.6, 0, 0)
 	seated_body_position = get_parent().global_position
-	seated_rotation = rotation_degrees
 	setup_chair_interaction()
+	
+	# Connect to InspectUI signals
+	var ui = get_node_or_null("/root/InspectUI")
+	if ui:
+		ui.dismissed.connect(_on_inspect_dismissed)
 	
 	# Reset state if reloaded
 	Engine.time_scale = 1.0
@@ -150,14 +155,11 @@ func _input(event):
 			return
 			
 		# Convert mouse motion to rotation
-		yaw -= event.relative.x * sensitivity
-		pitch -= event.relative.y * sensitivity
-		
-		# Limits (RELATIVE TO START ANGLES)
-		if current_state == PlayerState.SEATED:
-			yaw = clamp(yaw, start_y - limit_y, start_y + limit_y)
-			pitch = clamp(pitch, start_x - limit_x, start_x + limit_x)
-		else:
+		if current_state != PlayerState.SEATED:
+			yaw -= event.relative.x * sensitivity
+			pitch -= event.relative.y * sensitivity
+			
+			# Limits (RELATIVE TO START ANGLES)
 			# Standing: Full 360 yaw, but still limit pitch to avoid flipping over
 			pitch = clamp(pitch, -85, 85)
 
@@ -188,9 +190,14 @@ func _process(_delta):
 	var breath_pitch = cos(t * 0.8) * 0.15
 	var breath_roll = sin(t * 0.5) * 0.08
 	
-	rotation_degrees.y = yaw + breath_yaw + (shake_offset.x * 2.0)
-	rotation_degrees.x = pitch + breath_pitch + (shake_offset.y * 2.0)
-	rotation_degrees.z = breath_roll + (shake_offset.z * 5.0)
+	if current_state == PlayerState.SEATED:
+		rotation_degrees.y = seated_rotation.y
+		rotation_degrees.x = seated_rotation.x
+		rotation_degrees.z = seated_rotation.z
+	else:
+		rotation_degrees.y = yaw + breath_yaw + (shake_offset.x * 2.0)
+		rotation_degrees.x = pitch + breath_pitch + (shake_offset.y * 2.0)
+		rotation_degrees.z = breath_roll + (shake_offset.z * 5.0)
 	
 	if current_state == PlayerState.STANDING:
 		_process_chair_interaction()
@@ -291,7 +298,13 @@ func pick_up_piece(piece: Node3D, scene_path: String):
 	# Kullanıcının istediği "yakın ve büyük" görünüm için optimize edilmiş değerler:
 	held_piece.position = Vector3(0.4, -0.4, -0.6) 
 	held_piece.rotation_degrees = Vector3(3.8, 154.4, 0.8)
-	held_piece.scale = Vector3(7.0, 7.0, 7.0)
+	held_piece.scale = Vector3(1.0, 1.0, 1.0)
+	
+	# UI'yı göster
+	if has_node("/root/InspectUI"):
+		get_node("/root/InspectUI").show_piece(scene_path)
+		# Gerçek taşı gizleyelim (UI kendi kopyasını gösterecek)
+		held_piece.visible = false
 
 func _process_placement_preview():
 	var space_state = get_world_3d().direct_space_state
@@ -350,6 +363,10 @@ func place_held_piece():
 	target_hucre.set_highlight(false)
 	last_highlighted_cell = null
 	
+	# UI'yı gizle
+	if has_node("/root/InspectUI"):
+		get_node("/root/InspectUI").hide_piece()
+	
 	print("Taş yerleştirildi.")
 
 # Taşın materyallerini ayarlama yardımcısı (X-Ray desteği eklendi)
@@ -387,6 +404,11 @@ func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
 
 	for child in node.get_children():
 		set_piece_render_priority(child, priority, x_ray)
+
+func _on_inspect_dismissed():
+	if held_piece:
+		held_piece.visible = true
+		print("İnceleme bitti, asıl taş tekrar görünür.")
 
 func apply_shake(intensity: float, duration: float):
 	shake_intensity = intensity

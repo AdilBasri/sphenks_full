@@ -84,22 +84,23 @@ func spawn_random_white_piece():
 		
 	var piece = piece_scene.instantiate()
 	
+	# ÖNEMLİ: Meta verisini SAHNEYE EKLEMEDEN ÖNCE verelim ki GlobalShaderApplier bunu yakalasın
+	piece.set_meta("render_on_top", true)
+	
+	# Önce sahneye ekliyoruz, sonra global_position atıyoruz (Aksi takdirde 'not in tree' hatası verir)
+	get_tree().root.add_child(piece)
+	
 	# Adım 1: Taşı tam olarak sandığın merkezinde oluşturalım
 	piece.global_position = box.global_position
 	piece.scale = Vector3(0.1, 0.1, 0.1) # Sandıktan çıkarken başta küçük olsun
 	
-	# ÖNEMLİ: Taşın her şeyin üzerinde görünmesi için meta verisini hemen SAHNEYE EKLEMEDEN ÖNCE verelim
-	piece.set_meta("render_on_top", true)
-	
 	# Materyal ayarlarını da yapalım (StandardMaterial kullanan taşlar için)
 	set_piece_render_priority(piece, 100, true)
-	
-	get_tree().root.add_child(piece)
 	
 	# Adım 2: Sandıktan önce hafifçe yukarı yükselme animasyonu (0.4 saniye)
 	var rise_tween = create_tween().set_parallel(true)
 	rise_tween.tween_property(piece, "global_position", box.global_position + Vector3(0, 0.3, 0), 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	rise_tween.tween_property(piece, "scale", Vector3(7.0, 7.0, 7.0), 0.5)
+	rise_tween.tween_property(piece, "scale", Vector3(1.0, 1.0, 1.0), 0.5)
 	
 	await rise_tween.finished
 	

@@ -16,6 +16,8 @@ config/features=PackedStringArray("4.5", "Forward Plus")
 
 [autoload]
 
+PieceDatabase="*res://PieceDatabase.gd"
+InspectUI="*res://InspectUI.tscn"
 GlobalShaderApplier="*res://Shaders/GlobalShaderApplier.gd"
 
 [display]
