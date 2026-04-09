@@ -22,6 +22,7 @@ var head_bob_time: float = 0.0
 var interact_label: Label = null
 
 var ray_length: float = 10.0
+@onready var crosshair_ui: TextureRect = get_tree().root.find_child("Crosshair", true, false)
 
 # Shake Params
 var shake_intensity: float = 0.0
@@ -35,7 +36,9 @@ var last_highlighted_cell: GridHucre = null
 func _ready():
 	# Capture mouse (HIDE)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	if OS.get_name() == "Linux":
+	if current_state == PlayerState.SEATED:
+		Input.mouse_mode = Input.MOUSE_MODE_CONFINED_HIDDEN # Hide OS cursor, keep free movement
+	elif OS.get_name() == "Linux":
 		Input.mouse_mode = Input.MOUSE_MODE_CONFINED
 	
 	# Find table and center view
@@ -64,7 +67,7 @@ func _ready():
 	
 	# Reset state if reloaded
 	Engine.time_scale = 1.0
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# The initial mouse mode is handled above in the current_state check
 
 func setup_chair_interaction():
 	var chair = get_tree().root.find_child("chair", true, false)
@@ -106,6 +109,7 @@ func stand_up():
 	tw.tween_callback(func():
 		current_state = PlayerState.STANDING
 		is_locked = false
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED # Reset mouse
 		print("PLAYER STANDING")
 	)
 
@@ -125,6 +129,7 @@ func sit_down():
 	tw.tween_callback(func():
 		current_state = PlayerState.SEATED
 		is_locked = false
+		Input.mouse_mode = Input.MOUSE_MODE_CONFINED_HIDDEN # Hide OS cursor
 		# Reset rotation params to current rotation
 		yaw = rotation_degrees.y
 		pitch = rotation_degrees.x
@@ -202,6 +207,20 @@ func _process(_delta):
 	if current_state == PlayerState.STANDING:
 		_process_chair_interaction()
 	
+	# Update Crosshair Position
+	_update_crosshair_position()
+
+func _update_crosshair_position():
+	if not crosshair_ui: return
+	
+	if current_state == PlayerState.SEATED:
+		# Follow mouse
+		crosshair_ui.global_position = get_viewport().get_mouse_position() - (crosshair_ui.size / 2.0)
+	else:
+		# Center screen
+		var v_size = get_viewport().get_visible_rect().size
+		crosshair_ui.global_position = (v_size / 2.0) - (crosshair_ui.size / 2.0)
+	
 	if held_piece:
 		_process_placement_preview()
 
@@ -248,9 +267,9 @@ func _process_chair_interaction():
 	
 	var space_state = get_world_3d().direct_space_state
 	var v_size = get_viewport().get_visible_rect().size
-	var center = v_size / 2.0
-	var origin = project_ray_origin(center)
-	var end = origin + project_ray_normal(center) * 2.0 # Close range interaction
+	var crosshair_pos = get_viewport().get_mouse_position() if current_state == PlayerState.SEATED else v_size / 2.0
+	var origin = project_ray_origin(crosshair_pos)
+	var end = origin + project_ray_normal(crosshair_pos) * 2.0 # Close range interaction
 	var query = PhysicsRayQueryParameters3D.create(origin, end)
 	var result = space_state.intersect_ray(query)
 	
@@ -262,9 +281,9 @@ func _process_chair_interaction():
 func interact_with_crosshair():
 	var space_state = get_world_3d().direct_space_state
 	var v_size = get_viewport().get_visible_rect().size
-	var center = v_size / 2.0
-	var origin = project_ray_origin(center)
-	var end = origin + project_ray_normal(center) * ray_length
+	var crosshair_pos = get_viewport().get_mouse_position() if current_state == PlayerState.SEATED else v_size / 2.0
+	var origin = project_ray_origin(crosshair_pos)
+	var end = origin + project_ray_normal(crosshair_pos) * ray_length
 	var query = PhysicsRayQueryParameters3D.create(origin, end)
 	var result = space_state.intersect_ray(query)
 	
@@ -309,9 +328,9 @@ func pick_up_piece(piece: Node3D, scene_path: String):
 func _process_placement_preview():
 	var space_state = get_world_3d().direct_space_state
 	var v_size = get_viewport().get_visible_rect().size
-	var center = v_size / 2.0
-	var origin = project_ray_origin(center)
-	var end = origin + project_ray_normal(center) * ray_length
+	var crosshair_pos = get_viewport().get_mouse_position() if current_state == PlayerState.SEATED else v_size / 2.0
+	var origin = project_ray_origin(crosshair_pos)
+	var end = origin + project_ray_normal(crosshair_pos) * ray_length
 	var query = PhysicsRayQueryParameters3D.create(origin, end)
 	var result = space_state.intersect_ray(query)
 	
