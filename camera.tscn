@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=35 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
@@ -8,7 +8,9 @@
 [ext_resource type="Script" uid="uid://wuvldqmhm6c6" path="res://camera_3d.gd" id="4_pbwbf"]
 [ext_resource type="Animation" uid="uid://b70e1rtqi4x57" path="res://geri_otur.res" id="5_woum2"]
 [ext_resource type="Animation" uid="uid://chhb1wxyk0mns" path="res://take_gun.res" id="6_aw76i"]
+[ext_resource type="PackedScene" uid="uid://drder1curhwta" path="res://Assets/paint1/framed_painting/scene.gltf" id="6_y3u0t"]
 [ext_resource type="PackedScene" uid="uid://wouv23y55lsa" path="res://Assets/light/scene.gltf" id="7_2jv0e"]
+[ext_resource type="PackedScene" uid="uid://dsgmlkoip2udr" path="res://Assets/paint2/smierc_eng/scene.gltf" id="7_k3bkl"]
 [ext_resource type="PackedScene" uid="uid://b5mlgov7d0c4n" path="res://candle1.tscn" id="8_bbdvs"]
 [ext_resource type="PackedScene" uid="uid://c5e7b2v7x8y1" path="res://InspectUI.tscn" id="11_bi1g6"]
 [ext_resource type="PackedScene" uid="uid://d3lxhgiwslk0a" path="res://king_white.tscn" id="11_f3tc8"]
@@ -20,6 +22,10 @@
 [ext_resource type="PackedScene" uid="uid://c8ol3v3ugs1om" path="res://Assets/horror_stairway_gameready/scene.gltf" id="18_woum2"]
 [ext_resource type="PackedScene" uid="uid://dltn2ue8cb2m6" path="res://Assets/chain/chains_12mb/scene.gltf" id="19_aw76i"]
 [ext_resource type="Script" uid="uid://dsq5ui7ws5gbu" path="res://EnemyHeadLook.gd" id="20_head"]
+[ext_resource type="PackedScene" uid="uid://dvi6tw2xcavov" path="res://Assets/poster/poster_from_soviet_union/scene.gltf" id="23_k3bkl"]
+[ext_resource type="PackedScene" uid="uid://cd1kd4sf1pnl3" path="res://Assets/poster/soviet_posters/scene.gltf" id="24_21nal"]
+[ext_resource type="PackedScene" uid="uid://ejxn6qum5b3v" path="res://Assets/poster/the_final_storm_prototype_missing_poster/scene.gltf" id="25_0skcs"]
+[ext_resource type="PackedScene" uid="uid://daeik0psu8u7e" path="res://Assets/vent/scene.gltf" id="26_n8g8v"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
 _data = {
@@ -141,7 +147,7 @@ bone_name = "mixamorig_Head"
 bone_idx = 5
 
 [node name="mask" parent="Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("18_aw76i")]
-transform = Transform3D(0.08119255, 0.001765005, -0.0024919389, -0.0017780866, 0.08122957, -0.00040008087, 0.0024826203, 0.0004543358, 0.081210785, 0.0014746115, -0.009333789, 0.024668217)
+transform = Transform3D(0.081192546, 0.001765005, -0.0024919389, -0.0017780864, 0.08122957, -0.00040008087, 0.0024826198, 0.00045433576, 0.081210785, 0.0013096482, -0.009360269, 0.030044317)
 
 [node name="AnimationPlayer" parent="Sitting" index="1"]
 libraries = {
@@ -188,6 +194,11 @@ light_energy = 5.0
 
 [node name="OmniLight3D5" type="OmniLight3D" parent="WorldEnvironment"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.073132, 0.27785105, 2.3718586)
+light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
+light_energy = 5.0
+
+[node name="OmniLight3D7" type="OmniLight3D" parent="WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18857956, 0.024483025, 2.8740935)
 light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
 light_energy = 5.0
 
@@ -336,5 +347,103 @@ transform = Transform3D(0.5819385, 0, 0.14610806, 0, 0.59999996, 0, -0.14610806,
 [node name="chain" parent="." instance=ExtResource("19_aw76i")]
 transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, -3.9451857, -0.36819583, -2.4780807)
 
+[node name="paint2" parent="." instance=ExtResource("7_k3bkl")]
+transform = Transform3D(0.49991685, 9.0934274e-11, 0.009118845, -9.09494e-11, 0.5, 0, -0.009118845, -1.6587069e-12, 0.49991685, 0.5240196, 0.17126778, -2.9747448)
+
+[node name="Wall" parent="paint2/Sketchfab_model/69c77fe81bd849078793a868c87bf3be_fbx/RootNode" index="1"]
+visible = false
+
+[node name="paint1" parent="." instance=ExtResource("6_y3u0t")]
+transform = Transform3D(0.046743996, -0.039623912, -1.4987478, -0.02563259, 1.4992357, -0.04043626, 1.4990524, 0.026871292, 0.046043076, -0.666963, 0.19471467, -2.9734046)
+
+[node name="poster1" parent="." instance=ExtResource("23_k3bkl")]
+transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, -0.3164387, -0.10137743, 3.107027)
+
+[node name="poster2" parent="." instance=ExtResource("24_21nal")]
+transform = Transform3D(-1.3113415e-08, -7.940934e-24, 0.29999998, -0.030650256, 0.29843014, -1.3397652e-09, -0.29843014, -0.030650256, -1.30447955e-08, -3.0962656, 0.22416091, -0.52502275)
+
+[node name="poster3" parent="." instance=ExtResource("24_21nal")]
+transform = Transform3D(-1.3113415e-08, -1.9852335e-24, 0.29999998, -0.00934996, 0.29985425, -4.0869969e-10, -0.29985425, -0.00934996, -1.3107045e-08, -3.0962656, -0.08155781, -0.52502275)
+
+[node name="Sketchfab_model" parent="poster3" index="0"]
+transform = Transform3D(0.99999976, 0, 0, 0, 2.2204455e-16, 0.99999976, 0, -0.99999976, 2.2204455e-16, 0, 0, 0.54076004)
+
+[node name="Plane_008_Material_011_0" parent="poster3/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="0"]
+visible = false
+
+[node name="Plane_008_Material_007_0" parent="poster3/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="1"]
+visible = false
+
+[node name="Plane_008_Material_004_0" parent="poster3/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="2"]
+visible = false
+
+[node name="Plane_008_Material_009_0" parent="poster3/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="4"]
+visible = false
+
+[node name="poster4" parent="." instance=ExtResource("24_21nal")]
+transform = Transform3D(-1.3113415e-08, 0, 0.29999998, 0.020576969, 0.2992935, 8.9944785e-10, -0.2992935, 0.020576969, -1.3082532e-08, -2.8910897, 0.14796513, -0.52502275)
+
+[node name="Sketchfab_model" parent="poster4" index="0"]
+transform = Transform3D(0.99999976, 0, 0, 0, 2.2204455e-16, 0.99999976, 0, -0.99999976, 2.2204455e-16, 0, 0, 0.54076004)
+
+[node name="Plane_008_Material_011_0" parent="poster4/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="0"]
+visible = false
+
+[node name="Plane_008_Material_007_0" parent="poster4/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="1"]
+visible = false
+
+[node name="Plane_008_Material_004_0" parent="poster4/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="2"]
+visible = false
+
+[node name="Plane_008_Material_006_0" parent="poster4/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="3"]
+visible = false
+
+[node name="poster5" parent="." instance=ExtResource("24_21nal")]
+transform = Transform3D(-1.3113415e-08, -3.970467e-24, 0.29999998, -0.0149321, 0.29962814, -6.527027e-10, -0.29962814, -0.0149321, -1.3097162e-08, -1.9713324, -0.22073096, -0.52502275)
+
+[node name="Sketchfab_model" parent="poster5" index="0"]
+transform = Transform3D(0.99999976, 0, 0, 0, 2.2204455e-16, 0.99999976, 0, -0.99999976, 2.2204455e-16, 0, 0, 0.54076004)
+
+[node name="Plane_008_Material_007_0" parent="poster5/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="1"]
+visible = false
+
+[node name="Plane_008_Material_004_0" parent="poster5/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="2"]
+visible = false
+
+[node name="Plane_008_Material_006_0" parent="poster5/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="3"]
+visible = false
+
+[node name="Plane_008_Material_009_0" parent="poster5/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="4"]
+visible = false
+
+[node name="poster6" parent="." instance=ExtResource("24_21nal")]
+transform = Transform3D(-1.3113415e-08, -3.970467e-24, 0.29999998, -0.015057606, 0.29962188, -6.581888e-10, -0.29962188, -0.015057606, -1.3096887e-08, -2.7394314, 0.09819192, -0.52502275)
+
+[node name="Sketchfab_model" parent="poster6" index="0"]
+transform = Transform3D(0.99999976, 0, 0, 0, 2.2204455e-16, 0.99999976, 0, -0.99999976, 2.2204455e-16, 0, 0, 0.54076004)
+
+[node name="Plane_008_Material_011_0" parent="poster6/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="0"]
+visible = false
+
+[node name="Plane_008_Material_004_0" parent="poster6/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="2"]
+visible = false
+
+[node name="Plane_008_Material_006_0" parent="poster6/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="3"]
+visible = false
+
+[node name="Plane_008_Material_009_0" parent="poster6/Sketchfab_model/47131c68746f4fd6b1f722119cdbb95e_fbx/RootNode/Plane_008" index="4"]
+visible = false
+
+[node name="poster7" parent="." instance=ExtResource("25_0skcs")]
+transform = Transform3D(3.5774643e-09, 0, -0.3, 0, 0.3, 0, 0.3, 0, 3.5774643e-09, 2.1890624, 0.10465473, 1.2478869)
+
+[node name="vent" parent="." instance=ExtResource("26_n8g8v")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 1.983463, 0.42146164, -0.001840651)
+
 [editable path="Sitting"]
 [editable path="box"]
+[editable path="paint2"]
+[editable path="poster3"]
+[editable path="poster4"]
+[editable path="poster5"]
+[editable path="poster6"]

@@ -1,0 +1,11 @@
+Model Information:
+* title:	"Śmierć" (eng. "Death") painting
+* source:	https://sketchfab.com/3d-models/smierc-eng-death-painting-ea0baac65c454953b12224c0ea9488ac
+* author:	SebastianSosnowski (https://sketchfab.com/SebastianSosnowski)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on ""Śmierć" (eng. "Death") painting" (https://sketchfab.com/3d-models/smierc-eng-death-painting-ea0baac65c454953b12224c0ea9488ac) by SebastianSosnowski (https://sketchfab.com/SebastianSosnowski) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
