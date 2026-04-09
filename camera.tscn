@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=29 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
@@ -16,7 +16,10 @@
 [ext_resource type="Texture2D" uid="uid://dqardmtjbbmbf" path="res://Assets/cursor/Cursor.png" id="11_motcw"]
 [ext_resource type="PackedScene" uid="uid://berst0pur28ff" path="res://Assets/chair/scene.gltf" id="14_bbdvs"]
 [ext_resource type="PackedScene" uid="uid://bthkggqs1ca4q" path="res://Assets/box/scene.gltf" id="14_w2vvk"]
+[ext_resource type="PackedScene" uid="uid://dxkvsxq0j5mgj" path="res://Assets/glitched_skull/scene.gltf" id="18_aw76i"]
 [ext_resource type="PackedScene" uid="uid://c8ol3v3ugs1om" path="res://Assets/horror_stairway_gameready/scene.gltf" id="18_woum2"]
+[ext_resource type="PackedScene" uid="uid://dltn2ue8cb2m6" path="res://Assets/chain/chains_12mb/scene.gltf" id="19_aw76i"]
+[ext_resource type="Script" uid="uid://dsq5ui7ws5gbu" path="res://EnemyHeadLook.gd" id="20_head"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
 _data = {
@@ -53,7 +56,7 @@ outline_size = 8
 outline_color = Color(0, 0, 0, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bi1g6"]
-size = Vector3(0.54833984, 2.2666626, 5.513794)
+size = Vector3(0.7269287, 2.2666626, 5.2095337)
 
 [node name="GameRoom" type="Node3D"]
 script = ExtResource("1_w2vvk")
@@ -127,9 +130,18 @@ bones/62/rotation = Quaternion(-0.040405124, 0.7566758, 0.64931697, 0.06478145)
 bones/63/rotation = Quaternion(-0.7739942, 0.0629535, -0.042185333, 0.62864155)
 bones/64/rotation = Quaternion(0.442584, -0.009106701, -0.051855516, 0.8951802)
 bones/65/rotation = Quaternion(0.27768585, 6.4978295e-08, 5.032736e-07, 0.96067196)
+script = ExtResource("20_head")
 
 [node name="WhiteClown" parent="Sitting/Skeleton3D" index="0"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0038419962, 0)
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Sitting/Skeleton3D" index="1"]
+transform = Transform3D(0.9992935, -0.021884156, 0.030555338, 0.02172313, 0.9997482, 0.00559178, -0.030670024, -0.0049241185, 0.99951744, 0.016935494, 1.3688762, 0.19300246)
+bone_name = "mixamorig_Head"
+bone_idx = 5
+
+[node name="mask" parent="Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("18_aw76i")]
+transform = Transform3D(0.08119255, 0.001765005, -0.0024919389, -0.0017780866, 0.08122957, -0.00040008087, 0.0024826203, 0.0004543358, 0.081210785, 0.0014746115, -0.009333789, 0.024668217)
 
 [node name="AnimationPlayer" parent="Sitting" index="1"]
 libraries = {
@@ -179,6 +191,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.073132, 0.27785105, 2.37185
 light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
 light_energy = 5.0
 
+[node name="OmniLight3D6" type="OmniLight3D" parent="WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.653758, 0.27785105, -2.8270643)
+light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
+light_energy = 5.0
+
 [node name="light" parent="WorldEnvironment" instance=ExtResource("7_2jv0e")]
 transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0.19101596, 1.0415931, -2.5514631)
 
@@ -199,9 +216,6 @@ shape = SubResource("CapsuleShape3D_6acwk")
 transform = Transform3D(1, 0, 0, 0, 0.95325404, 0.30217025, 0, -0.30217025, 0.95325404, 0, -0.31322035, 2.0847573)
 fov = 80.0
 script = ExtResource("4_pbwbf")
-sensitivity = null
-limit_y = null
-limit_x = null
 
 [node name="InspectUI" parent="CharacterBody3D/Camera3D" instance=ExtResource("11_bi1g6")]
 
@@ -297,7 +311,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2872987, -0.095671415, 0.0
 shape = SubResource("BoxShape3D_bi1g6")
 
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="Collisionlar/StaticBody3D"]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.1600225, -0.095671415, -3.2010584)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.31215262, -0.095671415, -3.111764)
 shape = SubResource("BoxShape3D_bi1g6")
 
 [node name="stairway" parent="." instance=ExtResource("18_woum2")]
@@ -318,6 +332,9 @@ visible = false
 
 [node name="candles" parent="." instance=ExtResource("8_bbdvs")]
 transform = Transform3D(0.5819385, 0, 0.14610806, 0, 0.59999996, 0, -0.14610806, 0, 0.5819385, -0.3470999, -0.70473886, -1.7271398)
+
+[node name="chain" parent="." instance=ExtResource("19_aw76i")]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, -3.9451857, -0.36819583, -2.4780807)
 
 [editable path="Sitting"]
 [editable path="box"]

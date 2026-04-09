@@ -25,6 +25,7 @@ var ray_length: float = 10.0
 @onready var crosshair_ui: TextureRect = get_tree().root.find_child("Crosshair", true, false)
 @onready var camera2: Camera3D = get_parent().get_node("Camera3D2") if get_parent().has_node("Camera3D2") else null
 var piece_name_label: Label = null
+var cursor_3d_pos: Vector3 = Vector3.ZERO
 
 var is_zoomed_view: bool = false
 var is_transitioning_view: bool = false
@@ -280,9 +281,17 @@ func _update_piece_hover_info():
 				piece_name_label.text = display_name
 				piece_name_label.global_position = crosshair_pos + Vector2(20, -20)
 				piece_name_label.visible = true
+				cursor_3d_pos = result.position
 				return
 				
 	piece_name_label.visible = false
+	
+	# Update cursor_3d_pos even if not over a piece (for head tracking)
+	if result:
+		cursor_3d_pos = result.position
+	else:
+		# Fallback: Look at player's general area
+		cursor_3d_pos = global_position
 
 func _update_crosshair_position():
 	if not crosshair_ui: return
