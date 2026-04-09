@@ -72,13 +72,24 @@ func start_game():
 	start_current_turn_logic()
 
 func start_current_turn_logic():
+	if camera and camera.is_game_over:
+		is_game_active = false
+		return
+		
 	print("--- Round %d | Turn: %s ---" % [round_number, "PLAYER" if current_turn == GameTurn.PLAYER else "ENEMY"])
 	
 	# Draw Piece if round is odd (1, 3, 5...)
 	if round_number % 2 != 0:
 		start_chest_sequence()
-	else:
-		# In even rounds, just notify the active side to select an existing piece
+	# Check for valid moves in even rounds (Move Only)
+	if round_number % 2 == 0:
+		var is_white = (current_turn == GameTurn.PLAYER)
+		if not _has_side_any_moves(is_white):
+			print("--- Tarafın yapabileceği hamle yok, sıra geçiliyor... ---")
+			await get_tree().create_timer(1.0).timeout
+			next_turn()
+			return
+			
 		if current_turn == GameTurn.ENEMY:
 			_process_enemy_move_only()
 
@@ -92,6 +103,7 @@ func next_turn():
 	start_current_turn_logic()
 
 func start_chest_sequence():
+	if camera and camera.is_game_over: return
 	print("Sandık sekansı başlatılıyor...")
 	if sequence_started: 
 		print("Sekans zaten çalışıyor!")
@@ -145,6 +157,11 @@ func spawn_random_white_piece():
 	# Materyal ayarlarını da yapalım (StandardMaterial kullanan taşlar için)
 	set_piece_render_priority(piece, 100, true)
 	
+	# Initialize persistent health
+	var stats = PieceDatabase.get_piece_stats(random_path)
+	if not stats.is_empty():
+		piece.set_meta("current_defense", stats["defense"])
+	
 	# Adım 2: Sandıktan önce hafifçe yukarı yükselme animasyonu (0.4 saniye)
 	var rise_tween = create_tween().set_parallel(true)
 	rise_tween.tween_property(piece, "global_position", box.global_position + Vector3(0, 0.3, 0), 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -179,6 +196,11 @@ func _spawn_random_black_piece_for_enemy():
 	piece.global_position = box.global_position
 	piece.scale = Vector3(0.1, 0.1, 0.1)
 	set_piece_render_priority(piece, 100, true)
+	
+	# Initialize persistent health
+	var stats = PieceDatabase.get_piece_stats(random_path)
+	if not stats.is_empty():
+		piece.set_meta("current_defense", stats["defense"])
 	
 	# Rise animation
 	var tw = create_tween().set_parallel(true)
@@ -237,47 +259,148 @@ func _ai_move_piece(hucre: GridHucre):
 		next_turn()
 		return
 		
-	var path = hucre.mevcut_tas.get_meta("scene_path")
-	var valid_moves = PieceDatabase.get_valid_moves(Vector2i(hucre.sutun, hucre.satir), path)
-	
-	if valid_moves.size() > 0:
-		# AI chooses a move (random for now, ideally towards player)
-		var move_coord = valid_moves[randi() % valid_moves.size()]
-		var grid = hucre.get_parent()
-		var target_hucre = grid.hucrelerin_sozlugu[move_coord]
-		
-		# Execute Jump?
-		# For now, let's call a shared move function if we had one.
-		# Let's just automate it here for the AI.
-		var piece = hucre.mevcut_tas
-		hucre.mevcut_tas = null
-		
-		var tw = create_tween()
-		var mid_point = (piece.global_position + target_hucre.global_position) / 2.0 + Vector3(0, 0.15, 0)
-		tw.tween_property(piece, "global_position", mid_point, 0.25).set_trans(Tween.TRANS_SINE)
-		tw.tween_property(piece, "global_position", target_hucre.global_position, 0.25).set_trans(Tween.TRANS_SINE)
-		await tw.finished
-		
-		target_hucre.mevcut_tas = piece
-		
-	# End Turn
-	next_turn()
+	# Instead of just this piece, AI should consider ALL pieces it has
+	# But if called after placement, maybe it just wants to move THIS piece?
+	# User: "düşman koyduğu taşı en mantıklı şekilde... hareket ettirecek"
+	# Let's find the best move for THIS piece specifically
+	var best_move = _get_best_move_for_piece(hucre)
+	if best_move:
+		await _execute_ai_move(hucre, best_move)
+	else:
+		next_turn()
 
 func _process_enemy_move_only():
-	# AI picks a piece on board and moves it
 	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
 	if not grid: return
 	
-	var ai_pieces = []
-	for cell in grid.hucrelerin_sozlugu.values():
-		if cell.mevcut_tas and "black" in cell.mevcut_tas.name.to_lower():
-			ai_pieces.append(cell)
-			
-	if ai_pieces.size() > 0:
+	var best_score = -999999
+	var best_move_data = null # { "from": hucre, "to": target_hucre }
+	
+	for hucre in grid.hucrelerin_sozlugu.values():
+		if hucre.mevcut_tas and "black" in hucre.mevcut_tas.get_meta("scene_path").to_lower():
+			var move = _get_best_move_for_piece(hucre)
+			if move:
+				var score = _evaluate_move(hucre, move)
+				if score > best_score:
+					best_score = score
+					best_move_data = {"from": hucre, "to": move}
+	
+	if best_move_data:
 		await get_tree().create_timer(1.0).timeout
-		_ai_move_piece(ai_pieces[randi() % ai_pieces.size()])
+		await _execute_ai_move(best_move_data["from"], best_move_data["to"])
 	else:
 		next_turn()
+
+func _get_best_move_for_piece(hucre: GridHucre) -> GridHucre:
+	var path = hucre.mevcut_tas.get_meta("scene_path")
+	var valid_moves = PieceDatabase.get_valid_moves(Vector2i(hucre.sutun, hucre.satir), path)
+	if valid_moves.size() == 0: return null
+	
+	var grid = hucre.get_parent()
+	var best_score = -999999
+	var best_target = null
+	
+	for move_coord in valid_moves:
+		if grid.hucrelerin_sozlugu.has(move_coord):
+			var target = grid.hucrelerin_sozlugu[move_coord]
+			var score = _evaluate_move(hucre, target)
+			if score > best_score:
+				best_score = score
+				best_target = target
+				
+	return best_target
+
+func _evaluate_move(from: GridHucre, to: GridHucre) -> float:
+	var score = 0.0
+	var piece = from.mevcut_tas
+	var path = piece.get_meta("scene_path")
+	var attacker_stats = PieceDatabase.get_piece_stats(path)
+	
+	# Target Player King (Absolute priority)
+	if to.mevcut_tas:
+		var defender_path = to.mevcut_tas.get_meta("scene_path").to_lower()
+		var defender_stats = PieceDatabase.get_piece_stats(defender_path)
+		
+		if "white" in defender_path:
+			if "king" in defender_path:
+				score += 10000.0 # Kill King!
+			else:
+				score += 100.0 + defender_stats["defense"]
+				
+			# Check if we can actually kill it
+			var current_def = to.mevcut_tas.get_meta("current_defense") if to.mevcut_tas.has_meta("current_defense") else defender_stats["defense"]
+			if attacker_stats["attack"] < current_def:
+				score -= 50.0 # Disincentivize pointless bouncing
+	
+	# Proximity to player side (Row 4 is where player King resides)
+	# Dist to Row 4, Col 2
+	var dist_to_king = Vector2(to.sutun, to.satir).distance_to(Vector2(2, 4))
+	score += (10.0 - dist_to_king) * 5.0
+	
+	# Defence: If enemy is near our King (Row 0, Col 2)
+	# This is a bit simplified, but AI will move to squares near its own king if threatened
+	return score
+
+func _execute_ai_move(from: GridHucre, to: GridHucre):
+	var piece = from.mevcut_tas
+	var path = piece.get_meta("scene_path")
+	from.mevcut_tas = null
+	
+	# Jump animation (Shared logic with camera_3d but automated)
+	var tw = create_tween()
+	var start_pos = piece.global_position
+	var end_pos = to.global_position
+	var mid_point = (start_pos + end_pos) / 2.0 + Vector3(0, 0.15, 0)
+	
+	tw.tween_property(piece, "global_position", mid_point, 0.25).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(piece, "global_position", end_pos, 0.25).set_trans(Tween.TRANS_SINE)
+	await tw.finished
+	
+	# Combat Resolution (Same as player's)
+	if to.mevcut_tas:
+		var attacker_stats = PieceDatabase.get_piece_stats(path)
+		var defender = to.mevcut_tas
+		var defender_path = defender.get_meta("scene_path")
+		var defender_stats = PieceDatabase.get_piece_stats(defender_path)
+		
+		var current_def = defender.get_meta("current_defense") if defender.has_meta("current_defense") else defender_stats["defense"]
+		current_def -= attacker_stats["attack"]
+		defender.set_meta("current_defense", current_def)
+		
+		if camera.has_method("apply_shake"): camera.apply_shake(0.2, 0.3)
+		
+		if current_def <= 0:
+			# Capture!
+			if camera.has_method("_create_puff"): camera._create_puff(to.global_position)
+			if camera.has_method("apply_shake"): camera.apply_shake(0.4, 0.5)
+			
+			var is_king = defender.has_meta("is_king")
+			var is_player_king = is_king and "white" in defender_path.to_lower()
+			
+			defender.queue_free()
+			to.mevcut_tas = piece
+			piece.reparent(to)
+			piece.position = Vector3.ZERO
+			
+			if is_king:
+				if is_player_king:
+					if camera.has_method("trigger_loss"): camera.trigger_loss()
+				else:
+					if camera.has_method("trigger_win"): camera.trigger_win()
+		else:
+			# Bounce back!
+			var tw_back = create_tween()
+			tw_back.tween_property(piece, "global_position", from.global_position, 0.3).set_trans(Tween.TRANS_BACK)
+			await tw_back.finished
+			from.mevcut_tas = piece
+			piece.reparent(from)
+			piece.position = Vector3.ZERO
+	else:
+		to.mevcut_tas = piece
+		piece.reparent(to)
+		piece.position = Vector3.ZERO
+	
+	next_turn()
 
 # Taşın materyallerini ayarlama yardımcısı
 func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
@@ -329,3 +452,28 @@ func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
 	# Eğer animasyon durdurulmuşsa devam ettir
 	anim_player.speed_scale = 1.0
 	sequence_started = false
+
+func _has_side_any_moves(is_white: bool) -> bool:
+	# 1. If currently holding a piece from box, they HAVE a move (placement)
+	if is_white and camera and camera.held_piece != null:
+		return true
+		
+	# 2. Check all pieces on board for valid moves
+	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	if not grid: return false
+	
+	var keyword = "white" if is_white else "black"
+	
+	for hucre in grid.hucrelerin_sozlugu.values():
+		if hucre.mevcut_tas:
+			var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
+			if keyword in path.to_lower():
+				# immovable pieces (Kings) don't count as "available moves" if they can't move
+				if hucre.mevcut_tas.has_meta("is_immovable"):
+					continue
+					
+				var moves = PieceDatabase.get_valid_moves(Vector2i(hucre.sutun, hucre.satir), path)
+				if moves.size() > 0:
+					return true
+					
+	return false

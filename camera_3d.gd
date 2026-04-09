@@ -174,9 +174,8 @@ func sit_down():
 	)
 
 func _input(event):
-	if is_game_over: return
-	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if is_game_over and current_state == PlayerState.SEATED: return
 		if event.double_click:
 			_handle_double_click()
 		else:
@@ -186,6 +185,7 @@ func _input(event):
 				interact_with_crosshair()
 	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+		if is_game_over: return
 		# Deselect on right click
 		_clear_selection()
 	
@@ -450,7 +450,7 @@ func _select_hucre(hucre: GridHucre):
 func _clear_selection():
 	if selected_hucre and selected_hucre.mevcut_tas:
 		var tw = create_tween()
-		tw.tween_property(selected_hucre.mevcut_tas, "position:y", 0.0, 0.1)
+		tw.tween_property(selected_hucre.mevcut_tas, "position:y", 0.0, 0.1).set_trans(Tween.TRANS_SINE)
 		
 	selected_hucre = null
 	for h in move_highlights:
@@ -474,25 +474,52 @@ func _execute_move(from: GridHucre, to: GridHucre):
 	
 	await tw.finished
 	
+	# Impact Shake
+	if to.mevcut_tas:
+		apply_shake(0.2, 0.3)
+	
 	# Combat Resolution
 	if to.mevcut_tas:
 		var attacker_stats = PieceDatabase.get_piece_stats(path)
-		var defender_path = to.mevcut_tas.get_meta("scene_path")
+		var defender = to.mevcut_tas
+		var defender_path = defender.get_meta("scene_path")
 		var defender_stats = PieceDatabase.get_piece_stats(defender_path)
 		
-		if attacker_stats["attack"] > defender_stats["defense"]:
+		# Get or Initialize current defense
+		var current_def = defender.get_meta("current_defense") if defender.has_meta("current_defense") else defender_stats["defense"]
+		current_def -= attacker_stats["attack"]
+		defender.set_meta("current_defense", current_def)
+		
+		if current_def <= 0:
 			# Capture!
 			_create_puff(to.global_position)
-			to.mevcut_tas.queue_free()
+			apply_shake(0.4, 0.5) # Bigger shake on kill
+			
+			var is_king = defender.has_meta("is_king")
+			var is_player_piece = "white" in defender_path.to_lower()
+			
+			defender.queue_free()
 			to.mevcut_tas = piece
+			piece.reparent(to)
+			piece.position = Vector3.ZERO
+			
+			if is_king:
+				if is_player_piece:
+					trigger_loss()
+				else:
+					trigger_win()
 		else:
 			# Bounce back!
 			var tw_back = create_tween()
 			tw_back.tween_property(piece, "global_position", from.global_position, 0.3).set_trans(Tween.TRANS_BACK)
 			await tw_back.finished
 			from.mevcut_tas = piece
+			piece.reparent(from)
+			piece.position = Vector3.ZERO
 	else:
 		to.mevcut_tas = piece
+		piece.reparent(to)
+		piece.position = Vector3.ZERO
 	
 	# End Player Turn
 	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
@@ -583,6 +610,11 @@ func place_held_piece():
 	tween.tween_property(held_piece, "scale", Vector3(1, 1, 1), 0.5)
 	tween.tween_property(held_piece, "rotation_degrees", Vector3.ZERO, 0.5)
 	
+	await tween.finished
+	if held_piece:
+		held_piece.reparent(target_hucre)
+		held_piece.position = Vector3.ZERO
+	
 	# Taşı yerleştirdiğimizde derinlik önceliğini sıfırlayalım (Normal görünsün)
 	set_piece_render_priority(held_piece, 0, false)
 	
@@ -597,6 +629,16 @@ func place_held_piece():
 	target_hucre.set_preview_piece("")
 	target_hucre.set_highlight(false)
 	last_highlighted_cell = null
+	
+func trigger_win():
+	print("VICTORY! King defeated.")
+	is_game_over = true
+	# Force player to stand up
+	stand_up()
+	# Maybe add a small overlay or slow motion
+	Engine.time_scale = 0.5
+	await get_tree().create_timer(1.0).timeout
+	Engine.time_scale = 1.0
 	
 	# UI'yı gizle
 	if has_node("/root/InspectUI"):
@@ -687,3 +729,32 @@ func _transition_to_seated_view():
 	await tw.finished
 	is_zoomed_view = false
 	is_transitioning_view = false
+
+func trigger_loss():
+	print("GAME OVER! Player King defeated.")
+	is_game_over = true
+	is_locked = true # Disable controls
+	
+	# Falling Animation
+	var tw = create_tween().set_parallel(true)
+	# Tilt camera sideways and crash to floor
+	tw.tween_property(self, "rotation_degrees:z", 75.0, 0.6).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	tw.tween_property(self, "position:y", -0.9, 0.6).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "rotation_degrees:x", -10.0, 0.6)
+	
+	apply_shake(0.5, 0.8)
+	
+	await tw.finished
+	
+	# Notify UI (will be created in root by OyunYoneticisi or here)
+	var ui = get_node_or_null("/root/GameOverUI")
+	if ui:
+		ui.show_game_over()
+	else:
+		# Fallback: create it if it doesn't exist
+		var script = load("res://GameOverUI.gd")
+		if script:
+			var new_ui = script.new()
+			new_ui.name = "GameOverUI"
+			get_tree().root.add_child(new_ui)
+			new_ui.show_game_over()
