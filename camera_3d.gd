@@ -117,19 +117,35 @@ func stand_up():
 	current_state = PlayerState.TRANSITIONING
 	is_locked = true
 	
-	var tw = create_tween().set_parallel(true)
-	# Camera goes up slightly
-	var target_pos = Vector3(position.x, position.y + 0.3, position.z)
-	tw.tween_property(self, "position", target_pos, 1.0).set_trans(Tween.TRANS_SINE)
+	var tw = create_tween()
 	
-	tw.set_parallel(false)
-	tw.tween_callback(func():
-		current_state = PlayerState.STANDING
-		is_locked = false
-		is_zoomed_view = false # Reset zoom state
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED # Reset mouse
-		print("PLAYER STANDING")
-	)
+	# 1. Aşama: Masaya doğru hafifçe eğilme (Lean In)
+	tw.set_parallel(true)
+	tw.tween_property(self, "position:z", 1.8, 0.4).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(self, "rotation_degrees:x", -30.0, 0.4).set_trans(Tween.TRANS_SINE)
+	
+	tw.set_parallel(false) # Sıralı devam et
+	tw.tween_interval(0.1) # Kısa bir duraksama
+	
+	# 2. Aşama: Doğrulma ve Geri Çekilme (Push Back & Rise)
+	tw.set_parallel(true)
+	# Gövdeyi geriye çekelim
+	var target_body_pos = get_parent().global_position + get_parent().global_transform.basis.z * 1.0
+	tw.tween_property(get_parent(), "global_position", target_body_pos, 0.8).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	# Kamerayı yukarı kaldırıp düzeltelim
+	tw.tween_property(self, "position:y", seated_position.y + 0.3, 0.8).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "rotation_degrees:x", 0.0, 0.8).set_trans(Tween.TRANS_SINE)
+	
+	await tw.finished
+	
+	current_state = PlayerState.STANDING
+	is_locked = false
+	is_zoomed_view = false
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# Bakış yönünü mevcut rotasyona kilitleyelim
+	yaw = rotation_degrees.y
+	pitch = rotation_degrees.x
+	print("PLAYER STANDING")
 
 func sit_down():
 	if current_state != PlayerState.STANDING: return
@@ -177,6 +193,9 @@ func _input(event):
 				_transition_to_board_view()
 			elif event.keycode == KEY_S and is_zoomed_view:
 				_transition_to_seated_view()
+				
+		if event.keycode == KEY_C and current_state == PlayerState.SEATED and not is_transitioning_view:
+			stand_up()
 
 	if is_locked: return
 	if event is InputEventMouseMotion:
