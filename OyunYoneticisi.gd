@@ -4,7 +4,6 @@ var white_pieces = [
 	"res://Pawn/bishop_white.tscn",
 	"res://Pawn/castle_white.tscn",
 	"res://Pawn/horse_white.tscn",
-	"res://Pawn/king_white.tscn",
 	"res://Pawn/piyon_white.tscn",
 	"res://Pawn/queen_white.tscn"
 ]

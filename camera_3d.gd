@@ -23,6 +23,10 @@ var interact_label: Label = null
 
 var ray_length: float = 10.0
 @onready var crosshair_ui: TextureRect = get_tree().root.find_child("Crosshair", true, false)
+@onready var camera2: Camera3D = get_parent().get_node("Camera3D2") if get_parent().has_node("Camera3D2") else null
+
+var is_zoomed_view: bool = false
+var is_transitioning_view: bool = false
 
 # Shake Params
 var shake_intensity: float = 0.0
@@ -109,6 +113,7 @@ func stand_up():
 	tw.tween_callback(func():
 		current_state = PlayerState.STANDING
 		is_locked = false
+		is_zoomed_view = false # Reset zoom state
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED # Reset mouse
 		print("PLAYER STANDING")
 	)
@@ -152,6 +157,13 @@ func _input(event):
 				manager.start_chest_sequence()
 			else:
 				print("OyunYoneticisi bulunamadı!")
+		
+		# Camera Switching Logic (W to Zoom, S to Back)
+		if current_state == PlayerState.SEATED and not is_transitioning_view:
+			if event.keycode == KEY_W and not is_zoomed_view:
+				_transition_to_board_view()
+			elif event.keycode == KEY_S and is_zoomed_view:
+				_transition_to_seated_view()
 
 	if is_locked: return
 	if event is InputEventMouseMotion:
@@ -196,9 +208,14 @@ func _process(_delta):
 	var breath_roll = sin(t * 0.5) * 0.08
 	
 	if current_state == PlayerState.SEATED:
-		rotation_degrees.y = seated_rotation.y
-		rotation_degrees.x = seated_rotation.x
-		rotation_degrees.z = seated_rotation.z
+		if not is_transitioning_view:
+			if is_zoomed_view and camera2:
+				position = camera2.position
+				rotation_degrees = camera2.rotation_degrees
+			else:
+				rotation_degrees.y = seated_rotation.y
+				rotation_degrees.x = seated_rotation.x
+				rotation_degrees.z = seated_rotation.z
 	else:
 		rotation_degrees.y = yaw + breath_yaw + (shake_offset.x * 2.0)
 		rotation_degrees.x = pitch + breath_pitch + (shake_offset.y * 2.0)
@@ -459,3 +476,22 @@ func reset_rotation():
 	# Warp mouse to center to sync with reset yaw/pitch
 	Input.warp_mouse(get_viewport().get_visible_rect().size / 2.0)
 	is_locked = false
+
+func _transition_to_board_view():
+	if not camera2: return
+	is_transitioning_view = true
+	var tw = create_tween().set_parallel(true)
+	tw.tween_property(self, "position", camera2.position, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(self, "rotation_degrees", camera2.rotation_degrees, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tw.finished
+	is_zoomed_view = true
+	is_transitioning_view = false
+
+func _transition_to_seated_view():
+	is_transitioning_view = true
+	var tw = create_tween().set_parallel(true)
+	tw.tween_property(self, "position", seated_position, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(self, "rotation_degrees", seated_rotation, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tw.finished
+	is_zoomed_view = false
+	is_transitioning_view = false
