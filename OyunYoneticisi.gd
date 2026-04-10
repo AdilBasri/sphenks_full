@@ -92,6 +92,69 @@ func start_current_turn_logic():
 			if current_turn == GameTurn.ENEMY:
 				_process_enemy_move_only()
 
+var phase_number: int = 1
+
+func restart_new_match():
+	is_game_active = false
+	cleanup_board()
+	
+	# Reset state
+	phase_number += 1
+	round_number = 1
+	current_turn = GameTurn.PLAYER
+	sequence_started = false
+	
+	# AI Upgrade: Düşmana da 1 puan ver (Rastgele dağıt)
+	_apply_enemy_upgrade()
+	
+	# Şahları ve Grid'i resetle
+	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	if grid and grid.has_method("spawn_kings"):
+		grid.spawn_kings()
+		
+	print("[OyunYoneticisi] Phase %d hazırlanıyor..." % phase_number)
+	await get_tree().create_timer(0.5).timeout
+	
+	_show_phase_message()
+	
+	await get_tree().create_timer(1.2).timeout
+	is_game_active = true
+	start_current_turn_logic()
+
+func _apply_enemy_upgrade():
+	var types = ["pawn", "castle", "bishop", "horse", "queen"]
+	var type = types[randi() % types.size()]
+	var stat = "attack" if randf() > 0.5 else "defense"
+	
+	# PieceDatabase üzerinden düşman (Siyah) taşını geliştir
+	PieceDatabase.upgrade_piece(type, false, stat, 1)
+
+func _show_phase_message():
+	var canvas = CanvasLayer.new()
+	canvas.layer = 200
+	get_tree().root.add_child(canvas)
+	
+	var label = Label.new()
+	label.text = "PHASE %d" % phase_number
+	var settings = LabelSettings.new()
+	settings.font_size = 64
+	settings.font_color = Color.WHITE
+	settings.outline_size = 12
+	settings.outline_color = Color.BLACK
+	label.label_settings = settings
+	
+	label.set_anchors_preset(Control.PRESET_CENTER)
+	label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	label.grow_vertical = Control.GROW_DIRECTION_BOTH
+	canvas.add_child(label)
+	
+	label.modulate.a = 0
+	var tw = create_tween()
+	tw.tween_property(label, "modulate:a", 1.0, 0.4)
+	tw.tween_interval(1.0)
+	tw.tween_property(label, "modulate:a", 0.0, 0.4)
+	tw.tween_callback(canvas.queue_free)
+
 func cleanup_board():
 	print("Oyun bitti, tahta temizleniyor...")
 	var grid = get_tree().root.find_child("OyuncuGrid", true, false)

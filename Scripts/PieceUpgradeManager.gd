@@ -183,8 +183,8 @@ func _on_upgrade_done(_type, _atk, _def):
 	if camera and camera.has_method("exit_upgrade_selection_view"):
 		camera.exit_upgrade_selection_view()
 	
-	if camera and camera.has_method("release_to_walk"):
-		camera.release_to_walk()
+	if camera and camera.has_method("return_to_table"):
+		camera.return_to_table()
 
 func _clear_selection_pieces():
 	for p in selection_pieces:

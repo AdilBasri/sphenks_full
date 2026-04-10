@@ -843,25 +843,25 @@ func exit_upgrade_selection_view():
 	is_upgrade_mode = false
 	# This is now handled by release_to_walk() or sit_down()
 
-func release_to_walk():
+func return_to_table():
 	is_upgrade_mode = false
-	is_game_over = false
-	current_state = PlayerState.STANDING
-	is_locked = false
+	is_game_over = false # Sıfırla ki sit_down engellenmesin
 	
-	var body = get_parent()
-	if body is CharacterBody3D:
-		# Oyuncuyu odanın güvenli bölgesine (sandalyenin yanındaki başlangıç konumu) ışınla
-		# seated_body_position bizim oda içindeki ana referansımız
-		var safe_pos = seated_body_position + Vector3(0, 0.42, 0)
-		body.global_position = safe_pos
-		# Kameranın yerel (local) konumunu kafaya sabitle
-		position = Vector3(0, 0.5, 0) 
-		# Dönüşü sandalyeye bakmayacak şekilde sıfırla (Kapıya doğru vs.)
-		rotation_degrees = Vector3(0, 180, 0)
-		yaw = 180
-		pitch = 0
-		print("[Camera3D] Oyuncu güvenli bölgeye (başlangıç noktası) sıfırlandı.")
+	# Masaya oturma animasyonunu başlat
+	sit_down()
+	
+	# İmleci geri getir
+	if crosshair_ui:
+		crosshair_ui.visible = true
+	
+	# Oyun Yöneticisini bul ve taze maçı başlat
+	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+	if manager and manager.has_method("restart_new_match"):
+		manager.restart_new_match()
+	
+	print("[Camera3D] Masaya dönüldü, imleç ve yeni maç tetiklendi.")
+
+func release_to_walk():
 	
 	# Mevcut bakış açısını yaw/pitch değişkenlerine aktar (Smooth transition)
 	yaw = rotation_degrees.y
