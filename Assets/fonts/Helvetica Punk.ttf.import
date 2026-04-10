@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://frov0p2mfvvo"
-path="res://.godot/imported/Vintage Warehouse.ttf-3922ed735a566185f169b0e75c4ebb48.fontdata"
+uid="uid://v8vvdtjnon7f"
+path="res://.godot/imported/Helvetica Punk.ttf-f4bbf618ee43954e64e98cb29d001932.fontdata"
 
 [deps]
 
-source_file="res://Assets/fonts/Vintage Warehouse.ttf"
-dest_files=["res://.godot/imported/Vintage Warehouse.ttf-3922ed735a566185f169b0e75c4ebb48.fontdata"]
+source_file="res://Assets/fonts/Helvetica Punk.ttf"
+dest_files=["res://.godot/imported/Helvetica Punk.ttf-f4bbf618ee43954e64e98cb29d001932.fontdata"]
 
 [params]
 

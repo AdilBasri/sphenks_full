@@ -33,22 +33,30 @@ func _ready():
 	title = Label.new()
 	title.text = "GAME OVER"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	# Small delay/font style would be nice, but we'll stick to basics for now
+	var title_font = load("res://Assets/fonts/Golden Horse.ttf")
+	title.add_theme_font_override("font", title_font)
+	title.add_theme_font_size_override("font_size", 64)
 	v_box.add_child(title)
 	
 	var spacer = Control.new()
 	spacer.custom_minimum_size.y = 20
 	v_box.add_child(spacer)
 	
+	var btn_font = load("res://Assets/fonts/Helvetica Punk.ttf")
+	
 	try_again_btn = Button.new()
 	try_again_btn.text = "TRY AGAIN"
 	try_again_btn.flat = true
+	try_again_btn.add_theme_font_override("font", btn_font)
+	try_again_btn.add_theme_font_size_override("font_size", 24)
 	try_again_btn.pressed.connect(_on_try_again)
 	v_box.add_child(try_again_btn)
 	
 	quit_btn = Button.new()
 	quit_btn.text = "QUIT"
 	quit_btn.flat = true
+	quit_btn.add_theme_font_override("font", btn_font)
+	quit_btn.add_theme_font_size_override("font_size", 24)
 	quit_btn.pressed.connect(_on_quit)
 	v_box.add_child(quit_btn)
 

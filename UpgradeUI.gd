@@ -43,6 +43,20 @@ func _ready():
 	def_minus.pressed.connect(_on_minus_pressed.bind("defense"))
 	decide_btn.pressed.connect(_on_decide_pressed)
 	
+	# Font Uygulamaları
+	var golden_font = load("res://Assets/fonts/Golden Horse.ttf")
+	var normal_font = load("res://Assets/fonts/Helvetica Punk.ttf")
+	
+	name_label.add_theme_font_override("font", golden_font)
+	name_label.add_theme_font_size_override("font_size", 32)
+	
+	credit_label.add_theme_font_override("font", normal_font)
+	atk_value_label.add_theme_font_override("font", normal_font)
+	def_value_label.add_theme_font_override("font", normal_font)
+	
+	decide_btn.add_theme_font_override("font", golden_font)
+	decide_btn.add_theme_font_size_override("font_size", 22)
+	
 	_setup_slots()
 
 func _setup_slots():
@@ -102,11 +116,11 @@ func open(piece_path: String):
 		viewport_piece.position.y = -0.35 # Biraz yukarı kaldırdık
 		_apply_shader_to_viewport_piece(viewport_piece)
 	
-	# Decide butonunu küçült ve merkeze zorla
-	decide_btn.custom_minimum_size = Vector2(120, 35)
+	# Decide butonunu yazıyı saracak şekilde küçült (Taşma önlendi, orantı düzeltildi)
+	decide_btn.custom_minimum_size = Vector2(110, 35)
 	decide_btn.set_anchors_and_offsets_preset(7)
 	decide_btn.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	decide_btn.position.y = get_viewport().get_visible_rect().size.y - 70
+	decide_btn.position.y = get_viewport().get_visible_rect().size.y - 75
 	
 	is_active = true
 	visible = true

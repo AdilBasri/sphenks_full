@@ -3,12 +3,12 @@
 importer="font_data_dynamic"
 type="FontFile"
 uid="uid://dv5nym1bm6ufp"
-path="res://.godot/imported/Golden Horse PERSONAL USE ONLY!.ttf-d6028105faf660b647ac95d29e123e27.fontdata"
+path="res://.godot/imported/Golden Horse.ttf-2afabd504a8973abd9e201741146831e.fontdata"
 
 [deps]
 
-source_file="res://Assets/fonts/Golden Horse PERSONAL USE ONLY!.ttf"
-dest_files=["res://.godot/imported/Golden Horse PERSONAL USE ONLY!.ttf-d6028105faf660b647ac95d29e123e27.fontdata"]
+source_file="res://Assets/fonts/Golden Horse.ttf"
+dest_files=["res://.godot/imported/Golden Horse.ttf-2afabd504a8973abd9e201741146831e.fontdata"]
 
 [params]
 

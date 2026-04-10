@@ -136,11 +136,13 @@ func _show_phase_message():
 	
 	var label = Label.new()
 	label.text = "PHASE %d" % phase_number
+	
 	var settings = LabelSettings.new()
-	settings.font_size = 64
+	settings.font = load("res://Assets/fonts/dominica.ttf")
+	settings.font_size = 84 # Dominica için daha görkemli bir boyut
 	settings.font_color = Color.WHITE
-	settings.outline_size = 12
-	settings.outline_color = Color.BLACK
+	settings.outline_size = 14
+	settings.outline_color = Color(0, 0, 0, 0.9)
 	label.label_settings = settings
 	
 	label.set_anchors_preset(Control.PRESET_CENTER)

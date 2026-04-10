@@ -110,10 +110,11 @@ func start_upgrade_sequence():
 			piece.rotation = Vector3.ZERO
 			piece.scale = Vector3(1.5, 1.5, 1.5)
 			
-			_add_collision_to_piece(piece)
-			
 			piece.set_meta("scene_path", piece_path)
 			piece.set_meta("is_upgrade_choice", true)
+			
+			_add_collision_to_piece(piece)
+			
 			selection_pieces.append(piece)
 			
 			_setup_piece_visuals(piece)
@@ -129,6 +130,11 @@ func _add_collision_to_piece(piece: Node3D):
 	if piece.find_child("*StaticBody*", true, false): return
 	var body = StaticBody3D.new()
 	body.collision_layer = 1
+	body.set_meta("is_chess_piece", true)
+	body.set_meta("is_upgrade_choice", true)
+	if piece.has_meta("scene_path"):
+		body.set_meta("scene_path", piece.get_meta("scene_path"))
+		
 	piece.add_child(body)
 	var shape = CollisionShape3D.new()
 	var box = BoxShape3D.new()

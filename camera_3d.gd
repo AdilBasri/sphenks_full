@@ -117,9 +117,10 @@ func setup_chair_interaction():
 		piece_name_label = Label.new()
 		piece_name_label.name = "PieceInfoLabel"
 		var settings = LabelSettings.new()
-		settings.font_size = 24
+		settings.font = load("res://Assets/fonts/Golden Horse.ttf")
+		settings.font_size = 28
 		settings.font_color = Color.WHITE
-		settings.outline_size = 6
+		settings.outline_size = 8
 		settings.outline_color = Color.BLACK
 		piece_name_label.label_settings = settings
 		piece_name_label.visible = false
@@ -292,16 +293,29 @@ func _update_piece_hover_info():
 	
 	var space_state = get_world_3d().direct_space_state
 	var v_size = get_viewport().get_visible_rect().size
-	var crosshair_pos = get_viewport().get_mouse_position() if current_state == PlayerState.SEATED else v_size / 2.0
+	var crosshair_pos = get_viewport().get_mouse_position() if (current_state == PlayerState.SEATED or is_upgrade_mode) else v_size / 2.0
 	var origin = project_ray_origin(crosshair_pos)
 	var end = origin + project_ray_normal(crosshair_pos) * ray_length
 	var query = PhysicsRayQueryParameters3D.create(origin, end)
 	var result = space_state.intersect_ray(query)
 	
-	if result and result.collider.has_meta("is_grid_cell"):
-		var hucre = result.collider.get_meta("grid_cell_node")
-		if hucre and hucre.mevcut_tas:
-			var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
+	if result:
+		var collider = result.collider
+		var target_piece: Node3D = null
+		
+		# Check grid pieces
+		if collider.has_meta("is_grid_cell"):
+			var hucre = collider.get_meta("grid_cell_node")
+			if hucre and hucre.mevcut_tas:
+				target_piece = hucre.mevcut_tas
+		# Check drafted/upgrade pieces (look at collider directly first, then parent)
+		elif collider.has_meta("is_upgrade_choice"):
+			target_piece = collider
+		elif collider.get_parent() and collider.get_parent().has_meta("is_upgrade_choice"):
+			target_piece = collider.get_parent()
+			
+		if target_piece:
+			var path = target_piece.get_meta("scene_path") if target_piece.has_meta("scene_path") else ""
 			if path != "":
 				var display_name = PieceDatabase.get_piece_display_name(path)
 				piece_name_label.text = display_name
@@ -310,6 +324,7 @@ func _update_piece_hover_info():
 				cursor_3d_pos = result.position
 				return
 				
+	# If no piece is hit OR piece has no path, hide the label
 	piece_name_label.visible = false
 	
 	# Update cursor_3d_pos even if not over a piece (for head tracking)

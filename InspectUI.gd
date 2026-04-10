@@ -20,6 +20,21 @@ func _ready():
 	blur_rect.material.set_shader_parameter("blur_amount", 0.0)
 	margin_container.modulate.a = 0
 	visible = false
+	
+	# Font Uygulamaları
+	var golden_font = load("res://Assets/fonts/Golden Horse.ttf")
+	var normal_font = load("res://Assets/fonts/Helvetica Punk.ttf")
+	
+	name_label.add_theme_font_override("font", golden_font)
+	name_label.add_theme_font_size_override("font_size", 36)
+	
+	stats_label.add_theme_font_override("font", normal_font)
+	stats_label.add_theme_font_size_override("font_size", 22)
+	
+	desc_label.add_theme_font_override("font", normal_font)
+	desc_label.add_theme_font_size_override("font_size", 18)
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	
 	_setup_upgrade_slots()
 
 func _setup_upgrade_slots():
