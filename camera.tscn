@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=45 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
@@ -14,9 +14,10 @@
 [ext_resource type="PackedScene" uid="uid://b5mlgov7d0c4n" path="res://candle1.tscn" id="8_bbdvs"]
 [ext_resource type="PackedScene" uid="uid://c5e7b2v7x8y1" path="res://InspectUI.tscn" id="11_bi1g6"]
 [ext_resource type="PackedScene" uid="uid://d3lxhgiwslk0a" path="res://king_white.tscn" id="11_f3tc8"]
-[ext_resource type="Script" path="res://grid_generator.gd" id="11_grid"]
+[ext_resource type="Script" uid="uid://0rccufjia2dw" path="res://grid_generator.gd" id="11_grid"]
 [ext_resource type="Texture2D" uid="uid://dqardmtjbbmbf" path="res://Assets/cursor/Cursor.png" id="11_motcw"]
 [ext_resource type="PackedScene" uid="uid://berst0pur28ff" path="res://Assets/chair/scene.gltf" id="14_bbdvs"]
+[ext_resource type="Material" uid="uid://devmr4jwek26h" path="res://Masa_Ahsap.tres" id="14_urdi0"]
 [ext_resource type="PackedScene" uid="uid://bthkggqs1ca4q" path="res://Assets/box/scene.gltf" id="14_w2vvk"]
 [ext_resource type="PackedScene" uid="uid://dxkvsxq0j5mgj" path="res://Assets/glitched_skull/scene.gltf" id="18_aw76i"]
 [ext_resource type="PackedScene" uid="uid://c8ol3v3ugs1om" path="res://Assets/horror_stairway_gameready/scene.gltf" id="18_woum2"]
@@ -26,6 +27,14 @@
 [ext_resource type="PackedScene" uid="uid://cd1kd4sf1pnl3" path="res://Assets/poster/soviet_posters/scene.gltf" id="24_21nal"]
 [ext_resource type="PackedScene" uid="uid://ejxn6qum5b3v" path="res://Assets/poster/the_final_storm_prototype_missing_poster/scene.gltf" id="25_0skcs"]
 [ext_resource type="PackedScene" uid="uid://daeik0psu8u7e" path="res://Assets/vent/scene.gltf" id="26_n8g8v"]
+[ext_resource type="PackedScene" uid="uid://06xyafpsydwi" path="res://Assets/fabrics/fabric1/scene.gltf" id="27_y2xar"]
+[ext_resource type="PackedScene" uid="uid://bxwow8a1plawj" path="res://Assets/fabrics/fabric2/scene.gltf" id="28_t7pyt"]
+[ext_resource type="PackedScene" uid="uid://csxj848m8fyex" path="res://Assets/altar/scene.gltf" id="29_g8iqq"]
+[ext_resource type="PackedScene" uid="uid://bwhc2b30ug48m" path="res://Assets/alchol/scene.gltf" id="30_t7pyt"]
+[ext_resource type="PackedScene" uid="uid://602bs0cdwgxb" path="res://Assets/ent/scene.gltf" id="31_g8iqq"]
+[ext_resource type="PackedScene" uid="uid://brheseaaqt0he" path="res://Assets/skull/scene.gltf" id="32_u270x"]
+[ext_resource type="PackedScene" uid="uid://c5fd2o1npa5c0" path="res://Assets/ashtray/scene.gltf" id="34_tth1g"]
+[ext_resource type="Script" uid="uid://bnqdn52relu8j" path="res://Scripts/loop_animation.gd" id="35_loop"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
 _data = {
@@ -49,12 +58,6 @@ volumetric_fog_albedo = Color(0.21230483, 0.21230483, 0.21230483, 1)
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6acwk"]
 height = 1.9550781
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gyfrk"]
-albedo_color = Color(0, 0, 0, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f3tc8"]
-albedo_color = Color(0, 0, 0, 1)
-
 [sub_resource type="LabelSettings" id="LabelSettings_discard"]
 font_size = 36
 font_color = Color(1, 0, 0, 1)
@@ -63,6 +66,24 @@ outline_color = Color(0, 0, 0, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bi1g6"]
 size = Vector3(0.7269287, 2.2666626, 5.2095337)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_smoke"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(1, 1, 1, 0.5)
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_smoke"]
+material = SubResource("StandardMaterial3D_smoke")
+size = Vector2(0.04, 0.04)
+
+[sub_resource type="Curve" id="Curve_smoke"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.25, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
 
 [node name="GameRoom" type="Node3D"]
 script = ExtResource("1_w2vvk")
@@ -188,8 +209,13 @@ light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
 light_energy = 5.0
 
 [node name="OmniLight3D4" type="OmniLight3D" parent="WorldEnvironment"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.68188083, -0.8958916, -1.288084)
-light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8279673, -0.20484024, 2.55941)
+light_color = Color(0.80784315, 0, 0.12941177, 1)
+light_energy = 5.0
+
+[node name="OmniLight3D8" type="OmniLight3D" parent="WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9340401, -0.8555734, 2.2706506)
+light_color = Color(0.80784315, 0, 0.12941177, 1)
 light_energy = 5.0
 
 [node name="OmniLight3D5" type="OmniLight3D" parent="WorldEnvironment"]
@@ -215,6 +241,10 @@ transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0.19101596, 1.0415931, 0.1361
 
 [node name="light3" parent="WorldEnvironment" instance=ExtResource("7_2jv0e")]
 transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, -0.1290336, 0.9348762, 2.647094)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, -0.046443958, 0.9989209, 0, -0.9989209, -0.046443958, 0.18291616, 1.5646175, -2.7242203)
+light_color = Color(0.69411767, 0.7254902, 0.5137255, 1)
 
 [node name="CharacterBody3D" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11820468, -3.558596)
@@ -249,12 +279,12 @@ renk_alternatif = Color(0.29586652, 0.2958665, 0.2958665, 1)
 [node name="masa_üst" type="CSGBox3D" parent="Grid"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0023488253, -0.7297375, -1.9411768)
 size = Vector3(0.85, 0.05, 0.7400147)
-material = SubResource("StandardMaterial3D_gyfrk")
+material = ExtResource("14_urdi0")
 
 [node name="masa_alt" type="CSGBox3D" parent="Grid"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0041656494, -1.0403157, -1.9577152)
 size = Vector3(0.73947144, 0.5864258, 0.26123047)
-material = SubResource("StandardMaterial3D_f3tc8")
+material = ExtResource("14_urdi0")
 
 [node name="chair" parent="." instance=ExtResource("14_bbdvs")]
 transform = Transform3D(0.08, 0, -5.0858397e-09, 0, 0.08, 0, 5.0858397e-09, 0, 0.08, -0.004329741, -0.5934596, -1.1567504)
@@ -353,6 +383,12 @@ transform = Transform3D(0.49991685, 9.0934274e-11, 0.009118845, -9.09494e-11, 0.
 [node name="Wall" parent="paint2/Sketchfab_model/69c77fe81bd849078793a868c87bf3be_fbx/RootNode" index="1"]
 visible = false
 
+[node name="Back" parent="paint2/Sketchfab_model/69c77fe81bd849078793a868c87bf3be_fbx/RootNode" index="2"]
+visible = false
+
+[node name="Back_3_0" parent="paint2/Sketchfab_model/69c77fe81bd849078793a868c87bf3be_fbx/RootNode/Back" index="0"]
+visible = false
+
 [node name="paint1" parent="." instance=ExtResource("6_y3u0t")]
 transform = Transform3D(0.046743996, -0.039623912, -1.4987478, -0.02563259, 1.4992357, -0.04043626, 1.4990524, 0.026871292, 0.046043076, -0.666963, 0.19471467, -2.9734046)
 
@@ -439,6 +475,365 @@ transform = Transform3D(3.5774643e-09, 0, -0.3, 0, 0.3, 0, 0.3, 0, 3.5774643e-09
 
 [node name="vent" parent="." instance=ExtResource("26_n8g8v")]
 transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 1.983463, 0.42146164, -0.001840651)
+script = ExtResource("35_loop")
+
+[node name="fabric1" parent="." instance=ExtResource("27_y2xar")]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, -1.8904595, -0.24328205, 2.2491782)
+
+[node name="fabric2" parent="fabric1" instance=ExtResource("28_t7pyt")]
+transform = Transform3D(0.012499999, 0, 0, 0, 0.012499999, 0, 0, 0, 0.012499999, 0.04905486, -0.4021832, -0.46820235)
+
+[node name="fabric3" parent="fabric1" instance=ExtResource("28_t7pyt")]
+transform = Transform3D(-0.012499999, 0, -1.0927846e-09, 0, 0.012499999, 0, 1.0927846e-09, 0, -0.012499999, 0.059705257, -0.4021832, 0.015716314)
+
+[node name="fabric4" parent="fabric1" instance=ExtResource("28_t7pyt")]
+transform = Transform3D(-0.012482869, -1.091287e-09, 0.00065419945, 1.0927846e-09, -0.012499999, 0, 0.00065419945, 5.7191932e-11, 0.012482869, 0.052971363, -0.39241734, 0.5063889)
+
+[node name="altar" parent="." instance=ExtResource("29_g8iqq")]
+transform = Transform3D(-7.671898e-05, 0, 0.0009970528, 0, 0.001, 0, -0.0009970528, 0, -7.671898e-05, -1.8528045, -0.24002758, 2.2603366)
+
+[node name="alchol1" parent="." instance=ExtResource("30_t7pyt")]
+transform = Transform3D(-1.3987645e-09, 0, 0.032, 0, 0.032, 0, -0.032, 0, -1.3987645e-09, -1.8745492, -0.8680848, 2.4687345)
+
+[node name="bottle1_11_lp001" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="33"]
+visible = false
+
+[node name="Object_102" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_11_lp001" index="0"]
+visible = false
+
+[node name="bottle1_11_lp001_bottle1_0" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_11_lp001/Object_102" index="0"]
+visible = false
+
+[node name="bottle1_12_lp001" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="34"]
+visible = false
+
+[node name="Object_105" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_12_lp001" index="0"]
+visible = false
+
+[node name="bottle1_12_lp001_cap1_0" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_12_lp001/Object_105" index="0"]
+visible = false
+
+[node name="bottle2_11_lp001" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="35"]
+visible = false
+
+[node name="Object_108" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_11_lp001" index="0"]
+visible = false
+
+[node name="bottle2_11_lp001_bottle2_0" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_11_lp001/Object_108" index="0"]
+visible = false
+
+[node name="bottle2_12_lp001" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="36"]
+visible = false
+
+[node name="Object_111" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_12_lp001" index="0"]
+visible = false
+
+[node name="bottle2_12_lp001_cap2_0" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_12_lp001/Object_111" index="0"]
+visible = false
+
+[node name="bottle2_13_lp001" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="37"]
+visible = false
+
+[node name="Object_114" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_13_lp001" index="0"]
+visible = false
+
+[node name="bottle2_13_lp001_liquid2_0" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_13_lp001/Object_114" index="0"]
+visible = false
+
+[node name="bottle3_11_lp001" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="38"]
+visible = false
+
+[node name="Object_117" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_11_lp001" index="0"]
+visible = false
+
+[node name="bottle3_11_lp001_bottle3_0" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_11_lp001/Object_117" index="0"]
+visible = false
+
+[node name="bottle3_12_lp001" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="39"]
+visible = false
+
+[node name="Object_120" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_12_lp001" index="0"]
+visible = false
+
+[node name="bottle3_12_lp001_cap3_0" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_12_lp001/Object_120" index="0"]
+visible = false
+
+[node name="bottle3_13_lp001" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="40"]
+visible = false
+
+[node name="Object_123" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_13_lp001" index="0"]
+visible = false
+
+[node name="bottle3_13_lp001_liquid3_0" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_13_lp001/Object_123" index="0"]
+visible = false
+
+[node name="bottle4_1_lp003" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="41"]
+visible = false
+
+[node name="Object_126" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle4_1_lp003" index="0"]
+visible = false
+
+[node name="bottle4_1_lp003_bottle4_0" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle4_1_lp003/Object_126" index="0"]
+visible = false
+
+[node name="bottle4_2_lp003" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="42"]
+visible = false
+
+[node name="Object_129" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle4_2_lp003" index="0"]
+visible = false
+
+[node name="bottle4_2_lp003_cap4_0" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode/bottle4_2_lp003/Object_129" index="0"]
+visible = false
+
+[node name="bottle4_3_lp002" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="43"]
+visible = false
+
+[node name="bottle5_11_lp001" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="44"]
+visible = false
+
+[node name="bottle5_12_lp001" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="45"]
+visible = false
+
+[node name="bottle5_13_lp001" parent="alchol1/Sketchfab_model/carrrier_box_FBX/RootNode" index="46"]
+visible = false
+
+[node name="alchol2" parent="alchol1" instance=ExtResource("30_t7pyt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.949585, -0.6685982, 1.1117935)
+
+[node name="bottle1_11_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="0"]
+visible = false
+
+[node name="Object_4" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_11_lp" index="0"]
+visible = false
+
+[node name="bottle1_11_lp_bottle1_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_11_lp/Object_4" index="0"]
+visible = false
+
+[node name="bottle1_21_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="1"]
+visible = false
+
+[node name="Object_7" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_21_lp" index="0"]
+visible = false
+
+[node name="bottle1_21_lp_bottle1_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_21_lp/Object_7" index="0"]
+visible = false
+
+[node name="bottle1_12_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="2"]
+visible = false
+
+[node name="Object_10" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_12_lp" index="0"]
+visible = false
+
+[node name="bottle1_12_lp_cap1_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_12_lp/Object_10" index="0"]
+visible = false
+
+[node name="bottle1_22_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="3"]
+visible = false
+
+[node name="Object_13" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_22_lp" index="0"]
+visible = false
+
+[node name="bottle1_22_lp_cap1_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle1_22_lp/Object_13" index="0"]
+visible = false
+
+[node name="bottle2_11_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="4"]
+visible = false
+
+[node name="Object_16" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_11_lp" index="0"]
+visible = false
+
+[node name="bottle2_11_lp_bottle2_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_11_lp/Object_16" index="0"]
+visible = false
+
+[node name="bottle2_12_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="5"]
+visible = false
+
+[node name="Object_19" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_12_lp" index="0"]
+visible = false
+
+[node name="bottle2_12_lp_cap2_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_12_lp/Object_19" index="0"]
+visible = false
+
+[node name="bottle2_13_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="6"]
+visible = false
+
+[node name="Object_22" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_13_lp" index="0"]
+visible = false
+
+[node name="bottle2_13_lp_liquid2_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle2_13_lp/Object_22" index="0"]
+visible = false
+
+[node name="bottle3_11_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="7"]
+visible = false
+
+[node name="Object_25" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_11_lp" index="0"]
+visible = false
+
+[node name="bottle3_11_lp_bottle3_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_11_lp/Object_25" index="0"]
+visible = false
+
+[node name="bottle3_12_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="8"]
+visible = false
+
+[node name="Object_28" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_12_lp" index="0"]
+visible = false
+
+[node name="bottle3_12_lp_cap3_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_12_lp/Object_28" index="0"]
+visible = false
+
+[node name="bottle3_13_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="9"]
+visible = false
+
+[node name="Object_31" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_13_lp" index="0"]
+visible = false
+
+[node name="bottle3_13_lp_liquid3_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_13_lp/Object_31" index="0"]
+visible = false
+
+[node name="bottle5_11_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="10"]
+visible = false
+
+[node name="Object_34" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle5_11_lp" index="0"]
+visible = false
+
+[node name="bottle5_11_lp_bottle5_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle5_11_lp/Object_34" index="0"]
+visible = false
+
+[node name="bottle5_12_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="11"]
+visible = false
+
+[node name="Object_37" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle5_12_lp" index="0"]
+visible = false
+
+[node name="bottle5_12_lp_cap5_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle5_12_lp/Object_37" index="0"]
+visible = false
+
+[node name="bottle5_13_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="12"]
+visible = false
+
+[node name="Object_40" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle5_13_lp" index="0"]
+visible = false
+
+[node name="bottle5_13_lp_liquid5_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle5_13_lp/Object_40" index="0"]
+visible = false
+
+[node name="bottle3_21_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="13"]
+visible = false
+
+[node name="Object_43" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_21_lp" index="0"]
+visible = false
+
+[node name="bottle3_21_lp_bottle3_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_21_lp/Object_43" index="0"]
+visible = false
+
+[node name="bottle3_22_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="14"]
+visible = false
+
+[node name="Object_46" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_22_lp" index="0"]
+visible = false
+
+[node name="bottle3_22_lp_cap3_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_22_lp/Object_46" index="0"]
+visible = false
+
+[node name="bottle3_23_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="15"]
+visible = false
+
+[node name="Object_49" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_23_lp" index="0"]
+visible = false
+
+[node name="bottle3_31_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="16"]
+visible = false
+
+[node name="Object_52" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_31_lp" index="0"]
+visible = false
+
+[node name="bottle3_31_lp_bottle3_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_31_lp/Object_52" index="0"]
+visible = false
+
+[node name="bottle3_32_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="17"]
+visible = false
+
+[node name="Object_55" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle3_32_lp" index="0"]
+visible = false
+
+[node name="bottle3_33_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="18"]
+visible = false
+
+[node name="bottle3_41_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="19"]
+visible = false
+
+[node name="bottle3_42_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="20"]
+visible = false
+
+[node name="bottle2_21_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="21"]
+visible = false
+
+[node name="bottle2_22_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="22"]
+visible = false
+
+[node name="bottle2_23_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="23"]
+visible = false
+
+[node name="bottle5_21_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="24"]
+visible = false
+
+[node name="bottle5_22_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="25"]
+visible = false
+
+[node name="bottle5_23_lp" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="26"]
+visible = false
+
+[node name="Box638" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="27"]
+visible = false
+
+[node name="bottle4_1_lp001" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="28"]
+visible = false
+
+[node name="Object_87" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle4_1_lp001" index="0"]
+visible = false
+
+[node name="bottle4_1_lp001_bottle4_0" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode/bottle4_1_lp001/Object_87" index="0"]
+visible = false
+
+[node name="bottle4_2_lp001" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="29"]
+visible = false
+
+[node name="bottle4_3_lp001" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="30"]
+visible = false
+
+[node name="bottle4_1_lp002" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="31"]
+visible = false
+
+[node name="bottle4_2_lp002" parent="alchol1/alchol2/Sketchfab_model/carrrier_box_FBX/RootNode" index="32"]
+visible = false
+
+[node name="pster" parent="." instance=ExtResource("31_g8iqq")]
+transform = Transform3D(-5.7145515e-09, -6.531758e-08, 1.5, -1.494292, 0.1307337, 0, -0.1307337, -1.494292, -6.556708e-08, -2.096984, 0.22870114, 2.4507916)
+
+[node name="skullp" parent="." instance=ExtResource("32_u270x")]
+transform = Transform3D(0.082806036, 0, -0.056063898, 0, 0.1, 0, 0.056063898, 0, 0.082806036, 0.33372277, -0.6346469, -1.9914403)
+
+[node name="ashtray" parent="." instance=ExtResource("34_tth1g")]
+transform = Transform3D(-0.88941634, 0, -0.45709798, 0, 1, 0, 0.45709798, 0, -0.88941634, 0.31315672, -0.7048744, -2.2486281)
+
+[node name="SmokeParticles" type="CPUParticles3D" parent="ashtray"]
+transform = Transform3D(1.0000012, 0, 0, 0, 1, 0, 0, 0, 1.0000012, -0.017488241, -0.028969705, 0.003086567)
+amount = 32
+lifetime = 2.5
+mesh = SubResource("QuadMesh_smoke")
+direction = Vector3(0, 1, 0)
+spread = 25.0
+gravity = Vector3(0, 0.1, 0)
+initial_velocity_min = 0.05
+initial_velocity_max = 0.15
+angular_velocity_min = -1.0
+angular_velocity_max = 1.0
+damping_min = 0.05
+damping_max = 0.1
+scale_amount_min = 0.02
+scale_amount_max = 0.08
+scale_amount_curve = SubResource("Curve_smoke")
+color = Color(1, 1, 1, 0.4)
 
 [editable path="Sitting"]
 [editable path="box"]
@@ -447,3 +842,6 @@ transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 1.983463, 0.42146164, -
 [editable path="poster4"]
 [editable path="poster5"]
 [editable path="poster6"]
+[editable path="poster7"]
+[editable path="alchol1"]
+[editable path="alchol1/alchol2"]

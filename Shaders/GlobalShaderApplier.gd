@@ -7,6 +7,11 @@ const BASE_SHADER_NO_DEPTH = preload("res://Shaders/toon_ps1_no_depth.gdshader")
 const OUTLINE_SHADER_NO_DEPTH = preload("res://Shaders/toon_ps1_outline_no_depth.gdshader")
 const BARREL_SHADER = preload("res://Shaders/barrel_distortion.gdshader")
 
+# Performance Optimization State
+var _mat_cache: Dictionary = {}
+var _pending_nodes: Array[Node] = []
+var _excluded_cache: Dictionary = {} # Node path -> bool
+
 func _ready():
 	# Apply to everything currently in the tree
 	_process_node(get_tree().root)
@@ -17,10 +22,34 @@ func _ready():
 	# Listen for future nodes entering the world
 	get_tree().node_added.connect(_on_node_added)
 
+func _process(_delta):
+	if _pending_nodes.is_empty():
+		return
+		
+	# Process a small batch of nodes per frame to prevent jitter
+	var start_time = Time.get_ticks_msec()
+	while not _pending_nodes.is_empty():
+		var node = _pending_nodes.pop_front()
+		if is_instance_valid(node):
+			_process_node(node)
+		
+		# Limit processing time per frame (e.g., 2ms) to keep frame rate stable
+		if Time.get_ticks_msec() - start_time > 2:
+			break
+
 func _on_node_added(node: Node):
-	_process_node(node)
+	# Optimization: Fast-exit for common Godot internal nodes
+	if node is Timer or node is AnimationPlayer or node is AudioStreamPlayer or node is AudioStreamPlayer3D or node is CanvasItem:
+		return
+	
+	# Optimization: Add to queue instead of processing instantly
+	_pending_nodes.append(node)
 
 func _process_node(node: Node):
+	# EXCLUSION: Skip fabric1 and altar subtrees
+	if _is_excluded(node):
+		return
+		
 	# Only target 3D meshes
 	if node is MeshInstance3D:
 		# Layer 2 is reserved for Viewmodels (Gun/Cards)
@@ -31,9 +60,31 @@ func _process_node(node: Node):
 		var is_piece = _is_chess_piece(node)
 		_apply_toon_ps1(node, is_piece)
 	
-	# Recurse for existing children if needed (mostly for _ready() call)
-	for child in node.get_children():
-		_process_node(child)
+	# Recurse for existing children if needed
+	# Optimization: Only recurse if the node is part of a 3D branch or root
+	# Skip recursion for pure UI/Control branches beyond the root logic
+	if node is Node3D or node == get_tree().root or node.name == "GameRoom":
+		for child in node.get_children():
+			_process_node(child)
+
+func _is_excluded(node: Node) -> bool:
+	# Check path-based cache first
+	var path = node.get_path()
+	if _excluded_cache.has(path):
+		return _excluded_cache[path]
+		
+	# Checks if this node or any ancestor is fabric1, altar, or ashtray
+	var p = node
+	var result = false
+	while p and p != get_tree().root:
+		var lname = p.name.to_lower()
+		if lname == "fabric1" or lname == "altar" or lname == "ashtray":
+			result = true
+			break
+		p = p.get_parent()
+	
+	_excluded_cache[path] = result
+	return result
 
 func _is_chess_piece(node: Node) -> bool:
 	# Check the node itself
@@ -104,7 +155,15 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 		if color.r > 0.9 and color.g > 0.9 and color.b > 0.9:
 			color = Color(0.85, 0.85, 0.85)
 
-	# 3. Create the New Base Material
+	# 3. Use Cached Material if available
+	var tex_id = tex.get_instance_id() if tex else 0
+	var cache_key = "%d_%s_%d_%d" % [tex_id, str(color), int(is_piece), int(render_on_top)]
+	
+	if _mat_cache.has(cache_key):
+		mesh.material_override = _mat_cache[cache_key]
+		return
+
+	# 4. Create the New Base Material
 	var toon_mat = ShaderMaterial.new()
 	toon_mat.shader = BASE_SHADER_NO_DEPTH if render_on_top else BASE_SHADER
 	toon_mat.render_priority = 100 if render_on_top else 0
@@ -118,8 +177,7 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 	toon_mat.set_shader_parameter("affine_warp", affine)
 	toon_mat.set_shader_parameter("light_intensity", light_int)
 
-	# 4. Create the Outline Material (Next Pass)
-	# Pieces get a thinner, subtler outline
+	# 5. Create the Outline Material (Next Pass)
 	var outline_mat = ShaderMaterial.new()
 	outline_mat.shader = OUTLINE_SHADER_NO_DEPTH if render_on_top else OUTLINE_SHADER
 	outline_mat.render_priority = 101 if render_on_top else 0
@@ -130,6 +188,9 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 	outline_mat.set_shader_parameter("resolution_scale", 256.0)
 
 	toon_mat.next_pass = outline_mat
+	
+	# Store in cache and apply
+	_mat_cache[cache_key] = toon_mat
 	mesh.material_override = toon_mat
 
 func _setup_screen_effects():

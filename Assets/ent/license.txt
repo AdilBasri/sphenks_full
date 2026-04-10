@@ -1,0 +1,11 @@
+Model Information:
+* title:	Triangle Poster - Sword
+* source:	https://sketchfab.com/3d-models/triangle-poster-sword-d25f9eb2f9164f62b5738ed3f4cb98b4
+* author:	jazz-the-giraffe (https://sketchfab.com/jazz-the-giraffe)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Triangle Poster - Sword" (https://sketchfab.com/3d-models/triangle-poster-sword-d25f9eb2f9164f62b5738ed3f4cb98b4) by jazz-the-giraffe (https://sketchfab.com/jazz-the-giraffe) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Fabric
+* source:	https://sketchfab.com/3d-models/fabric-ee6763b97ae34cd49cc63f169c5c4cf9
+* author:	ariajadidi (https://sketchfab.com/ariajadidi)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Fabric" (https://sketchfab.com/3d-models/fabric-ee6763b97ae34cd49cc63f169c5c4cf9) by ariajadidi (https://sketchfab.com/ariajadidi) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

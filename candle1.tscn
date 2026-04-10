@@ -1,8 +1,11 @@
-[gd_scene load_steps=2 format=3 uid="uid://b5mlgov7d0c4n"]
+[gd_scene load_steps=4 format=3 uid="uid://b5mlgov7d0c4n"]
 
 [ext_resource type="PackedScene" uid="uid://blw4ymtsh4brt" path="res://Assets/candle1/scene.gltf" id="1_ekqw7"]
+[ext_resource type="Script" uid="uid://cbp1vwy7q2d4n" path="res://Scripts/light_flicker.gd" id="2_flicker"]
+[ext_resource type="Script" uid="uid://bwuvldqmhm6c6" path="res://Scripts/loop_animation.gd" id="3_loop"]
 
 [node name="Sketchfab_Scene" instance=ExtResource("1_ekqw7")]
+script = ExtResource("3_loop")
 
 [node name="mesh_6" parent="Sketchfab_model/root/GLTF_SceneRootNode/Flame_3_6" index="0"]
 blend_shapes/morph_0 = 1.0
@@ -15,14 +18,23 @@ blend_shapes/morph_0 = 1.0
 
 [node name="OmniLight3D" type="OmniLight3D" parent="." index="2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05439903, 0.16933, -0.03502047)
+script = ExtResource("2_flicker")
 light_color = Color(1, 0.53333336, 0.29411766, 1)
 light_energy = 0.5
+noise_speed = 12.0
+noise_amplitude = 0.6
 
 [node name="OmniLight3D3" type="OmniLight3D" parent="." index="3"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.06493016, 0.09737001, 0.055703536)
+script = ExtResource("2_flicker")
 light_color = Color(1, 0.53333336, 0.29411766, 1)
 light_energy = 0.5
+noise_speed = 10.0
+noise_amplitude = 0.4
 
 [node name="OmniLight3D2" type="OmniLight3D" parent="." index="4"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05033219, 0.19854254, -0.0005975254)
+script = ExtResource("2_flicker")
 light_color = Color(1, 0.53333336, 0.29411766, 1)
+noise_speed = 15.0
+noise_amplitude = 0.8

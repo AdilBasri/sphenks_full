@@ -40,6 +40,7 @@ var held_piece_scene: String = ""
 var last_highlighted_cell: GridHucre = null
 var selected_hucre: GridHucre = null
 var move_highlights: Array[GridHucre] = []
+var is_placing_piece: bool = false
 
 func _ready():
 	# Capture mouse (HIDE)
@@ -466,6 +467,11 @@ func _clear_selection():
 	for h in move_highlights:
 		h.set_highlight(false)
 	move_highlights.clear()
+	
+	if last_highlighted_cell:
+		last_highlighted_cell.set_highlight(false)
+		last_highlighted_cell.set_preview_piece("")
+		last_highlighted_cell = null
 
 func _execute_move(from: GridHucre, to: GridHucre):
 	var piece = from.mevcut_tas
@@ -577,6 +583,8 @@ func pick_up_piece(piece: Node3D, scene_path: String):
 		held_piece.visible = false
 
 func _process_placement_preview():
+	if is_placing_piece: return
+	
 	var space_state = get_world_3d().direct_space_state
 	var v_size = get_viewport().get_visible_rect().size
 	var crosshair_pos = get_viewport().get_mouse_position() if current_state == PlayerState.SEATED else v_size / 2.0
@@ -585,20 +593,29 @@ func _process_placement_preview():
 	var query = PhysicsRayQueryParameters3D.create(origin, end)
 	var result = space_state.intersect_ray(query)
 	
-	if last_highlighted_cell:
-		last_highlighted_cell.set_highlight(false)
-		last_highlighted_cell.set_preview_piece("")
-		last_highlighted_cell = null
-		
+	var current_hucre: GridHucre = null
 	if result:
 		var collider = result.collider
 		if collider.has_meta("is_grid_cell"):
-			var hucre = collider.get_meta("grid_cell_node")
+			current_hucre = collider.get_meta("grid_cell_node")
+	
+	# Optimization: Only update if the cell has changed
+	if current_hucre != last_highlighted_cell:
+		# Clear old highlight
+		if last_highlighted_cell:
+			last_highlighted_cell.set_highlight(false)
+			last_highlighted_cell.set_preview_piece("")
+		
+		# Set new highlight
+		last_highlighted_cell = current_hucre
+		if last_highlighted_cell:
 			# Check if cell is an allowed placement square
-			if not hucre.mevcut_tas and _is_cell_valid_for_placement(hucre):
-				hucre.set_highlight(true, Color(0, 1, 0, 0.4)) # Yeşil önizleme
-				hucre.set_preview_piece(held_piece_scene)
-				last_highlighted_cell = hucre
+			if not last_highlighted_cell.mevcut_tas and _is_cell_valid_for_placement(last_highlighted_cell):
+				last_highlighted_cell.set_highlight(true, Color(0, 1, 0, 0.4)) # Yeşil önizleme
+				last_highlighted_cell.set_preview_piece(held_piece_scene)
+			else:
+				# Even if it's hit, if it's invalid, treat as null for next frame check
+				last_highlighted_cell = null
 
 func is_node_part_of_box(node: Node) -> bool:
 	var current = node
@@ -613,8 +630,14 @@ func place_held_piece():
 		SesYoneticisi.play_error()
 		return
 	
+	is_placing_piece = true
 	var target_hucre = last_highlighted_cell
 	var target_pos = target_hucre.global_position
+	
+	# Temizle (Önizleme taşını hemen kaldıralım ki asıl taş uçarken görsel karmaşa olmasın)
+	target_hucre.set_preview_piece("")
+	target_hucre.set_highlight(false)
+	last_highlighted_cell = null
 	
 	# Taşı grid'e taşıyalım
 	held_piece.reparent(get_tree().root)
@@ -641,11 +664,7 @@ func place_held_piece():
 	target_hucre.mevcut_tas = held_piece
 	held_piece = null
 	held_piece_scene = ""
-	
-	# Hücredeki önizlemeyi temizle
-	target_hucre.set_preview_piece("")
-	target_hucre.set_highlight(false)
-	last_highlighted_cell = null
+	is_placing_piece = false
 	
 func trigger_win():
 	print("VICTORY! King defeated.")

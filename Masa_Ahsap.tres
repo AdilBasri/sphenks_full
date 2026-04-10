@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://devmr4jwek26h"]
+
+[ext_resource type="Texture2D" uid="uid://bofe5r3rah77e" path="res://Assets/wood_texture/textures/wood_shutter_diff_4k.jpg" id="1_ws0vw"]
+
+[resource]
+albedo_color = Color(0.45755738, 0.24607563, 0, 1)
+albedo_texture = ExtResource("1_ws0vw")
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0

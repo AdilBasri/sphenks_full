@@ -25,7 +25,7 @@ func setup(p_sutun: int, p_satir: int, p_boyut: float = 1.0, p_renk: Color = Col
 func refresh_visuals() -> void:
 	# Mevcut görselleri temizle (Highlight mesh hariç)
 	for child in get_children():
-		if child != highlight_mesh and child != preview_tas and not child is StaticBody3D:
+		if child != highlight_mesh and child != preview_tas and child != mevcut_tas and not child is StaticBody3D:
 			child.queue_free()
 	
 	# Eğer highlight_mesh yoksa oluştur (Sadece ilk kez)

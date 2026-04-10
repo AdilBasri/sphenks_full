@@ -67,6 +67,7 @@ func _on_try_again():
 	# Reset time scale just in case
 	Engine.time_scale = 1.0
 	get_tree().reload_current_scene()
+	queue_free()
 
 func _on_quit():
 	get_tree().quit()

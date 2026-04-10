@@ -1,0 +1,11 @@
+Model Information:
+* title:	Wooden box with bottles.
+* source:	https://sketchfab.com/3d-models/wooden-box-with-bottles-ec80cdf3f94c43859e202a34a720b96f
+* author:	DZs (https://sketchfab.com/DZs)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Wooden box with bottles." (https://sketchfab.com/3d-models/wooden-box-with-bottles-ec80cdf3f94c43859e202a34a720b96f) by DZs (https://sketchfab.com/DZs) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
