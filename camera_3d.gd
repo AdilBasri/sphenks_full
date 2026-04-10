@@ -461,6 +461,11 @@ func _handle_double_click():
 				get_viewport().set_input_as_handled()
 
 func _select_hucre(hucre: GridHucre):
+	if selected_hucre == hucre:
+		_clear_selection()
+		SesYoneticisi.play_error()
+		return
+		
 	if selected_hucre: _clear_selection()
 	
 	selected_hucre = hucre
