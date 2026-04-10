@@ -110,6 +110,9 @@ func play_handing():
 func play_fall():
 	play_sfx(fall_sound)
 
+func play_hover():
+	play_sfx(handing_item_sound, 1.2, -10.0) # High pitch, subtle
+
 # Walking control
 func set_walking(is_moving: bool):
 	if is_moving:

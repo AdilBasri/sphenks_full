@@ -41,6 +41,9 @@ var last_highlighted_cell: GridHucre = null
 var selected_hucre: GridHucre = null
 var move_highlights: Array[GridHucre] = []
 var is_placing_piece: bool = false
+var is_upgrade_mode: bool = false
+var upgrade_manager: Node = null
+var hovered_upgrade_piece: Node3D = null
 
 func _ready():
 	# Capture mouse (HIDE)
@@ -77,6 +80,13 @@ func _ready():
 	# Reset state if reloaded
 	Engine.time_scale = 1.0
 	# The initial mouse mode is handled above in the current_state check
+	
+	# Instantiate Upgrade Manager
+	var upgrade_script = load("res://Scripts/PieceUpgradeManager.gd")
+	if upgrade_script:
+		upgrade_manager = Node.new()
+		upgrade_manager.set_script(upgrade_script)
+		add_child(upgrade_manager)
 
 func setup_chair_interaction():
 	var chair = get_tree().root.find_child("chair", true, false)
@@ -189,7 +199,10 @@ func _input(event):
 			if held_piece:
 				place_held_piece()
 			else:
-				interact_with_crosshair()
+				if is_upgrade_mode:
+					_handle_upgrade_click()
+				else:
+					interact_with_crosshair()
 	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		if is_game_over: return
@@ -260,7 +273,7 @@ func _process(_delta):
 				rotation_degrees.y = seated_rotation.y
 				rotation_degrees.x = seated_rotation.x
 				rotation_degrees.z = seated_rotation.z
-	else:
+	elif not is_upgrade_mode:
 		rotation_degrees.y = yaw + breath_yaw + (shake_offset.x * 2.0)
 		rotation_degrees.x = pitch + breath_pitch + (shake_offset.y * 2.0)
 		rotation_degrees.z = breath_roll + (shake_offset.z * 5.0)
@@ -271,6 +284,8 @@ func _process(_delta):
 	# Update Crosshair Position
 	_update_crosshair_position()
 	_update_piece_hover_info()
+	if is_upgrade_mode:
+		_process_upgrade_interaction()
 
 func _update_piece_hover_info():
 	if not piece_name_label: return
@@ -319,7 +334,7 @@ func _update_crosshair_position():
 		_process_placement_preview()
 
 func _physics_process(_delta):
-	if current_state == PlayerState.STANDING:
+	if current_state == PlayerState.STANDING and not is_upgrade_mode:
 		_process_movement(_delta)
 
 func _process_movement(_delta):
@@ -669,15 +684,16 @@ func place_held_piece():
 func trigger_win():
 	print("VICTORY! King defeated.")
 	is_game_over = true
-	# Force player to stand up
-	stand_up()
-	# Board cleanup
-	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
-	if manager: manager.cleanup_board()
-	
-	# Maybe add a small overlay or slow motion
-	Engine.time_scale = 0.5
+	# Give 1 second for the impact before sequence
 	await get_tree().create_timer(1.0).timeout
+	
+	if upgrade_manager and upgrade_manager.has_method("start_upgrade_sequence"):
+		upgrade_manager.start_upgrade_sequence()
+	else:
+		# Fallback if no manager
+		stand_up()
+		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+		if manager: manager.cleanup_board()
 	Engine.time_scale = 1.0
 	
 	# UI'yı gizle
@@ -804,3 +820,99 @@ func trigger_loss():
 			new_ui.name = "GameOverUI"
 			get_tree().root.add_child(new_ui)
 			new_ui.show_game_over()
+
+func enter_upgrade_selection_view():
+	is_upgrade_mode = true
+	if current_state == PlayerState.SEATED:
+		stand_up()
+		await get_tree().create_timer(1.2).timeout 
+	
+	# Kullanıcının belirttiği kesin konum ve açı
+	var target_pos = Vector3(-1.062, -0.086, 2.303)
+	var target_rot = Vector3(-13.7, 84.9, 0)
+	
+	var tw = create_tween().set_parallel(true)
+	tw.tween_property(self, "global_position", target_pos, 1.2).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(self, "rotation_degrees", target_rot, 1.2).set_trans(Tween.TRANS_SINE)
+	
+	await tw.finished
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if crosshair_ui: crosshair_ui.visible = false
+
+func exit_upgrade_selection_view():
+	is_upgrade_mode = false
+	# This is now handled by release_to_walk() or sit_down()
+
+func release_to_walk():
+	is_upgrade_mode = false
+	is_game_over = false
+	current_state = PlayerState.STANDING
+	is_locked = false
+	
+	var body = get_parent()
+	if body is CharacterBody3D:
+		# Oyuncuyu odanın güvenli bölgesine (sandalyenin yanındaki başlangıç konumu) ışınla
+		# seated_body_position bizim oda içindeki ana referansımız
+		var safe_pos = seated_body_position + Vector3(0, 0.42, 0)
+		body.global_position = safe_pos
+		# Kameranın yerel (local) konumunu kafaya sabitle
+		position = Vector3(0, 0.5, 0) 
+		# Dönüşü sandalyeye bakmayacak şekilde sıfırla (Kapıya doğru vs.)
+		rotation_degrees = Vector3(0, 180, 0)
+		yaw = 180
+		pitch = 0
+		print("[Camera3D] Oyuncu güvenli bölgeye (başlangıç noktası) sıfırlandı.")
+	
+	# Mevcut bakış açısını yaw/pitch değişkenlerine aktar (Smooth transition)
+	yaw = rotation_degrees.y
+	pitch = rotation_degrees.x
+	
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if crosshair_ui: crosshair_ui.visible = true
+	print("PLAYER RELEASED TO WALK MODE")
+
+func _process_upgrade_interaction():
+	if not is_upgrade_mode: return
+	
+	var mouse_pos = get_viewport().get_mouse_position()
+	var from = project_ray_origin(mouse_pos)
+	var to = from + project_ray_normal(mouse_pos) * ray_length * 2.0
+	
+	var space_state = get_world_3d().direct_space_state
+	var query = PhysicsRayQueryParameters3D.create(from, to)
+	query.collision_mask = 1 # Pieces are on layer 1
+	var result = space_state.intersect_ray(query)
+	
+	var new_hovered = null
+	if result:
+		var collider = result.collider
+		var target = collider.get_parent() if collider is StaticBody3D else collider
+		if target.has_meta("is_upgrade_choice"):
+			new_hovered = target
+	
+	if new_hovered != hovered_upgrade_piece:
+		if hovered_upgrade_piece:
+			_set_piece_highlight(hovered_upgrade_piece, false)
+		hovered_upgrade_piece = new_hovered
+		if hovered_upgrade_piece:
+			_set_piece_highlight(hovered_upgrade_piece, true)
+			SesYoneticisi.play_hover()
+
+func _set_piece_highlight(piece: Node3D, active: bool):
+	if active:
+		# Shake or Outline? The user asked for either. Let's do a slight shake/pulse
+		var tw = create_tween().set_loops()
+		tw.tween_property(piece, "scale", Vector3(1.1, 1.1, 1.1), 0.2)
+		tw.tween_property(piece, "scale", Vector3(1.0, 1.0, 1.0), 0.2)
+		piece.set_meta("hover_tween", tw)
+	else:
+		if piece.has_meta("hover_tween"):
+			var tw = piece.get_meta("hover_tween")
+			if tw: tw.kill()
+		piece.scale = Vector3(1.0, 1.0, 1.0)
+
+func _handle_upgrade_click():
+	if hovered_upgrade_piece and upgrade_manager:
+		upgrade_manager.select_piece(hovered_upgrade_piece)
+		_set_piece_highlight(hovered_upgrade_piece, false)
+		hovered_upgrade_piece = null
