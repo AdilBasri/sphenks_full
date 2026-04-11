@@ -131,7 +131,9 @@ func play_hover():
 	play_sfx(handing_item_sound, 1.2, -10.0) # High pitch, subtle
 
 func play_angry(pos: Vector3):
-	play_spatial_sfx(angry_sound, pos)
+	var asp = play_spatial_sfx(angry_sound, pos)
+	# Trim to 1.80s as requested
+	get_tree().create_timer(1.80).timeout.connect(func(): if is_instance_valid(asp): asp.stop())
 
 func play_evil_laugh():
 	var asp = play_sfx(evil_laugh_sound)

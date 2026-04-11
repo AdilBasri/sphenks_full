@@ -68,6 +68,9 @@ func _ready():
 	_start_sitting_loop()
 	
 	start_game()
+	
+	# Setup basement door interaction
+	_setup_basement_door()
 
 func _start_sitting_loop():
 	print("[OyunYoneticisi] Starting Sitting Animation Loop...")
@@ -307,6 +310,13 @@ func start_chest_sequence():
 		sequence_started = false
 
 func spawn_random_white_piece():
+	if camera and camera.held_piece:
+		print("Oyuncunun elinde zaten taş var, yenisi verilmiyor.")
+		sequence_started = false
+		return
+
+	if camera: camera.is_receiving_piece = true
+	
 	var random_path = white_pieces[randi() % white_pieces.size()]
 	print("Taş çıkarılıyor: ", random_path)
 	
@@ -318,6 +328,7 @@ func spawn_random_white_piece():
 	if not piece_scene:
 		print("HATA: Taş sahnesi yüklenemedi: ", random_path)
 		sequence_started = false
+		if camera: camera.is_receiving_piece = false
 		return
 		
 	var piece = piece_scene.instantiate()
@@ -358,6 +369,8 @@ func spawn_random_white_piece():
 	drift_tween.tween_property(piece, "rotation_degrees", Vector3(3.8, 154.4, 0.8), 1.0)
 	
 	await drift_tween.finished
+	
+	if camera: camera.is_receiving_piece = false
 	
 	# Kamera scriptine bildirim gönder
 	if camera.has_method("pick_up_piece"):
@@ -410,6 +423,51 @@ func _get_enemy_pos() -> Vector3:
 	var sitting = get_tree().get_first_node_in_group("sitting_node")
 	if sitting: return sitting.global_position
 	return Vector3.ZERO
+
+func _setup_basement_door():
+	# Find 'kapi' in the scene
+	var basement = get_tree().root.find_child("Bodrum_Odasi", true, false)
+	if not basement: return
+	
+	var kapi = basement.find_child("kapi", true, false)
+	if not kapi: return
+	
+	# The user provided a specific path inside the door GLB
+	# Path: door_old_metal/door_2_door old metal_0
+	var door_mesh = kapi.find_child("door_2_door old metal_0", true, false)
+	
+	if not door_mesh:
+		# Fallback: find any mesh containing 'door' and 'metal'
+		var meshes = kapi.find_children("*", "MeshInstance3D", true, false)
+		for m in meshes:
+			if "door" in m.name.to_lower() and "metal" in m.name.to_lower():
+				door_mesh = m
+				break
+	
+	if door_mesh:
+		print("[OyunYoneticisi] Setting up basement door: ", door_mesh.name)
+		
+		# 1. Create StaticBody3D for raycasting
+		var sb = StaticBody3D.new()
+		sb.name = "DoorStaticBody"
+		door_mesh.add_child(sb)
+		sb.set_meta("is_door", true)
+		
+		# 2. Add CollisionShape3D based on mesh AABB
+		var cs = CollisionShape3D.new()
+		var box_shape = BoxShape3D.new()
+		if door_mesh is MeshInstance3D and door_mesh.mesh:
+			box_shape.size = door_mesh.mesh.get_aabb().size
+			cs.position = door_mesh.mesh.get_aabb().get_center()
+		else:
+			box_shape.size = Vector3(0.5, 2.0, 0.05) # Generic door size
+		cs.shape = box_shape
+		sb.add_child(cs)
+		
+		# 3. Attach Logic Script
+		var logic = load("res://DoorInteraction.gd").new()
+		door_mesh.add_child(logic)
+		door_mesh.set_meta("door_logic", logic)
 
 func _ai_place_piece(piece: Node3D, scene_path: String):
 	# Find Grid

@@ -45,6 +45,7 @@ var is_upgrade_mode: bool = false
 var upgrade_manager: Node = null
 var hovered_upgrade_piece: Node3D = null
 var blood_puke_scene = preload("res://BloodPuke.tscn")
+var is_receiving_piece: bool = false
 
 func _ready():
 	# Capture mouse (HIDE)
@@ -193,6 +194,7 @@ func sit_down():
 	)
 
 func _input(event):
+	if is_receiving_piece: return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if is_game_over and current_state == PlayerState.SEATED: return
 		if event.double_click:
@@ -400,12 +402,16 @@ func _process_chair_interaction():
 	var query = PhysicsRayQueryParameters3D.create(origin, end)
 	var result = space_state.intersect_ray(query)
 	
-	if result and result.collider.has_meta("is_chair"):
-		interact_label.visible = true
+	if result:
+		if result.collider.has_meta("is_chair") or result.collider.has_meta("is_door"):
+			interact_label.visible = true
+		else:
+			interact_label.visible = false
 	else:
 		interact_label.visible = false
 
 func interact_with_crosshair():
+	if is_receiving_piece: return
 	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 	if not manager or manager.current_turn != manager.GameTurn.PLAYER:
 		print("Sıra sizde değil!")
@@ -421,6 +427,13 @@ func interact_with_crosshair():
 	
 	if result:
 		var collider = result.collider
+		
+		# Door Interaction
+		if collider.has_meta("is_door"):
+			var door_mesh = collider.get_parent()
+			if door_mesh and door_mesh.has_meta("door_logic"):
+				door_mesh.get_meta("door_logic").toggle_door()
+				return
 		
 		if collider.has_meta("is_grid_cell"):
 			var hucre = collider.get_meta("grid_cell_node")
@@ -497,6 +510,9 @@ func _select_hucre(hucre: GridHucre):
 					# Fallback or unknown piece
 					color = Color(1, 1, 0, 0.5)
 			target.set_highlight(true, color)
+	
+	# Auto-transition to board view when a piece is selected
+	_transition_to_board_view()
 
 func _clear_selection():
 	if selected_hucre and selected_hucre.mevcut_tas:
@@ -512,6 +528,10 @@ func _clear_selection():
 		last_highlighted_cell.set_highlight(false)
 		last_highlighted_cell.set_preview_piece("")
 		last_highlighted_cell = null
+		
+	# Auto-transition back to seated view when selection is cleared
+	if is_zoomed_view:
+		_transition_to_seated_view()
 
 func _execute_move(from: GridHucre, to: GridHucre):
 	var piece = from.mevcut_tas
@@ -582,6 +602,9 @@ func _execute_move(from: GridHucre, to: GridHucre):
 	# End Player Turn
 	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 	if manager: manager.next_turn()
+	
+	# Auto-transition back to seated view when turn ends
+	_transition_to_seated_view()
 
 func _create_puff(pos: Vector3):
 	# Simple code-based puff effect using a Sphere
@@ -666,6 +689,7 @@ func is_node_part_of_box(node: Node) -> bool:
 	return false
 
 func place_held_piece():
+	if is_receiving_piece: return
 	if not last_highlighted_cell:
 		SesYoneticisi.play_error()
 		return
