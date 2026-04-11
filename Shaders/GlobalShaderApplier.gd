@@ -46,6 +46,10 @@ func _on_node_added(node: Node):
 	_pending_nodes.append(node)
 
 func _process_node(node: Node):
+	# Allow manual exclusion via meta tag
+	if node.has_meta("skip_shader") and node.get_meta("skip_shader"):
+		return
+		
 	# EXCLUSION: Skip fabric1 and altar subtrees
 	if _is_excluded(node):
 		return
@@ -128,12 +132,22 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 
 	# 1. Extract original material properties
 	var original_material = mesh.get_active_material(0)
+	if not original_material:
+		# Fallback: create a basic material if missing so we can still apply the shader
+		original_material = StandardMaterial3D.new()
+		
 	var tex = null
 	var color = Color.WHITE
 	
 	if original_material is StandardMaterial3D or original_material is ORMMaterial3D:
 		tex = original_material.albedo_texture
 		color = original_material.albedo_color
+	elif original_material is ShaderMaterial:
+		# Extract from existing shader if possible (rare for base)
+		if original_material.get_shader_parameter("albedo_texture"):
+			tex = original_material.get_shader_parameter("albedo_texture")
+		if original_material.get_shader_parameter("albedo_color"):
+			color = original_material.get_shader_parameter("albedo_color")
 
 	# 2. Configure parameters based on whether it's a piece or environment
 	var jitter = 0.08

@@ -39,6 +39,7 @@ func refresh_visuals() -> void:
 		highlight_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		highlight_mat.albedo_color = Color(1, 1, 0, 0.4) # Yarı saydam sarı
 		highlight_mesh.material_override = highlight_mat
+		highlight_mesh.set_meta("skip_shader", true)
 		highlight_mesh.position.y = 0.002
 		highlight_mesh.visible = false 
 		add_child(highlight_mesh)
@@ -79,9 +80,12 @@ func refresh_visuals() -> void:
 func set_highlight(active: bool, color: Color = Color(1, 1, 0, 0.4)) -> void:
 	if highlight_mesh:
 		highlight_mesh.visible = active
-		var mat = highlight_mesh.material_override as StandardMaterial3D
+		var mat = highlight_mesh.material_override
 		if mat and active:
-			mat.albedo_color = color
+			if mat is StandardMaterial3D:
+				mat.albedo_color = color
+			elif mat is ShaderMaterial:
+				mat.set_shader_parameter("albedo_color", color)
 
 func set_preview_piece(piece_scene_path: String) -> void:
 	if preview_tas:
@@ -95,8 +99,14 @@ func set_preview_piece(piece_scene_path: String) -> void:
 			add_child(preview_tas)
 			# Tüm materyalleri saydam yapmaya çalışalım
 			for child in preview_tas.find_children("*", "MeshInstance3D", true, false):
-				var mat = child.mesh.surface_get_material(0).duplicate()
-				if mat is StandardMaterial3D:
-					mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-					mat.albedo_color.a = 0.4
-					child.material_override = mat
+				if not child.mesh: continue
+				var base_mat = child.get_active_material(0)
+				if not base_mat:
+					base_mat = child.mesh.surface_get_material(0)
+				
+				if base_mat:
+					var mat = base_mat.duplicate()
+					if mat is StandardMaterial3D:
+						mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+						mat.albedo_color.a = 0.4
+						child.material_override = mat

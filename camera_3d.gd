@@ -182,16 +182,15 @@ func sit_down():
 	tw.tween_property(self, "rotation_degrees", seated_rotation, 1.0).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(get_parent(), "global_position", seated_body_position, 1.0).set_trans(Tween.TRANS_SINE)
 	
-	tw.set_parallel(false)
-	tw.tween_callback(func():
-		current_state = PlayerState.SEATED
-		is_locked = false
-		Input.mouse_mode = Input.MOUSE_MODE_CONFINED_HIDDEN # Hide OS cursor
-		# Reset rotation params to current rotation
-		yaw = rotation_degrees.y
-		pitch = rotation_degrees.x
-		print("PLAYER SEATED")
-	)
+	await tw.finished
+	
+	current_state = PlayerState.SEATED
+	is_locked = false
+	Input.mouse_mode = Input.MOUSE_MODE_CONFINED_HIDDEN # Hide OS cursor
+	# Reset rotation params to current rotation
+	yaw = rotation_degrees.y
+	pitch = rotation_degrees.x
+	print("PLAYER SEATED")
 
 func _input(event):
 	if is_receiving_piece: return
@@ -412,6 +411,7 @@ func _process_chair_interaction():
 
 func interact_with_crosshair():
 	if is_receiving_piece: return
+	
 	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 	if not manager or manager.current_turn != manager.GameTurn.PLAYER:
 		print("Sıra sizde değil!")
@@ -425,6 +425,18 @@ func interact_with_crosshair():
 	var query = PhysicsRayQueryParameters3D.create(origin, end)
 	var result = space_state.intersect_ray(query)
 	
+	# IF STANDING AND CLICKED GRID: Sit down first, then re-calculate
+	if current_state == PlayerState.STANDING and result and result.collider.has_meta("is_grid_cell"):
+		is_locked = true # Lock during transit
+		await sit_down()
+		# RE-CALCULATE after sitting (mouse mode might have changed)
+		v_size = get_viewport().get_visible_rect().size
+		crosshair_pos = get_viewport().get_mouse_position() # Now seated
+		origin = project_ray_origin(crosshair_pos)
+		end = origin + project_ray_normal(crosshair_pos) * ray_length
+		query = PhysicsRayQueryParameters3D.create(origin, end)
+		result = space_state.intersect_ray(query)
+
 	if result:
 		var collider = result.collider
 		
@@ -490,6 +502,7 @@ func _select_hucre(hucre: GridHucre):
 	
 	# Show highlights
 	var path = piece.get_meta("scene_path")
+	var attacker_stats = PieceDatabase.get_piece_stats(path)
 	var valid_coords = PieceDatabase.get_valid_moves(Vector2i(hucre.sutun, hucre.satir), path)
 	
 	var grid = hucre.get_parent()
@@ -497,18 +510,30 @@ func _select_hucre(hucre: GridHucre):
 		if grid.hucrelerin_sozlugu.has(coord):
 			var target = grid.hucrelerin_sozlugu[coord]
 			move_highlights.append(target)
-			# Highlight color: Red if occupied by enemy, Green if empty
-			var color = Color(0, 1, 0, 0.5)
+			
+			# Highlight color: 
+			# Red: Kill (Attack >= Defense)
+			# Orange: Damage (Attack < Defense)
+			# Green: Empty
+			var color = Color(0, 1, 0, 0.4) # Soft Green for empty squares
+			
 			if target.mevcut_tas:
 				var target_path = target.mevcut_tas.get_meta("scene_path") if target.mevcut_tas.has_meta("scene_path") else ""
 				if "black" in target_path.to_lower():
-					color = Color(1, 0, 0, 0.5)
+					var defender_base_stats = PieceDatabase.get_piece_stats(target_path)
+					var current_def = target.mevcut_tas.get_meta("current_defense") if target.mevcut_tas.has_meta("current_defense") else defender_base_stats.get("defense", 1)
+					
+					if attacker_stats.get("attack", 0) >= current_def:
+						color = Color(1, 0.1, 0.1, 0.6) # Kill - Rich Red
+					else:
+						color = Color(1, 0.6, 0.0, 0.6) # Damage - Vibrant Orange
 				elif "white" in target_path.to_lower():
 					# Friendly piece, skip moved highlight entirely
 					continue
 				else:
-					# Fallback or unknown piece
+					# Unknown/Neutral piece
 					color = Color(1, 1, 0, 0.5)
+					
 			target.set_highlight(true, color)
 	
 	# Auto-transition to board view when a piece is selected
@@ -690,6 +715,13 @@ func is_node_part_of_box(node: Node) -> bool:
 
 func place_held_piece():
 	if is_receiving_piece: return
+	
+	if current_state == PlayerState.STANDING:
+		await sit_down()
+		# After sitting down, the preview might need a refresh logic but usually 
+		# the player is still looking near the grid. 
+		# If the last_highlighted_cell is null (common after sitting transit), we abort
+		
 	if not last_highlighted_cell:
 		SesYoneticisi.play_error()
 		return
@@ -1025,16 +1057,19 @@ func _process_upgrade_interaction():
 			SesYoneticisi.play_hover()
 
 func _set_piece_highlight(piece: Node3D, active: bool):
+	# Kill existing tween if any
+	if piece.has_meta("hover_tween"):
+		var old_tw = piece.get_meta("hover_tween")
+		if old_tw and old_tw.is_valid():
+			old_tw.kill()
+		piece.remove_meta("hover_tween")
+
 	if active:
-		# Shake or Outline? The user asked for either. Let's do a slight shake/pulse
 		var tw = create_tween().set_loops()
-		tw.tween_property(piece, "scale", Vector3(1.1, 1.1, 1.1), 0.2)
-		tw.tween_property(piece, "scale", Vector3(1.0, 1.0, 1.0), 0.2)
+		tw.tween_property(piece, "scale", Vector3(1.1, 1.1, 1.1), 0.2).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(piece, "scale", Vector3(1.0, 1.0, 1.0), 0.2).set_trans(Tween.TRANS_SINE)
 		piece.set_meta("hover_tween", tw)
 	else:
-		if piece.has_meta("hover_tween"):
-			var tw = piece.get_meta("hover_tween")
-			if tw: tw.kill()
 		piece.scale = Vector3(1.0, 1.0, 1.0)
 
 func _get_enemy_pos() -> Vector3:

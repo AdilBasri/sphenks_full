@@ -201,6 +201,14 @@ func restart_new_match():
 	# AI Upgrade: Düşmana da 1 puan ver (Rastgele dağıt)
 	_apply_enemy_upgrade()
 	
+	# --- YENİ SİSTEM: KİNG UPGRADES ---
+	# Düşman King her bölüm +1 savunma alır
+	PieceDatabase.upgrade_piece("king", false, "defense", 1)
+	
+	# Oyuncu King her iki bölümde bir +1 savunma alır
+	if phase_number % 2 == 0:
+		PieceDatabase.upgrade_piece("king", true, "defense", 1)
+	
 	# Şahları ve Grid'i resetle
 	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
 	if grid and grid.has_method("spawn_kings"):
@@ -341,7 +349,7 @@ func spawn_random_white_piece():
 	
 	# Adım 1: Taşı tam olarak sandığın merkezinde oluşturalım
 	piece.global_position = box.global_position
-	piece.scale = Vector3(0.1, 0.1, 0.1) # Sandıktan çıkarken başta küçük olsun
+	piece.scale = Vector3(0.1, 0.1, 0.1) # Asla tam 0 yapmıyoruz (Basis Inversion hatası için)
 	
 	SesYoneticisi.play_handing()
 	
