@@ -1,4 +1,4 @@
-[gd_scene load_steps=45 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=46 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
@@ -35,12 +35,14 @@
 [ext_resource type="PackedScene" uid="uid://brheseaaqt0he" path="res://Assets/skull/scene.gltf" id="32_u270x"]
 [ext_resource type="PackedScene" uid="uid://c5fd2o1npa5c0" path="res://Assets/ashtray/scene.gltf" id="34_tth1g"]
 [ext_resource type="Script" uid="uid://bnqdn52relu8j" path="res://Scripts/loop_animation.gd" id="35_loop"]
+[ext_resource type="Animation" uid="uid://dp5eolmpu3nkh" path="res://puke.res" id="36_puke"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
 _data = {
 &"enemy_gun": ExtResource("4_bi1g6"),
 &"geri_otur": ExtResource("5_woum2"),
 &"oturma1": ExtResource("2_eeger"),
+&"puke": ExtResource("36_puke"),
 &"take_gun": ExtResource("6_aw76i")
 }
 
@@ -100,7 +102,7 @@ size = Vector3(4.5, 2.5, 6.5)
 
 [node name="Bodrum_Odasi" parent="." instance=ExtResource("1_6acwk")]
 
-[node name="Sitting" parent="." instance=ExtResource("1_p6dlx")]
+[node name="Sitting" parent="." groups=["sitting_node"] instance=ExtResource("1_p6dlx")]
 transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, -1.24, -2.804058)
 
 [node name="Skeleton3D" parent="Sitting" index="0"]

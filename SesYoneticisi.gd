@@ -7,6 +7,9 @@ var handing_item_sound = preload("res://Assets/Sounds/handing_item.mp3")
 var place_block_sound = preload("res://Assets/Sounds/place_block.mp3")
 var walking_sound = preload("res://Assets/Sounds/walking.mp3")
 var bgm_sound = preload("res://Assets/Sounds/background (2).mp3")
+var angry_sound = preload("res://Assets/Sounds/angry.mp3")
+var evil_laugh_sound = preload("res://Assets/Sounds/evil_laugh.mp3")
+var puke_sound = preload("res://Assets/Sounds/puke.mp3")
 
 var walking_player: AudioStreamPlayer
 var bgm_player: AudioStreamPlayer
@@ -87,7 +90,7 @@ func setup_bgm_player():
 	bgm_player.play()
 
 # Global SFX player helper
-func play_sfx(stream: AudioStream, pitch_scale: float = 1.0, volume_db: float = 0.0):
+func play_sfx(stream: AudioStream, pitch_scale: float = 1.0, volume_db: float = 0.0) -> AudioStreamPlayer:
 	var asp = AudioStreamPlayer.new()
 	asp.stream = stream
 	asp.bus = "SFX"
@@ -96,6 +99,20 @@ func play_sfx(stream: AudioStream, pitch_scale: float = 1.0, volume_db: float = 
 	add_child(asp)
 	asp.play()
 	asp.finished.connect(asp.queue_free)
+	return asp
+
+func play_spatial_sfx(stream: AudioStream, global_pos: Vector3, pitch_scale: float = 1.0, volume_db: float = 0.0) -> AudioStreamPlayer3D:
+	var asp = AudioStreamPlayer3D.new()
+	asp.stream = stream
+	asp.bus = "SFX"
+	asp.pitch_scale = pitch_scale
+	asp.volume_db = volume_db
+	asp.unit_size = 10.0 # Standard range
+	add_child(asp)
+	asp.global_position = global_pos
+	asp.play()
+	asp.finished.connect(asp.queue_free)
+	return asp
 
 # Specific Sound Helpers
 func play_error():
@@ -112,6 +129,17 @@ func play_fall():
 
 func play_hover():
 	play_sfx(handing_item_sound, 1.2, -10.0) # High pitch, subtle
+
+func play_angry(pos: Vector3):
+	play_spatial_sfx(angry_sound, pos)
+
+func play_evil_laugh():
+	var asp = play_sfx(evil_laugh_sound)
+	# Trim to 1.78s as requested
+	get_tree().create_timer(1.78).timeout.connect(func(): if is_instance_valid(asp): asp.stop())
+
+func play_puke():
+	play_sfx(puke_sound)
 
 # Walking control
 func set_walking(is_moving: bool):

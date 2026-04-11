@@ -63,7 +63,98 @@ func _ready():
 	
 	# Start the game loop after a brief wait
 	await get_tree().create_timer(1.0).timeout
+	
+	# Start Sitting Animation Loop
+	_start_sitting_loop()
+	
 	start_game()
+
+func _start_sitting_loop():
+	print("[OyunYoneticisi] Starting Sitting Animation Loop...")
+	var sitting_node = get_tree().get_first_node_in_group("sitting_node")
+	
+	if not sitting_node:
+		sitting_node = get_node_or_null("Sitting")
+	
+	if sitting_node:
+		var sitting_anim = sitting_node.find_child("AnimationPlayer", true, false)
+		if sitting_anim:
+			# INJECTION LOGIC: Ensure animations are present
+			if not sitting_anim.has_animation("oturma1") or not sitting_anim.has_animation("puke"):
+				print("[OyunYoneticisi] Injecting missing animations into Sitting AnimationPlayer...")
+				var lib: AnimationLibrary
+				if sitting_anim.has_animation_library(""):
+					lib = sitting_anim.get_animation_library("")
+				else:
+					lib = AnimationLibrary.new()
+					sitting_anim.add_animation_library("", lib)
+				
+				if not sitting_anim.has_animation("oturma1"):
+					var a_oturma = load("res://oturma1.res")
+					if a_oturma: lib.add_animation("oturma1", a_oturma)
+				
+				if not sitting_anim.has_animation("puke"):
+					var a_puke = load("res://puke.res")
+					if a_puke: lib.add_animation("puke", a_puke)
+			
+			# Play Loop
+			if sitting_anim.has_animation("oturma1"):
+				print("[OyunYoneticisi] Preparing to start Sitting loop...")
+				
+				# Check if Skeleton3D exists and is visible
+				var skel = sitting_node.find_child("Skeleton3D", true, false)
+				if skel:
+					print("[OyunYoneticisi] Skeleton3D found. Visible=", skel.visible, " BoneCount=", skel.get_bone_count())
+					print("[OyunYoneticisi] First 5 Bone Names: ", skel.get_bone_name(0), ", ", skel.get_bone_name(1), ", ", skel.get_bone_name(2), ", ", skel.get_bone_name(3), ", ", skel.get_bone_name(4))
+					
+					# REMAP ANIMATIONS (The Ultimate Fix)
+					var lib: AnimationLibrary = sitting_anim.get_animation_library("")
+					for anim_name in ["oturma1", "puke"]:
+						if sitting_anim.has_animation(anim_name):
+							var old_anim = sitting_anim.get_animation(anim_name)
+							if old_anim is Animation:
+								var new_anim = old_anim.duplicate()
+								var remapped_count = 0
+								for i in range(new_anim.get_track_count()):
+									var path = new_anim.track_get_path(i)
+									var path_str = str(path)
+									if "Skeleton3D:" in path_str:
+										var new_path = path_str.replace("Skeleton3D:", ".:")
+										new_anim.track_set_path(i, NodePath(new_path))
+										remapped_count += 1
+								
+								if remapped_count > 0:
+									print("[OyunYoneticisi] Remapped ", remapped_count, " tracks for ", anim_name)
+									if anim_name == "oturma1":
+										new_anim.loop_mode = Animation.LOOP_LINEAR
+									lib.add_animation(anim_name, new_anim)
+					
+					# Force correct playback properties and play
+					sitting_anim.root_node = sitting_anim.get_path_to(skel)
+					sitting_anim.active = true
+					sitting_anim.speed_scale = 1.0
+					
+					if sitting_anim.has_animation("oturma1"):
+						sitting_anim.play("oturma1")
+						print("[OyunYoneticisi] SUCCESS: Sitting loop started with remapped tracks.")
+					
+					# Re-enable head look after a short delay
+					await get_tree().create_timer(1.0).timeout
+					if skel.has_method("set_process"):
+						print("[OyunYoneticisi] Re-enabling HeadLook logic.")
+						skel.set_process(true)
+				
+				# DEBUG: Print tracks
+				var final_anim = sitting_anim.get_animation("oturma1")
+				print("[OyunYoneticisi] Animation Tracks for 'oturma1':")
+				for i in range(final_anim.get_track_count()):
+					print("  - Track %d: %s (Type: %d)" % [i, final_anim.track_get_path(i), final_anim.track_get_type(i)])
+			else:
+				print("[OyunYoneticisi] ERROR: 'oturma1' still missing after injection! List: ", sitting_anim.get_animation_list())
+		else:
+			print("[OyunYoneticisi] ERROR: AnimationPlayer not found in Sitting node.")
+	else:
+		print("[OyunYoneticisi] ERROR: Sitting node NOT FOUND.")
 
 func start_game():
 	is_game_active = true
@@ -218,6 +309,11 @@ func start_chest_sequence():
 func spawn_random_white_piece():
 	var random_path = white_pieces[randi() % white_pieces.size()]
 	print("Taş çıkarılıyor: ", random_path)
+	
+	# Horse Trigger
+	if "horse" in random_path.to_lower():
+		SesYoneticisi.play_angry(_get_enemy_pos())
+	
 	var piece_scene = load(random_path)
 	if not piece_scene:
 		print("HATA: Taş sahnesi yüklenemedi: ", random_path)
@@ -270,6 +366,11 @@ func spawn_random_white_piece():
 func _spawn_random_black_piece_for_enemy():
 	var random_path = black_pieces[randi() % black_pieces.size()]
 	print("Düşman taşı çıkarılıyor: ", random_path)
+	
+	# Horse Trigger
+	if "horse" in random_path.to_lower():
+		SesYoneticisi.play_evil_laugh()
+	
 	var piece_scene = load(random_path)
 	if not piece_scene: return
 	
@@ -304,6 +405,11 @@ func _spawn_random_black_piece_for_enemy():
 	# AI Think and Place
 	await get_tree().create_timer(randf_range(1.5, 3.0)).timeout
 	_ai_place_piece(piece, random_path)
+
+func _get_enemy_pos() -> Vector3:
+	var sitting = get_tree().get_first_node_in_group("sitting_node")
+	if sitting: return sitting.global_position
+	return Vector3.ZERO
 
 func _ai_place_piece(piece: Node3D, scene_path: String):
 	# Find Grid
@@ -390,6 +496,13 @@ func _get_best_move_for_piece(hucre: GridHucre) -> GridHucre:
 	for move_coord in valid_moves:
 		if grid.hucrelerin_sozlugu.has(move_coord):
 			var target = grid.hucrelerin_sozlugu[move_coord]
+			
+			# Friendly Fire Check: AI (Black) cannot move to square with another Black piece
+			if target.mevcut_tas:
+				var path_target = target.mevcut_tas.get_meta("scene_path") if target.mevcut_tas.has_meta("scene_path") else ""
+				if "black" in path_target.to_lower():
+					continue
+			
 			var score = _evaluate_move(hucre, target)
 			if score > best_score:
 				best_score = score

@@ -44,6 +44,7 @@ var is_placing_piece: bool = false
 var is_upgrade_mode: bool = false
 var upgrade_manager: Node = null
 var hovered_upgrade_piece: Node3D = null
+var blood_puke_scene = preload("res://BloodPuke.tscn")
 
 func _ready():
 	# Capture mouse (HIDE)
@@ -486,11 +487,15 @@ func _select_hucre(hucre: GridHucre):
 			# Highlight color: Red if occupied by enemy, Green if empty
 			var color = Color(0, 1, 0, 0.5)
 			if target.mevcut_tas:
-				if "black" in target.mevcut_tas.name.to_lower():
+				var target_path = target.mevcut_tas.get_meta("scene_path") if target.mevcut_tas.has_meta("scene_path") else ""
+				if "black" in target_path.to_lower():
 					color = Color(1, 0, 0, 0.5)
-				else:
-					# Friendly piece, skip?
+				elif "white" in target_path.to_lower():
+					# Friendly piece, skip moved highlight entirely
 					continue
+				else:
+					# Fallback or unknown piece
+					color = Color(1, 1, 0, 0.5)
 			target.set_highlight(true, color)
 
 func _clear_selection():
@@ -704,15 +709,23 @@ func place_held_piece():
 func trigger_win():
 	print("VICTORY! King defeated.")
 	is_game_over = true
+	# Character sound (Angry)
+	SesYoneticisi.play_angry(_get_enemy_pos())
+	
 	# Give 1 second for the impact before sequence
 	await get_tree().create_timer(1.0).timeout
+	
+	# Check for Puke Condition (Every 3 sections)
+	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+	if manager and manager.phase_number % 3 == 0:
+		await _play_puke_sequence()
 	
 	if upgrade_manager and upgrade_manager.has_method("start_upgrade_sequence"):
 		upgrade_manager.start_upgrade_sequence()
 	else:
 		# Fallback if no manager
 		stand_up()
-		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+		manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 		if manager: manager.cleanup_board()
 	Engine.time_scale = 1.0
 	
@@ -721,6 +734,74 @@ func trigger_win():
 		get_node("/root/InspectUI").hide_piece()
 	
 	print("Taş yerleştirildi.")
+
+func _play_puke_sequence():
+	print("[Camera3D] Starting Puke Sequence...")
+	var sitting_node = get_tree().get_first_node_in_group("sitting_node")
+	
+	if not sitting_node and owner:
+		sitting_node = owner.get_node_or_null("Sitting")
+	
+	if not sitting_node:
+		print("[Camera3D] ERROR: Sitting node NOT FOUND in group 'sitting_node' or relative to owner.")
+		return
+	
+	print("[Camera3D] Sitting node found: ", sitting_node.get_path())
+	var sitting_anim = sitting_node.find_child("AnimationPlayer", true, false)
+	
+	if sitting_anim:
+		# FALLBACK INJECTION: Ensure 'puke' is present
+		if not sitting_anim.has_animation("puke"):
+			print("[Camera3D] 'puke' animation missing. Injecting now...")
+			var lib: AnimationLibrary
+			if sitting_anim.has_animation_library(""):
+				lib = sitting_anim.get_animation_library("")
+			else:
+				lib = AnimationLibrary.new()
+				sitting_anim.add_animation_library("", lib)
+			
+			var a_puke = load("res://puke.res")
+			if a_puke: lib.add_animation("puke", a_puke)
+	
+	if sitting_anim and sitting_anim.has_animation("puke"):
+		print("[Camera3D] Playing 'puke' animation.")
+		sitting_anim.play("puke")
+		
+		# Create Blood Effect
+		await get_tree().create_timer(0.3).timeout # Wait for mouth to open
+		print("[Camera3D] Spawning blood particles.")
+		
+		# Puke Sound 1
+		SesYoneticisi.play_puke()
+		
+		var blood = blood_puke_scene.instantiate()
+		get_tree().root.add_child(blood)
+		blood.global_position = Vector3(0, -0.25, -2.45)
+		# Correct orientation: particles fly towards grid center
+		var target_puke = Vector3(0, -0.65, -1.97)
+		if blood.global_position.distance_to(target_puke) > 0.1:
+			blood.look_at(target_puke)
+		
+		# Puke Sound 2 (Triggered after 4 seconds as per user request for total ~8-9s)
+		get_tree().create_timer(4.0).timeout.connect(func(): SesYoneticisi.play_puke())
+		
+		# Extended duration (9.5s total for the sequence)
+		await get_tree().create_timer(7.5).timeout # Particles emit for 7.5s
+		blood.emitting = false
+		await get_tree().create_timer(2.0).timeout # Total wait ~9.5s
+		blood.queue_free()
+		
+		if sitting_anim.is_playing() and sitting_anim.current_animation == "puke":
+			print("[Camera3D] Waiting for animation to finish...")
+			await sitting_anim.animation_finished
+		
+		print("[Camera3D] Puke sequence complete.")
+		# Resume sitting loop
+		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+		if manager and manager.has_method("_start_sitting_loop"):
+			manager._start_sitting_loop()
+	else:
+		print("[Camera3D] ERROR: 'puke' animation not found. List: ", sitting_anim.get_animation_list())
 
 # Taşın materyallerini ayarlama yardımcısı (X-Ray desteği eklendi)
 func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
@@ -820,6 +901,7 @@ func trigger_loss():
 	
 	apply_shake(0.5, 0.8)
 	SesYoneticisi.play_fall()
+	SesYoneticisi.play_evil_laugh()
 	
 	await tw.finished
 	
@@ -930,6 +1012,11 @@ func _set_piece_highlight(piece: Node3D, active: bool):
 			var tw = piece.get_meta("hover_tween")
 			if tw: tw.kill()
 		piece.scale = Vector3(1.0, 1.0, 1.0)
+
+func _get_enemy_pos() -> Vector3:
+	var sitting = get_tree().get_first_node_in_group("sitting_node")
+	if sitting: return sitting.global_position
+	return Vector3(0, -0.25, -1.5) # Fallback near the character
 
 func _handle_upgrade_click():
 	if hovered_upgrade_piece and upgrade_manager:
