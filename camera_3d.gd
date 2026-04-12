@@ -823,6 +823,19 @@ func _play_puke_sequence():
 		print("[Camera3D] Playing 'puke' animation.")
 		sitting_anim.play("puke")
 		
+		# Create Bone Attachment for neck if it doesn't exist
+		var skel = sitting_node.find_child("Skeleton3D", true, false)
+		var puke_origin_node = sitting_node # Fallback
+		
+		if skel:
+			var attachment = skel.find_child("PukeAttachment", true, false)
+			if not attachment:
+				attachment = BoneAttachment3D.new()
+				attachment.name = "PukeAttachment"
+				attachment.bone_name = "mixamorig_Neck"
+				skel.add_child(attachment)
+			puke_origin_node = attachment
+		
 		# Create Blood Effect
 		await get_tree().create_timer(0.3).timeout # Wait for mouth to open
 		print("[Camera3D] Spawning blood particles.")
@@ -831,21 +844,34 @@ func _play_puke_sequence():
 		SesYoneticisi.play_puke()
 		
 		var blood = blood_puke_scene.instantiate()
-		get_tree().root.add_child(blood)
-		blood.global_position = Vector3(0, -0.25, -2.45)
+		# Set local_coords to false so particles fountain in world space
+		if blood.has_method("set_local_coords"):
+			blood.set_local_coords(false)
+		
+		puke_origin_node.add_child(blood)
+		blood.position = Vector3.ZERO # Start exactly at bone/origin
+		
 		# Correct orientation: particles fly towards grid center
 		var target_puke = Vector3(0, -0.65, -1.97)
-		if blood.global_position.distance_to(target_puke) > 0.1:
-			blood.look_at(target_puke)
 		
 		# Puke Sound 2 (Triggered after 4 seconds as per user request for total ~8-9s)
 		get_tree().create_timer(4.0).timeout.connect(func(): SesYoneticisi.play_puke())
 		
-		# Extended duration (9.5s total for the sequence)
-		await get_tree().create_timer(7.5).timeout # Particles emit for 7.5s
-		blood.emitting = false
+		# Dynamic LookAt Loop: Keep puke aimed at target even as character moves
+		var puke_time = 0.0
+		var duration = 7.5
+		while puke_time < duration:
+			if is_instance_valid(blood):
+				blood.look_at(target_puke)
+			await get_tree().process_frame
+			puke_time += get_process_delta_time()
+		
+		if is_instance_valid(blood):
+			blood.emitting = false
+		
 		await get_tree().create_timer(2.0).timeout # Total wait ~9.5s
-		blood.queue_free()
+		if is_instance_valid(blood):
+			blood.queue_free()
 		
 		if sitting_anim.is_playing() and sitting_anim.current_animation == "puke":
 			print("[Camera3D] Waiting for animation to finish...")
