@@ -9,6 +9,8 @@ uniform int color_steps : hint_range(2, 32) = 4;
 uniform float dither_grain : hint_range(0.0, 1.0) = 0.45;
 uniform float affine_warp : hint_range(0.0, 1.0) = 0.8; // PS1 texture "swimming"
 uniform float light_intensity : hint_range(0.0, 2.0) = 1.0;
+uniform float gamma : hint_range(0.5, 2.0) = 1.2;
+uniform float ambient_light : hint_range(0.0, 0.5) = 0.0;
 
 // Bayer 4x4 matrix for PS1-style dithering
 const mat4 bayer_matrix = mat4(
@@ -53,9 +55,12 @@ void fragment() {
     vec3 color = tex.rgb * albedo_color.rgb;
     
     // 3. Darker "Crushed" Gamma for that murky look
-    color = pow(color, vec3(1.2)); 
+    color = pow(color, vec3(gamma)); 
     
-    // 4. Posterization (Color Quantization)
+    // 4. Ambient Visibility (lifts the shadows)
+    color += ambient_light;
+    
+    // 5. Posterization (Color Quantization)
     float steps = float(color_steps);
     color = floor(color * steps + 0.5) / steps;
     

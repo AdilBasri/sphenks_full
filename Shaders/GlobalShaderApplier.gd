@@ -112,6 +112,21 @@ func _is_chess_piece(node: Node) -> bool:
 			
 	return false
 
+func _is_environment(node: Node) -> bool:
+	# Specifically targets walls, floors and ceilings in bodrum_odasi
+	var lname = node.name.to_lower()
+	if "zemin" in lname or "duvar" in lname or "tavan" in lname or "floor" in lname or "wall" in lname:
+		return true
+	
+	# Also check parent names for grouped meshes
+	var p = node.get_parent()
+	if p:
+		var pname = p.name.to_lower()
+		if "zeminler" in pname or "walls" in pname or "tavan" in pname:
+			return true
+			
+	return false
+
 func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 	# 0. Check for "render on top" override
 	var render_on_top = false
@@ -149,13 +164,17 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 		if original_material.get_shader_parameter("albedo_color"):
 			color = original_material.get_shader_parameter("albedo_color")
 
-	# 2. Configure parameters based on whether it's a piece or environment
+	# 2. Configure parameters based on whether it's a piece, environment, or general
 	var jitter = 0.08
 	var resolution = 480.0
 	var steps = 5
 	var dither = 0.35
 	var light_int = 1.0
 	var affine = 0.5
+	var gamma = 1.2
+	var ambient = 0.0
+	
+	var is_env = _is_environment(mesh)
 	
 	if is_piece:
 		# Pieces need much higher clarity and less blowout
@@ -164,14 +183,25 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 		light_int = 0.75 # Prevent white blowout
 		dither = 0.2     # Cleaner look
 		affine = 0.2     # Less texture warping for detail
+		gamma = 1.2      # Standard crush
 		
 		# If it's a white piece (pure white or very bright), tone down the albedo slightly
 		if color.r > 0.9 and color.g > 0.9 and color.b > 0.9:
 			color = Color(0.85, 0.85, 0.85)
+	elif is_env:
+		# Walls and floors need visibility in darkness
+		jitter = 0.06
+		steps = 12       # Smoother lighting response
+		light_int = 1.1  # Slightly more reactive
+		dither = 0.3
+		affine = 0.6
+		gamma = 1.0      # NO CRUSH (stays brighter)
+		ambient = 0.06   # Visibility floor (lifts shadows)
 
 	# 3. Use Cached Material if available
 	var tex_id = tex.get_instance_id() if tex else 0
-	var cache_key = "%d_%s_%d_%d" % [tex_id, str(color), int(is_piece), int(render_on_top)]
+	# Cache key now includes gamma and ambient to avoid collisions
+	var cache_key = "%d_%s_%d_%d_%.2f_%.2f" % [tex_id, str(color), int(is_piece), int(render_on_top), gamma, ambient]
 	
 	if _mat_cache.has(cache_key):
 		mesh.material_override = _mat_cache[cache_key]
@@ -190,6 +220,8 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 	toon_mat.set_shader_parameter("dither_grain", dither)
 	toon_mat.set_shader_parameter("affine_warp", affine)
 	toon_mat.set_shader_parameter("light_intensity", light_int)
+	toon_mat.set_shader_parameter("gamma", gamma)
+	toon_mat.set_shader_parameter("ambient_light", ambient)
 
 	# 5. Create the Outline Material (Next Pass)
 	var outline_mat = ShaderMaterial.new()
