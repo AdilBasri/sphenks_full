@@ -143,6 +143,9 @@ func play_evil_laugh():
 func play_puke():
 	play_sfx(puke_sound)
 
+var whetstone_atk_sound = preload("res://Assets/Sounds/whetstone_atk.mp3")
+var whetstone_def_sound = preload("res://Assets/Sounds/whetstone_def.mp3")
+
 # Walking control
 func set_walking(is_moving: bool):
 	if is_moving:
@@ -150,7 +153,13 @@ func set_walking(is_moving: bool):
 			walking_player.play()
 		walking_player.stream_paused = false
 	else:
-		# Use pause instead of stop for a "resuming" feel if desired, 
-		# but stop is usually cleaner for footstep loops.
-		# For this request, we'll use pause to keep the rhythm.
 		walking_player.stream_paused = true
+
+func play_whetstone(type: String):
+	var stream = whetstone_atk_sound if type == "atk" else whetstone_def_sound
+	var asp = play_sfx(stream)
+	# Sound is 3s but animation is 1.5s. Cut it off.
+	get_tree().create_timer(1.5).timeout.connect(func():
+		if is_instance_valid(asp):
+			asp.stop()
+	)

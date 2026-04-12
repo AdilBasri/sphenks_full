@@ -82,7 +82,7 @@ func _is_excluded(node: Node) -> bool:
 	var result = false
 	while p and p != get_tree().root:
 		var lname = p.name.to_lower()
-		if lname == "fabric1" or lname == "altar" or lname == "ashtray":
+		if lname == "fabric1" or lname == "altar" or lname == "ashtray" or "whetstone" in lname:
 			result = true
 			break
 		p = p.get_parent()

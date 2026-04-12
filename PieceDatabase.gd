@@ -93,6 +93,16 @@ func get_piece_display_name(path: String) -> String:
 	if "castle" in file_name or "rook" in file_name: return "Castle"
 	return "Piece"
 
+func get_piece_type(path: String) -> String:
+	var filename = path.get_file().to_lower()
+	if "piyon" in filename or "pawn" in filename: return "pawn"
+	if "castle" in filename or "rook" in filename: return "castle"
+	if "bishop" in filename: return "bishop"
+	if "horse" in filename: return "horse"
+	if "king" in filename: return "king"
+	if "queen" in filename: return "queen"
+	return ""
+
 func get_valid_moves(current_pos: Vector2i, piece_path: String) -> Array[Vector2i]:
 	var file_name = piece_path.get_file().to_lower()
 	var moves: Array[Vector2i] = []

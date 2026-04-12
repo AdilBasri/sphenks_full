@@ -317,11 +317,16 @@ func _update_piece_hover_info():
 			target_piece = collider.get_parent()
 			
 		if target_piece:
-			var path = target_piece.get_meta("scene_path") if target_piece.has_meta("scene_path") else ""
+			# Check piece parent for upgrade choices to ensure we find 'scene_path'
+			var actual_piece = target_piece
+			if not actual_piece.has_meta("scene_path") and actual_piece.get_parent() and actual_piece.get_parent().has_meta("scene_path"):
+				actual_piece = actual_piece.get_parent()
+				
+			var path = actual_piece.get_meta("scene_path") if actual_piece.has_meta("scene_path") else ""
 			if path != "":
 				var display_name = PieceDatabase.get_piece_display_name(path)
 				piece_name_label.text = display_name
-				piece_name_label.global_position = crosshair_pos + Vector2(20, -20)
+				piece_name_label.global_position = crosshair_pos + Vector2(25, -25)
 				piece_name_label.visible = true
 				cursor_3d_pos = result.position
 				return
@@ -1055,6 +1060,8 @@ func release_to_walk():
 	if crosshair_ui: crosshair_ui.visible = true
 	print("PLAYER RELEASED TO WALK MODE")
 
+var hovered_whetstone: Node3D = null
+
 func _process_upgrade_interaction():
 	if not is_upgrade_mode: return
 	
@@ -1064,26 +1071,47 @@ func _process_upgrade_interaction():
 	
 	var space_state = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.create(from, to)
-	query.collision_mask = 1 # Pieces are on layer 1
+	# Layers: Pieces/Whetstones on Layer 1
 	var result = space_state.intersect_ray(query)
 	
-	var new_hovered = null
+	var new_hovered_piece = null
+	var new_hovered_whetstone = null
+	
 	if result:
 		var collider = result.collider
-		var target = collider.get_parent() if collider is StaticBody3D else collider
-		if target.has_meta("is_upgrade_choice"):
-			new_hovered = target
-	
-	if new_hovered != hovered_upgrade_piece:
+		if collider.has_meta("is_upgrade_choice"):
+			# SUCCESS: Get the actual piece Node3D, not the StaticBody3D child
+			new_hovered_piece = collider.get_parent() if collider.get_parent() else collider
+		elif collider.has_meta("is_whetstone"):
+			new_hovered_whetstone = collider
+			
+	# Handle Piece Hover
+	if new_hovered_piece != hovered_upgrade_piece:
 		if hovered_upgrade_piece:
 			_set_piece_highlight(hovered_upgrade_piece, false)
-		hovered_upgrade_piece = new_hovered
+			if piece_name_label: piece_name_label.visible = false
+			
+		hovered_upgrade_piece = new_hovered_piece
+		
 		if hovered_upgrade_piece:
 			_set_piece_highlight(hovered_upgrade_piece, true)
 			SesYoneticisi.play_hover()
+			# Show Tooltip (Non-intrusive)
+			if piece_name_label and hovered_upgrade_piece.has_meta("scene_path"):
+				var path = hovered_upgrade_piece.get_meta("scene_path")
+				piece_name_label.text = PieceDatabase.get_piece_display_name(path)
+				piece_name_label.visible = true
+				piece_name_label.global_position = get_viewport().get_mouse_position() + Vector2(25, -25)
+
+	# Handle Whetstone Hover (Visual feedback)
+	if new_hovered_whetstone != hovered_whetstone:
+		hovered_whetstone = new_hovered_whetstone
+		if hovered_whetstone:
+			# Optional: add a subtle sound or visual if needed
+			SesYoneticisi.play_hover()
 
 func _set_piece_highlight(piece: Node3D, active: bool):
-	# Kill existing tween if any
+	if not is_instance_valid(piece): return
 	if piece.has_meta("hover_tween"):
 		var old_tw = piece.get_meta("hover_tween")
 		if old_tw and old_tw.is_valid():
@@ -1092,19 +1120,37 @@ func _set_piece_highlight(piece: Node3D, active: bool):
 
 	if active:
 		var tw = create_tween().set_loops()
-		tw.tween_property(piece, "scale", Vector3(1.1, 1.1, 1.1), 0.2).set_trans(Tween.TRANS_SINE)
-		tw.tween_property(piece, "scale", Vector3(1.0, 1.0, 1.0), 0.2).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(piece, "scale", Vector3(1.6, 1.6, 1.6), 0.2).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(piece, "scale", Vector3(1.5, 1.5, 1.5), 0.2).set_trans(Tween.TRANS_SINE)
 		piece.set_meta("hover_tween", tw)
 	else:
-		piece.scale = Vector3(1.0, 1.0, 1.0)
+		piece.scale = Vector3(1.5, 1.5, 1.5)
 
 func _get_enemy_pos() -> Vector3:
 	var sitting = get_tree().get_first_node_in_group("sitting_node")
 	if sitting: return sitting.global_position
-	return Vector3(0, -0.25, -1.5) # Fallback near the character
+	return Vector3(0, -0.25, -1.5)
 
 func _handle_upgrade_click():
-	if hovered_upgrade_piece and upgrade_manager:
+	if not upgrade_manager: return
+	
+	# If we ALREADY selected a piece, we only care about whetstones
+	if upgrade_manager.selected_piece != null:
+		if hovered_whetstone:
+			var type = hovered_whetstone.get_meta("whetstone_type") if hovered_whetstone.has_meta("whetstone_type") else ""
+			if type != "":
+				upgrade_manager.process_upgrade(type)
+		return
+	
+	# Otherwise, we are in the selection phase
+	if hovered_upgrade_piece:
+		# Hide UI before moving
+		if has_node("/root/InspectUI"): get_node("/root/InspectUI").hide_piece()
+		
 		upgrade_manager.select_piece(hovered_upgrade_piece)
 		_set_piece_highlight(hovered_upgrade_piece, false)
 		hovered_upgrade_piece = null
+	elif hovered_whetstone:
+		var type = hovered_whetstone.get_meta("whetstone_type") if hovered_whetstone.has_meta("whetstone_type") else ""
+		if type != "":
+			upgrade_manager.process_upgrade(type)
