@@ -1,12 +1,15 @@
 extends Node
 class_name PieceUpgradeManager
 
+signal piece_placed_on_altar  # Emitted when a piece reaches the altar
+
 @onready var game_manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 @onready var camera = get_viewport().get_camera_3d()
 
 var selection_pieces: Array[Node3D] = []
 var selected_piece: Node3D = null
 var is_selection_active: bool = false
+var is_selection_ready: bool = false
 
 var fabric_markers: Array[Marker3D] = []
 var altar_marker: Marker3D = null
@@ -184,8 +187,9 @@ func start_upgrade_sequence():
 	if fabric_markers.is_empty(): return
 	
 	is_selection_active = true
+	is_selection_ready = false
 	upgrade_points = 3
-	selection_lockout = 0.6 # 0.6 second delay before allowing selection
+	selection_lockout = 0.4 # More responsive lockout
 	if points_label: points_label.text = "3"
 	
 	for l in labels_nodes: l.visible = true
@@ -223,6 +227,9 @@ func start_upgrade_sequence():
 			_add_collision_to_piece(piece)
 			selection_pieces.append(piece)
 			_setup_piece_visuals(piece)
+	
+	is_selection_ready = true
+	print("[PieceUpgradeManager] Drafting phase ready. Pieces: ", selection_pieces.size())
 
 func _add_collision_to_piece(piece: Node3D):
 	if piece.find_child("*StaticBody*", true, false): return
@@ -244,15 +251,20 @@ func _setup_piece_visuals(piece: Node3D):
 		applier._process_node(piece)
 
 func select_piece(piece: Node3D):
-	if selection_lockout > 0.0 or selected_piece or not is_selection_active: return
-	
-	if not piece or not piece is Node3D:
-		print("[PieceUpgradeManager] ERROR: Invalid piece passed to select_piece")
+	if not is_selection_active or not is_selection_ready:
+		print("[PieceUpgradeManager] Selection blocked: Not active or ready.")
 		return
+	if selection_lockout > 0.0:
+		print("[PieceUpgradeManager] Selection blocked: Lockout active (", selection_lockout, ")")
+		return
+	if selected_piece:
+		print("[PieceUpgradeManager] Selection blocked: Piece already selected.")
+		return
+	
 	selected_piece = piece
+	print("[PieceUpgradeManager] Selection confirmed: ", piece.name)
 	
 	# Hide others
-	print("[PieceUpgradeManager] Selection confirmed: ", piece.name)
 	for p in selection_pieces:
 		if p != piece:
 			var tw_hide = create_tween()
@@ -264,10 +276,12 @@ func select_piece(piece: Node3D):
 	var tw = create_tween().set_parallel(false)
 	tw.tween_property(piece, "global_position:y", piece.global_position.y + 0.4, 0.3).set_trans(Tween.TRANS_QUAD)
 	tw.tween_property(piece, "global_position", target_pos, 0.6).set_trans(Tween.TRANS_SINE)
+	await tw.finished
 	
 	_update_screen_stats()
-	
-	# NO UI POPUP HERE
+	piece_placed_on_altar.emit()  # TutorialManager Box 12'yi tetikler
+
+
 
 func process_upgrade(type: String):
 	if not selected_piece or upgrade_points <= 0: return

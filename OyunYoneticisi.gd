@@ -20,6 +20,10 @@ enum GameTurn { PLAYER, ENEMY }
 var current_turn: GameTurn = GameTurn.PLAYER
 var round_number: int = 1
 var is_game_active: bool = false
+var is_tutorial_mode: bool = true
+var tutorial_manager: Node
+var is_processing_turn: bool = false
+var pending_ai_timer: SceneTreeTimer = null
 
 var camera: Camera3D
 var box: Node3D
@@ -67,7 +71,10 @@ func _ready():
 	# Start Sitting Animation Loop
 	_start_sitting_loop()
 	
-	start_game()
+	# Setup Tutorial Manager
+	tutorial_manager = load("res://Scripts/TutorialManager.gd").new()
+	add_child(tutorial_manager)
+	tutorial_manager.tutorial_completed.connect(func(): is_tutorial_mode = false; start_game())
 	
 	# Setup basement door interaction
 	_setup_basement_door()
@@ -166,6 +173,9 @@ func start_game():
 	start_current_turn_logic()
 
 func start_current_turn_logic():
+	if not is_game_active and is_tutorial_mode:
+		return
+		
 	if camera and camera.is_game_over:
 		is_game_active = false
 		return
@@ -173,7 +183,14 @@ func start_current_turn_logic():
 	print("--- Round %d | Turn: %s ---" % [round_number, "PLAYER" if current_turn == GameTurn.PLAYER else "ENEMY"])
 	
 	# Draw Piece if round is odd (1, 3, 5...)
-	if round_number % 2 != 0:
+	var should_draw = (round_number % 2 != 0)
+	if is_tutorial_mode:
+		# In tutorial, only PLAYER gets automatic pieces (to recover if they die)
+		# Enemy is manually given only ONE piece by TutorialManager
+		if current_turn == GameTurn.ENEMY:
+			should_draw = false
+			
+	if should_draw:
 		start_chest_sequence()
 	else:
 		# Check for valid moves in even rounds (Move Only)
@@ -277,7 +294,23 @@ func cleanup_board():
 				if not stats.is_empty():
 					king.set_meta("current_defense", stats["defense"])
 
+func cleanup_non_king_pieces():
+	print("Tutorial reset: Cleaning non-king pieces...")
+	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	if not grid: return
+	
+	for hucre in grid.hucrelerin_sozlugu.values():
+		if hucre.mevcut_tas and not hucre.mevcut_tas.has_meta("is_king"):
+			hucre.mevcut_tas.queue_free()
+			hucre.mevcut_tas = null
+
 func next_turn():
+	if is_processing_turn: return
+	is_processing_turn = true
+	
+	# Kill any pending AI thinking if turn is forced to switch
+	pending_ai_timer = null 
+	
 	if current_turn == GameTurn.PLAYER:
 		current_turn = GameTurn.ENEMY
 	else:
@@ -285,6 +318,7 @@ func next_turn():
 		round_number += 1
 	
 	start_current_turn_logic()
+	is_processing_turn = false
 
 func start_chest_sequence():
 	if camera and camera.is_game_over: return
@@ -545,7 +579,14 @@ func _process_enemy_move_only():
 					best_move_data = {"from": hucre, "to": move}
 	
 	if best_move_data:
-		await get_tree().create_timer(1.0).timeout
+		var this_turn = current_turn
+		pending_ai_timer = get_tree().create_timer(1.0)
+		await pending_ai_timer.timeout
+		
+		# Guard: Turn must still be Enemy and timer must still be the active one
+		if current_turn != this_turn or not is_game_active:
+			return
+			
 		await _execute_ai_move(best_move_data["from"], best_move_data["to"])
 	else:
 		next_turn()
@@ -608,6 +649,10 @@ func _evaluate_move(from: GridHucre, to: GridHucre) -> float:
 	return score
 
 func _execute_ai_move(from: GridHucre, to: GridHucre):
+	if not from or not is_instance_valid(from.mevcut_tas):
+		next_turn()
+		return
+		
 	var piece = from.mevcut_tas
 	var path = piece.get_meta("scene_path")
 	from.mevcut_tas = null
@@ -652,9 +697,15 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 			
 			if is_king:
 				if is_player_king:
-					if camera.has_method("trigger_loss"): camera.trigger_loss()
+					if is_tutorial_mode:
+						tutorial_manager.on_king_died(true)
+					elif camera.has_method("trigger_loss"): 
+						camera.trigger_loss()
 				else:
-					if camera.has_method("trigger_win"): camera.trigger_win()
+					if is_tutorial_mode:
+						tutorial_manager.on_king_died(false)
+					elif camera.has_method("trigger_win"): 
+						camera.trigger_win()
 		else:
 			# Bounce back!
 			var tw_back = create_tween()

@@ -15,6 +15,9 @@ extends CanvasLayer
 @onready var def_plus: Button = $MarginContainer/VBoxContainer/DefenseBox/PlusBtn
 @onready var def_minus: Button = $MarginContainer/VBoxContainer/DefenseBox/MinusBtn
 
+signal dismissed
+signal piece_on_altar
+
 var is_active: bool = false
 var viewport_piece: Node3D = null
 var rotation_speed: float = 0.5
@@ -87,6 +90,8 @@ func open(piece_path: String):
 	current_piece_path = piece_path
 	var stats = PieceDatabase.get_piece_stats(piece_path)
 	if stats.is_empty(): return
+	
+	piece_on_altar.emit()
 	
 	current_credits = 3
 	bonus_atk = 0
@@ -182,6 +187,7 @@ func close():
 	if viewport_piece:
 		viewport_piece.queue_free()
 		viewport_piece = null
+	dismissed.emit()
 
 func _apply_shader_to_viewport_piece(node: Node):
 	var applier = get_tree().root.find_child("GlobalShaderApplier", true, false)

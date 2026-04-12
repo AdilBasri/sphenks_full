@@ -8,13 +8,13 @@ extends CanvasLayer
 @onready var slots_container: HBoxContainer = $MarginContainer/VBoxContainer/HBoxContainer
 @onready var viewport_piece_anchor: Node3D = $SubViewportContainer/SubViewport/PieceAnchor
 
+signal dismissed
+
 var is_active: bool = false
 var viewport_piece: Node3D = null
 var rotation_speed: float = 0.5
 var sensitivity: float = 0.2
 var _can_dismiss: bool = false
-
-signal dismissed
 
 func _ready():
 	blur_rect.material.set_shader_parameter("blur_amount", 0.0)
@@ -127,3 +127,4 @@ func _input(event):
 		if _can_dismiss:
 			get_viewport().set_input_as_handled()
 			hide_piece()
+			dismissed.emit()

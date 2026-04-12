@@ -47,6 +47,10 @@ var hovered_upgrade_piece: Node3D = null
 var blood_puke_scene = preload("res://BloodPuke.tscn")
 var is_receiving_piece: bool = false
 
+signal piece_placed
+signal piece_moved
+signal camera_returned_to_board
+
 func _ready():
 	# Capture mouse (HIDE)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -190,9 +194,16 @@ func sit_down():
 	# Reset rotation params to current rotation
 	yaw = rotation_degrees.y
 	pitch = rotation_degrees.x
+	camera_returned_to_board.emit()
 	print("PLAYER SEATED")
 
 func _input(event):
+	# Upgrade modunda: tüm guard'ları atla, direkt etkileşime izin ver
+	if is_upgrade_mode and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_handle_upgrade_click()
+		get_viewport().set_input_as_handled()
+		return
+	
 	if is_receiving_piece: return
 	
 	# Block all camera actions and rotation if any full-screen UI is active
@@ -206,12 +217,12 @@ func _input(event):
 		if is_game_over and current_state == PlayerState.SEATED: return
 		
 		if held_piece:
-			place_held_piece()
+			if _check_tutorial_permission(0): # 0 = PLACE
+				place_held_piece()
 		else:
-			if is_upgrade_mode:
-				_handle_upgrade_click()
-			else:
-				interact_with_crosshair()
+			if not is_upgrade_mode:
+				if _check_tutorial_permission(4): # 4 = BOARD_CLICK
+					interact_with_crosshair()
 	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		if is_game_over: return
@@ -221,15 +232,25 @@ func _input(event):
 		if result and result.collider.has_meta("is_grid_cell"):
 			var hucre = result.collider.get_meta("grid_cell_node")
 			if hucre and hucre.mevcut_tas and hucre != selected_hucre:
-				var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
-				if path != "" and has_node("/root/InspectUI"):
-					get_node("/root/InspectUI").show_piece(path)
-					return # Prevent deselection if we are inspecting
+				if _check_tutorial_permission(2): # 2 = INSPECT
+					var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
+					if path != "" and has_node("/root/InspectUI"):
+						get_node("/root/InspectUI").show_piece(path)
+						return # Prevent deselection if we are inspecting
 		
 		# Default: Deselect on right click
 		if held_piece:
 			SesYoneticisi.play_error()
 		_clear_selection()
+	
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and not held_piece and not is_upgrade_mode:
+		# Check if we clicked an already standing piece to open info
+		var result = _raycast_from_mouse()
+		if result and result.collider.has_meta("is_grid_cell"):
+			var hucre = result.collider.get_meta("grid_cell_node")
+			if hucre and hucre.mevcut_tas:
+				# Signal that we are inspecting a board piece (for Sequence 5)
+				pass # This is handled by right-click in current version, but user requested left-click info check in tutorial
 	
 	if event is InputEventKey and event.pressed:
 		# Camera Switching Logic (W to Zoom, S to Back)
@@ -439,11 +460,20 @@ func _process_chair_interaction():
 func interact_with_crosshair():
 	if is_receiving_piece: return
 	
-	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
-	if not manager or manager.current_turn != manager.GameTurn.PLAYER:
-		print("Sıra sizde değil!")
-		return
+	# Eğer tutorial diyaloğu açıksa board etkileşimini sessizce yoksay
+	# (Godot'ta _input tüm olayları alır; set_input_as_handled sadece _unhandled_input için geçerli)
+	var tm = get_tree().get_first_node_in_group("tutorial_manager")
+	if tm and tm.dialogue_ui and tm.dialogue_ui.visible: return
+
+	
+	# Sıra ve game_active kontrolü sadece normal tahta etkileşiminde gerekli
+	if not is_upgrade_mode:
+		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+		if not manager or manager.current_turn != manager.GameTurn.PLAYER:
+			print("Sıra sizde değil!")
+			return
 		
+
 	var space_state = get_world_3d().direct_space_state
 	var v_size = get_viewport().get_visible_rect().size
 	var crosshair_pos = get_viewport().get_mouse_position() if current_state == PlayerState.SEATED else v_size / 2.0
@@ -578,6 +608,9 @@ func _clear_selection():
 		_transition_to_seated_view()
 
 func _execute_move(from: GridHucre, to: GridHucre):
+	if not _check_tutorial_permission(1): # 1 = MOVE
+		return
+		
 	var piece = from.mevcut_tas
 	var path = piece.get_meta("scene_path")
 	from.mevcut_tas = null
@@ -626,10 +659,22 @@ func _execute_move(from: GridHucre, to: GridHucre):
 			piece.position = Vector3.ZERO
 			
 			if is_king:
+				var tm = get_tree().get_first_node_in_group("tutorial_manager")
 				if is_player_piece:
-					trigger_loss()
+					if tm and tm.is_tutorial_active:
+						is_game_over = true  # Oyun döngüsünü anında durdur
+						tm.on_king_died(true)
+					else:
+						trigger_loss()
 				else:
-					trigger_win()
+					if tm and tm.is_tutorial_active:
+						is_game_over = true  # Oyun döngüsünü anında durdur
+						tm.on_king_died(false)
+					else:
+						trigger_win()
+				# King yakalandığında sıra geçişi ve kamera geçişi YOK
+				# (upgrade sekansı veya oyun sonu sekansı kamerayı yönetir)
+				return
 		else:
 			# Bounce back!
 			var tw_back = create_tween()
@@ -643,12 +688,15 @@ func _execute_move(from: GridHucre, to: GridHucre):
 		piece.reparent(to)
 		piece.position = Vector3.ZERO
 	
+	piece_moved.emit()
+	
 	# End Player Turn
 	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 	if manager: manager.next_turn()
 	
 	# Auto-transition back to seated view when turn ends
 	_transition_to_seated_view()
+
 
 func _create_puff(pos: Vector3):
 	# Simple code-based puff effect using a Sphere
@@ -780,6 +828,7 @@ func place_held_piece():
 	held_piece = null
 	held_piece_scene = ""
 	is_placing_piece = false
+	piece_placed.emit()
 	
 func trigger_win():
 	print("VICTORY! King defeated.")
@@ -804,11 +853,8 @@ func trigger_win():
 		if manager: manager.cleanup_board()
 	Engine.time_scale = 1.0
 	
-	# UI'yı gizle
 	if has_node("/root/InspectUI"):
 		get_node("/root/InspectUI").hide_piece()
-	
-	print("Taş yerleştirildi.")
 
 func _play_puke_sequence():
 	print("[Camera3D] Starting Puke Sequence...")
@@ -1024,6 +1070,9 @@ func trigger_loss():
 			get_tree().root.add_child(new_ui)
 			new_ui.show_game_over()
 
+func _transition_to_upgrade_view():
+	enter_upgrade_selection_view()
+
 func enter_upgrade_selection_view():
 	is_upgrade_mode = true
 	if current_state == PlayerState.SEATED:
@@ -1058,8 +1107,9 @@ func return_to_table():
 		crosshair_ui.visible = true
 	
 	# Oyun Yöneticisini bul ve taze maçı başlat
+	# Eğer tutorial hâlâ aktifse, restart_new_match yerine TutorialManager devralır
 	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
-	if manager and manager.has_method("restart_new_match"):
+	if manager and manager.has_method("restart_new_match") and not manager.is_tutorial_mode:
 		manager.restart_new_match()
 	
 	print("[Camera3D] Masaya dönüldü, imleç ve yeni maç tetiklendi.")
@@ -1168,3 +1218,11 @@ func _handle_upgrade_click():
 		var type = hovered_whetstone.get_meta("whetstone_type") if hovered_whetstone.has_meta("whetstone_type") else ""
 		if type != "":
 			upgrade_manager.process_upgrade(type)
+
+func _check_tutorial_permission(action_type: int) -> bool:
+	var tm = get_tree().get_first_node_in_group("tutorial_manager")
+	if tm and tm.has_method("is_action_allowed"):
+		# Using int for enum safety across scripts
+		if not tm.is_action_allowed(action_type):
+			return false
+	return true
