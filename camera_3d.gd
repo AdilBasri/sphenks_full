@@ -194,22 +194,39 @@ func sit_down():
 
 func _input(event):
 	if is_receiving_piece: return
+	
+	# Block all camera actions and rotation if any full-screen UI is active
+	if _is_any_ui_active():
+		return
+
+	if is_locked: return
+	
+	# Interactions
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if is_game_over and current_state == PlayerState.SEATED: return
-		if event.double_click:
-			_handle_double_click()
+		
+		if held_piece:
+			place_held_piece()
 		else:
-			if held_piece:
-				place_held_piece()
+			if is_upgrade_mode:
+				_handle_upgrade_click()
 			else:
-				if is_upgrade_mode:
-					_handle_upgrade_click()
-				else:
-					interact_with_crosshair()
+				interact_with_crosshair()
 	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		if is_game_over: return
-		# Deselect on right click
+		
+		# Check if we are right-clicking a piece to inspect it
+		var result = _raycast_from_mouse()
+		if result and result.collider.has_meta("is_grid_cell"):
+			var hucre = result.collider.get_meta("grid_cell_node")
+			if hucre and hucre.mevcut_tas and hucre != selected_hucre:
+				var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
+				if path != "" and has_node("/root/InspectUI"):
+					get_node("/root/InspectUI").show_piece(path)
+					return # Prevent deselection if we are inspecting
+		
+		# Default: Deselect on right click
 		if held_piece:
 			SesYoneticisi.play_error()
 		_clear_selection()
@@ -224,8 +241,12 @@ func _input(event):
 				
 		if event.keycode == KEY_C and current_state == PlayerState.SEATED and not is_transitioning_view:
 			stand_up()
+			
+		if event.keycode == KEY_E:
+			if current_state == PlayerState.STANDING and interact_label.visible:
+				sit_down()
 
-	if is_locked: return
+	# Rotation
 	if event is InputEventMouseMotion:
 		# Only rotate if the mouse is captured
 		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
@@ -237,13 +258,14 @@ func _input(event):
 			pitch -= event.relative.y * sensitivity
 			
 			# Limits (RELATIVE TO START ANGLES)
-			# Standing: Full 360 yaw, but still limit pitch to avoid flipping over
 			pitch = clamp(pitch, -85, 85)
 
-	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_E:
-			if current_state == PlayerState.STANDING and interact_label.visible:
-				sit_down()
+func _is_any_ui_active() -> bool:
+	var inspect_ui = get_node_or_null("/root/InspectUI")
+	if inspect_ui and inspect_ui.is_active: return true
+	var upgrade_ui = get_node_or_null("/root/UpgradeUI")
+	if upgrade_ui and upgrade_ui.is_active: return true
+	return false
 
 func _process(_delta):
 	if is_locked: return
@@ -475,21 +497,13 @@ func interact_with_crosshair():
 			else:
 				_clear_selection()
 
-func _handle_double_click():
+func _raycast_from_mouse() -> Dictionary:
 	var space_state = get_world_3d().direct_space_state
-	var crosshair_pos = get_viewport().get_mouse_position()
+	var crosshair_pos = get_viewport().get_mouse_position() if (current_state == PlayerState.SEATED or is_upgrade_mode) else get_viewport().get_visible_rect().size / 2.0
 	var origin = project_ray_origin(crosshair_pos)
 	var end = origin + project_ray_normal(crosshair_pos) * ray_length
 	var query = PhysicsRayQueryParameters3D.create(origin, end)
-	var result = space_state.intersect_ray(query)
-	
-	if result and result.collider.has_meta("is_grid_cell"):
-		var hucre = result.collider.get_meta("grid_cell_node")
-		if hucre.mevcut_tas:
-			var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
-			if path != "" and has_node("/root/InspectUI"):
-				get_node("/root/InspectUI").show_piece(path)
-				get_viewport().set_input_as_handled()
+	return space_state.intersect_ray(query)
 
 func _select_hucre(hucre: GridHucre):
 	if selected_hucre == hucre:

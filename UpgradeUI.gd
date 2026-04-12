@@ -193,3 +193,4 @@ func _input(event):
 	if not is_active: return
 	if event is InputEventMouseMotion:
 		viewport_piece_anchor.rotate_y(deg_to_rad(event.relative.x * sensitivity))
+		get_viewport().set_input_as_handled()

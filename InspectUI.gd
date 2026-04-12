@@ -120,6 +120,7 @@ func _input(event):
 	if event is InputEventMouseMotion:
 		viewport_piece_anchor.rotate_y(deg_to_rad(event.relative.x * sensitivity))
 		viewport_piece_anchor.rotate_object_local(Vector3.RIGHT, deg_to_rad(-event.relative.y * sensitivity))
+		get_viewport().set_input_as_handled()
 		
 	# Dismiss Logic - Consume the click so main camera doesn't place piece
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
