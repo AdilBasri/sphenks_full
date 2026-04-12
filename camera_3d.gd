@@ -558,13 +558,9 @@ func _select_hucre(hucre: GridHucre):
 	for coord in valid_coords:
 		if grid.hucrelerin_sozlugu.has(coord):
 			var target = grid.hucrelerin_sozlugu[coord]
-			move_highlights.append(target)
-			
-			# Highlight color: 
-			# Red: Kill (Attack >= Defense)
-			# Orange: Damage (Attack < Defense)
-			# Green: Empty
+			# Determine highlight color and if valid
 			var color = Color(0, 1, 0, 0.4) # Soft Green for empty squares
+			var is_friendly = false
 			
 			if target.mevcut_tas:
 				var target_path = target.mevcut_tas.get_meta("scene_path") if target.mevcut_tas.has_meta("scene_path") else ""
@@ -577,13 +573,14 @@ func _select_hucre(hucre: GridHucre):
 					else:
 						color = Color(1, 0.6, 0.0, 0.6) # Damage - Vibrant Orange
 				elif "white" in target_path.to_lower():
-					# Friendly piece, skip moved highlight entirely
-					continue
+					is_friendly = true
 				else:
 					# Unknown/Neutral piece
 					color = Color(1, 1, 0, 0.5)
-					
-			target.set_highlight(true, color)
+			
+			if not is_friendly:
+				move_highlights.append(target)
+				target.set_highlight(true, color)
 	
 	# Auto-transition to board view when a piece is selected
 	_transition_to_board_view()
@@ -610,6 +607,13 @@ func _clear_selection():
 func _execute_move(from: GridHucre, to: GridHucre):
 	if not _check_tutorial_permission(1): # 1 = MOVE
 		return
+		
+	# Friendly fire guard
+	if to.mevcut_tas:
+		var target_path = to.mevcut_tas.get_meta("scene_path") if to.mevcut_tas.has_meta("scene_path") else ""
+		if "white" in target_path.to_lower():
+			_clear_selection()
+			return
 		
 	var piece = from.mevcut_tas
 	var path = piece.get_meta("scene_path")

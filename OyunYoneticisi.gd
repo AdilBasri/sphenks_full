@@ -166,6 +166,10 @@ func _start_sitting_loop():
 		print("[OyunYoneticisi] ERROR: Sitting node NOT FOUND.")
 
 func start_game():
+	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	if grid and grid.has_method("spawn_kings"):
+		grid.spawn_kings()
+		
 	is_game_active = true
 	round_number = 1
 	current_turn = GameTurn.PLAYER
@@ -302,6 +306,10 @@ func cleanup_non_king_pieces():
 		if hucre.mevcut_tas and not hucre.mevcut_tas.has_meta("is_king"):
 			hucre.mevcut_tas.queue_free()
 			hucre.mevcut_tas = null
+	
+	# Ensure Kings are present and reset to full health
+	if grid.has_method("spawn_kings"):
+		grid.spawn_kings()
 
 func next_turn():
 	if is_processing_turn: return
@@ -667,6 +675,13 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 	await tw.finished
 	
 	SesYoneticisi.play_place_block()
+	
+	# Friendly fire guard for AI
+	if to.mevcut_tas:
+		var target_path = to.mevcut_tas.get_meta("scene_path") if to.mevcut_tas.has_meta("scene_path") else ""
+		if "black" in target_path.to_lower():
+			next_turn()
+			return
 	
 	# Combat Resolution (Same as player's)
 	if to.mevcut_tas:
