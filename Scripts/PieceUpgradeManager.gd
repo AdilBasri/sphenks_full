@@ -85,6 +85,7 @@ func _find_markers():
 		
 	if altar_marker:
 		# print("[PieceUpgradeManager] Altar target pos: ", altar_marker.global_position)
+		pass
 	else:
 		print("[PieceUpgradeManager] WARNING: Altar not found!")
 		

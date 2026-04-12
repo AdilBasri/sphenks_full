@@ -58,6 +58,7 @@ func _ready():
 		if anim_player:
 			# print("Animasyon Oynatıcı bulundu: ", anim_player.name)
 			# print("Mevcut animasyonlar: ", anim_player.get_animation_list())
+			pass
 		else:
 			# Çok daha agresif bir arama (Sahnedeki her yere bak)
 			print("BAŞARISIZ: Kutuda AnimationPlayer yok. Sahne ağacında aranıyor...")
