@@ -1,4 +1,4 @@
-[gd_scene load_steps=49 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=51 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
@@ -37,6 +37,7 @@
 [ext_resource type="Script" uid="uid://bnqdn52relu8j" path="res://Scripts/loop_animation.gd" id="35_loop"]
 [ext_resource type="Animation" uid="uid://dp5eolmpu3nkh" path="res://puke.res" id="36_puke"]
 [ext_resource type="PackedScene" uid="uid://c5n6oyf767usb" path="res://Assets/whetstone/scene.gltf" id="37_0d0sc"]
+[ext_resource type="PackedScene" uid="uid://d0qlgknpqe0aj" path="res://Assets/points/scene.gltf" id="38_4acqy"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
 _data = {
@@ -89,10 +90,13 @@ _data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.25, 1), 0.0, 0.0, 0, 0, Vector
 point_count = 3
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_0d0sc"]
-size = Vector3(1.1326904, 1.5800781, 1)
+size = Vector3(1.3539429, 1.5800781, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_4acqy"]
-size = Vector3(1.2260742, 1.6668701, 1)
+size = Vector3(1.5494385, 1.6668701, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tk8v5"]
+albedo_color = Color(0, 0, 0, 1)
 
 [node name="GameRoom" type="Node3D"]
 script = ExtResource("1_w2vvk")
@@ -868,7 +872,7 @@ transform = Transform3D(1, 0, -5.9604645e-08, 0, 0.99999976, 0, 5.9604645e-08, 0
 [node name="StaticBody3D" type="StaticBody3D" parent="whetstone_def"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="whetstone_def/StaticBody3D"]
-transform = Transform3D(1, 0, -5.9604645e-08, 0, 0.9999874, 0, 5.9604645e-08, 0, 1, 0.066345215, 0.2900381, 0)
+transform = Transform3D(1, 0, -5.9604645e-08, 0, 0.99998474, 0, 5.9604645e-08, 0, 1, 0.17697144, 0.2900381, 4.7683716e-07)
 shape = SubResource("BoxShape3D_0d0sc")
 
 [node name="whetstone_atk" parent="." instance=ExtResource("37_0d0sc")]
@@ -880,8 +884,26 @@ transform = Transform3D(0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0,
 [node name="StaticBody3D" type="StaticBody3D" parent="whetstone_atk"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="whetstone_atk/StaticBody3D"]
-transform = Transform3D(0.9999999, 0, 0, 0, 0.9999889, 0, 0, 0, 0.9999999, 0.11303806, 0.33343387, 0)
+transform = Transform3D(0.9999999, 0, 0, 0, 0.99998736, 0, 0, 0, 0.9999999, 0.2747202, 0.33343387, 0)
 shape = SubResource("BoxShape3D_4acqy")
+
+[node name="screen1" parent="." instance=ExtResource("38_4acqy")]
+transform = Transform3D(0.32000002, 0, 0, 0, 0.31999996, 0, 0, 0, 0.32000002, -2.1315694, 0.050811082, 2.5760672)
+
+[node name="Screen_Material_002_0" parent="screen1/Sketchfab_model/PSX style tv_fbx/RootNode/Screen" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_tk8v5")
+
+[node name="Label3D" type="Label3D" parent="screen1"]
+transform = Transform3D(1.0000001, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.25126648, 0.058872685, 0)
+
+[node name="screen2" parent="." instance=ExtResource("38_4acqy")]
+transform = Transform3D(0.32000002, 0, 0, 0, 0.31999996, 0, 0, 0, 0.32000002, -2.1315694, 0.050811082, 1.9867964)
+
+[node name="Screen_Material_002_0" parent="screen2/Sketchfab_model/PSX style tv_fbx/RootNode/Screen" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_tk8v5")
+
+[node name="Label3D" type="Label3D" parent="screen2"]
+transform = Transform3D(1.0000001, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.25126648, 0.058872685, 0)
 
 [editable path="Sitting"]
 [editable path="box"]
@@ -893,3 +915,5 @@ shape = SubResource("BoxShape3D_4acqy")
 [editable path="poster7"]
 [editable path="alchol1"]
 [editable path="alchol1/alchol2"]
+[editable path="screen1"]
+[editable path="screen2"]

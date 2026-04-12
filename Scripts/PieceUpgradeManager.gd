@@ -19,6 +19,11 @@ var marker_def: Marker3D = null
 var upgrade_points: int = 3
 var labels_nodes: Array[Label3D] = []
 var points_label: Label3D = null
+var atk_screen_label: Label3D = null
+var def_screen_label: Label3D = null
+
+var screen1: Node3D = null
+var screen2: Node3D = null
 
 var selection_lockout: float = 0.0
 
@@ -79,8 +84,25 @@ func _find_markers():
 		print("[PieceUpgradeManager] Altar target pos: ", altar_marker.global_position)
 	else:
 		print("[PieceUpgradeManager] WARNING: Altar not found!")
+		
+	# Find Screens & Setup Shader Bypass
+	screen1 = base_node.find_child("screen1", true, false)
+	screen2 = base_node.find_child("screen2", true, false)
+	
+	if screen1:
+		print("[PieceUpgradeManager] Screen1 found.")
+		screen1.set_meta("skip_shader", true)
+		if screen1 is MeshInstance3D: screen1.material_override = null
+		atk_screen_label = screen1.find_child("*Label3D*", true, false)
+		
+	if screen2:
+		print("[PieceUpgradeManager] Screen2 found.")
+		screen2.set_meta("skip_shader", true)
+		if screen2 is MeshInstance3D: screen2.material_override = null
+		def_screen_label = screen2.find_child("*Label3D*", true, false)
 
 func _ensure_collision(node: Node3D, type: String):
+# ... (rest of function remains same)
 	# Check if the node itself is a body
 	if node is CollisionObject3D:
 		print("[PieceUpgradeManager] Node ", node.name, " is itself a collision object. Tagging it.")
@@ -112,11 +134,27 @@ func _setup_diegetic_ui():
 	# Points Label on Altar (Raised to -0.12 to avoid clipping)
 	points_label = _create_label("3", Vector3(-1.83, -0.12, 2.265), Color.GOLD)
 	
-	# Atk Label
+	# Atk & Def Labels
 	_create_label("+1 Attack", Vector3(-1.78, -0.12, 2.561), Color.RED)
-	
-	# Def Label
 	_create_label("+1 Defense", Vector3(-1.78, -0.12, 1.975), Color.SKY_BLUE)
+	
+	# Configure Manually Added Screen Labels
+	if atk_screen_label:
+		_configure_existing_label(atk_screen_label, Color.RED)
+	if def_screen_label:
+		_configure_existing_label(def_screen_label, Color.SKY_BLUE)
+
+func _configure_existing_label(l: Label3D, color: Color):
+	l.font = FONT_DOMINICA
+	l.font_size = 28
+	l.modulate = color
+	l.outline_modulate = Color.BLACK
+	l.outline_size = 8
+	l.no_depth_test = true
+	l.set_meta("skip_shader", true)
+	l.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	l.visible = false
+	labels_nodes.append(l)
 
 func _create_label(text: String, pos: Vector3, color: Color) -> Label3D:
 	var l = Label3D.new()
@@ -227,6 +265,8 @@ func select_piece(piece: Node3D):
 	tw.tween_property(piece, "global_position:y", piece.global_position.y + 0.4, 0.3).set_trans(Tween.TRANS_QUAD)
 	tw.tween_property(piece, "global_position", target_pos, 0.6).set_trans(Tween.TRANS_SINE)
 	
+	_update_screen_stats()
+	
 	# NO UI POPUP HERE
 
 func process_upgrade(type: String):
@@ -266,6 +306,21 @@ func process_upgrade(type: String):
 	else:
 		var tw_back = create_tween()
 		tw_back.tween_property(selected_piece, "global_position", altar_marker.global_position, 0.4).set_trans(Tween.TRANS_SINE)
+		_update_screen_stats()
+
+func _update_screen_stats():
+	if not selected_piece: return
+	
+	var path = selected_piece.get_meta("scene_path")
+	var stats = PieceDatabase.get_piece_stats(path)
+	
+	if atk_screen_label:
+		atk_screen_label.text = "Atk: %d" % stats.get("attack", 0)
+		atk_screen_label.visible = true
+		
+	if def_screen_label:
+		def_screen_label.text = "Def: %d" % stats.get("defense", 0)
+		def_screen_label.visible = true
 
 func _play_sharpening_effects(type: String):
 	# Sound
@@ -274,22 +329,47 @@ func _play_sharpening_effects(type: String):
 	
 	# Particles (Fire/Sparks)
 	var sparks = CPUParticles3D.new()
-	sparks.amount = 60 # Increased for more "fire" effect
-	sparks.lifetime = 0.8
-	sparks.explosiveness = 0.1
-	sparks.spread = 90.0
-	sparks.gravity = Vector3(0, 1.0, 0) # Rising embers
-	sparks.initial_velocity_min = 2.0
-	sparks.initial_velocity_max = 5.0
-	sparks.scale_amount_min = 0.05
-	sparks.scale_amount_max = 0.12
-	sparks.color = Color(1.0, 0.4, 0.0) # Hot Fire Orange
+	sparks.amount = 180 # Even denser for small particles
+	sparks.lifetime = 0.5
+	sparks.explosiveness = 0.05
+	sparks.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	sparks.emission_sphere_radius = 0.05
+	sparks.spread = 180.0
+	sparks.gravity = Vector3(0, 3.0, 0)
+	sparks.initial_velocity_min = 4.0
+	sparks.initial_velocity_max = 7.0
+	sparks.scale_amount_min = 0.015 # Smaller
+	sparks.scale_amount_max = 0.06  # Smaller
+	
+	# Color Gradient: Quick Yellow Heat -> Deep Red -> Fade
+	var gradient = Gradient.new()
+	gradient.set_color(0, Color(1, 1, 0.6)) # Very brief light yellow
+	gradient.add_point(0.1, Color.ORANGE)
+	gradient.add_point(0.3, Color.ORANGE_RED)
+	gradient.add_point(0.6, Color.RED)
+	gradient.add_point(0.8, Color.DARK_RED)
+	gradient.set_color(1, Color(0.1, 0, 0, 0))
+	sparks.color_ramp = gradient
+	
+	# Material & Mesh
+	var mat = StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.vertex_color_use_as_albedo = true
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	
+	var mesh = QuadMesh.new()
+	mesh.size = Vector2(0.05, 0.05) # Half the previous mesh size
+	mesh.material = mat
+	sparks.mesh = mesh
+	
+	sparks.set_meta("skip_shader", true)
 	
 	selected_piece.add_child(sparks)
-	sparks.position = Vector3(0, 0.15, 0) # Raise so it comes from the piece body
+	sparks.position = Vector3(0, 0, 0)
 	sparks.emitting = true
 	
-	get_tree().create_timer(1.5).timeout.connect(func(): 
+	get_tree().create_timer(1.6).timeout.connect(func(): 
 		sparks.emitting = false
 		get_tree().create_timer(1.0).timeout.connect(sparks.queue_free)
 	)
