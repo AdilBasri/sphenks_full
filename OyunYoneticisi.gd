@@ -51,13 +51,13 @@ func _ready():
 				if not box: box = node
 	
 	if box:
-		print("Kutu bulundu: ", box.name)
+		# print("Kutu bulundu: ", box.name)
 		if not anim_player:
 			anim_player = box.find_child("AnimationPlayer", true, false)
 		
 		if anim_player:
-			print("Animasyon Oynatıcı bulundu: ", anim_player.name)
-			print("Mevcut animasyonlar: ", anim_player.get_animation_list())
+			# print("Animasyon Oynatıcı bulundu: ", anim_player.name)
+			# print("Mevcut animasyonlar: ", anim_player.get_animation_list())
 		else:
 			# Çok daha agresif bir arama (Sahnedeki her yere bak)
 			print("BAŞARISIZ: Kutuda AnimationPlayer yok. Sahne ağacında aranıyor...")
@@ -80,7 +80,7 @@ func _ready():
 	_setup_basement_door()
 
 func _start_sitting_loop():
-	print("[OyunYoneticisi] Starting Sitting Animation Loop...")
+	# print("[OyunYoneticisi] Starting Sitting Animation Loop...")
 	var sitting_node = get_tree().get_first_node_in_group("sitting_node")
 	
 	if not sitting_node:
@@ -109,13 +109,13 @@ func _start_sitting_loop():
 			
 			# Play Loop
 			if sitting_anim.has_animation("oturma1"):
-				print("[OyunYoneticisi] Preparing to start Sitting loop...")
+				# print("[OyunYoneticisi] Preparing to start Sitting loop...")
 				
 				# Check if Skeleton3D exists and is visible
 				var skel = sitting_node.find_child("Skeleton3D", true, false)
 				if skel:
-					print("[OyunYoneticisi] Skeleton3D found. Visible=", skel.visible, " BoneCount=", skel.get_bone_count())
-					print("[OyunYoneticisi] First 5 Bone Names: ", skel.get_bone_name(0), ", ", skel.get_bone_name(1), ", ", skel.get_bone_name(2), ", ", skel.get_bone_name(3), ", ", skel.get_bone_name(4))
+					# print("[OyunYoneticisi] Skeleton3D found. Visible=", skel.visible, " BoneCount=", skel.get_bone_count())
+					# print("[OyunYoneticisi] First 5 Bone Names: ", skel.get_bone_name(0), ", ", skel.get_bone_name(1), ", ", skel.get_bone_name(2), ", ", skel.get_bone_name(3), ", ", skel.get_bone_name(4))
 					
 					# REMAP ANIMATIONS (The Ultimate Fix)
 					var lib: AnimationLibrary = sitting_anim.get_animation_library("")
@@ -134,7 +134,7 @@ func _start_sitting_loop():
 										remapped_count += 1
 								
 								if remapped_count > 0:
-									print("[OyunYoneticisi] Remapped ", remapped_count, " tracks for ", anim_name)
+									# print("[OyunYoneticisi] Remapped ", remapped_count, " tracks for ", anim_name)
 									if anim_name == "oturma1":
 										new_anim.loop_mode = Animation.LOOP_LINEAR
 									lib.add_animation(anim_name, new_anim)
@@ -146,19 +146,17 @@ func _start_sitting_loop():
 					
 					if sitting_anim.has_animation("oturma1"):
 						sitting_anim.play("oturma1")
-						print("[OyunYoneticisi] SUCCESS: Sitting loop started with remapped tracks.")
+						# print("[OyunYoneticisi] SUCCESS: Sitting loop started with remapped tracks.")
 					
 					# Re-enable head look after a short delay
 					await get_tree().create_timer(1.0).timeout
 					if skel.has_method("set_process"):
-						print("[OyunYoneticisi] Re-enabling HeadLook logic.")
+						# print("[OyunYoneticisi] Re-enabling HeadLook logic.")
 						skel.set_process(true)
 				
-				# DEBUG: Print tracks
-				var final_anim = sitting_anim.get_animation("oturma1")
-				print("[OyunYoneticisi] Animation Tracks for 'oturma1':")
-				for i in range(final_anim.get_track_count()):
-					print("  - Track %d: %s (Type: %d)" % [i, final_anim.track_get_path(i), final_anim.track_get_type(i)])
+				# print("[OyunYoneticisi] Animation Tracks for 'oturma1':")
+				# for i in range(final_anim.get_track_count()):
+				# 	print("  - Track %d: %s (Type: %d)" % [i, final_anim.track_get_path(i), final_anim.track_get_type(i)])
 			else:
 				print("[OyunYoneticisi] ERROR: 'oturma1' still missing after injection! List: ", sitting_anim.get_animation_list())
 		else:
@@ -180,7 +178,7 @@ func start_current_turn_logic():
 		is_game_active = false
 		return
 		
-	print("--- Round %d | Turn: %s ---" % [round_number, "PLAYER" if current_turn == GameTurn.PLAYER else "ENEMY"])
+	# print("--- Round %d | Turn: %s ---" % [round_number, "PLAYER" if current_turn == GameTurn.PLAYER else "ENEMY"])
 	
 	# Draw Piece if round is odd (1, 3, 5...)
 	var should_draw = (round_number % 2 != 0)
@@ -277,7 +275,7 @@ func _show_phase_message():
 	tw.tween_callback(canvas.queue_free)
 
 func cleanup_board():
-	print("Oyun bitti, tahta temizleniyor...")
+	# print("Oyun bitti, tahta temizleniyor...")
 	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
 	if not grid: return
 	
@@ -322,9 +320,9 @@ func next_turn():
 
 func start_chest_sequence():
 	if camera and camera.is_game_over: return
-	print("Sandık sekansı başlatılıyor...")
+	# print("Sandık sekansı başlatılıyor...")
 	if sequence_started: 
-		print("Sekans zaten çalışıyor!")
+		# print("Sekans zaten çalışıyor!")
 		return
 	sequence_started = true
 	
@@ -336,7 +334,7 @@ func start_chest_sequence():
 				anim_name = a
 				break
 		
-		print("Seçilen Animasyon: ", anim_name)
+		# print("Seçilen Animasyon: ", anim_name)
 		anim_player.play(anim_name)
 		
 		# Animasyonu 2.5 saniyeye kadar oynat ve gerekirse durdur/yavaşlat
@@ -360,7 +358,7 @@ func spawn_random_white_piece():
 	if camera: camera.is_receiving_piece = true
 	
 	var random_path = white_pieces[randi() % white_pieces.size()]
-	print("Taş çıkarılıyor: ", random_path)
+	# print("Taş çıkarılıyor: ", random_path)
 	
 	# Horse Trigger
 	if "horse" in random_path.to_lower():
@@ -420,7 +418,7 @@ func spawn_random_white_piece():
 
 func _spawn_random_black_piece_for_enemy():
 	var random_path = black_pieces[randi() % black_pieces.size()]
-	print("Düşman taşı çıkarılıyor: ", random_path)
+	# print("Düşman taşı çıkarılıyor: ", random_path)
 	
 	# Horse Trigger
 	if "horse" in random_path.to_lower():
@@ -487,7 +485,7 @@ func _setup_basement_door():
 				break
 	
 	if door_mesh:
-		print("[OyunYoneticisi] Setting up basement door: ", door_mesh.name)
+		# print("[OyunYoneticisi] Setting up basement door: ", door_mesh.name)
 		
 		# 1. Create StaticBody3D for raycasting
 		var sb = StaticBody3D.new()

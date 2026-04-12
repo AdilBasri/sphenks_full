@@ -58,7 +58,7 @@ func _try_connect_upgrade_manager(camera: Camera3D) -> bool:
 	if not camera.upgrade_manager: return false
 	if camera.upgrade_manager.is_connected("piece_placed_on_altar", on_piece_on_altar): return true
 	camera.upgrade_manager.piece_placed_on_altar.connect(on_piece_on_altar)
-	print("[TutorialManager] Connected to piece_placed_on_altar signal.")
+	# print("[TutorialManager] Connected to piece_placed_on_altar signal.")
 	return true
 
 

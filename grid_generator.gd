@@ -90,17 +90,18 @@ func olustur_grid() -> void:
 			hucrelerin_sozlugu[Vector2i(s, r)] = hucre
 
 func print_grid_coords() -> void:
-	print("--- %s Grid Koordinatları ---" % name)
-	for coord in hucrelerin_sozlugu:
-		var hucre = hucrelerin_sozlugu[coord]
-		print("- Hücre: (%d, %d) @ %s" % [hucre.sutun, hucre.satir, hucre.global_position])
-	print("---------------------------------")
+	pass
+	# print("--- %s Grid Koordinatları ---" % name)
+	# for coord in hucrelerin_sozlugu:
+	# 	var hucre = hucrelerin_sozlugu[coord]
+	# 	print("- Hücre: (%d, %d) @ %s" % [hucre.sutun, hucre.satir, hucre.global_position])
+	# print("---------------------------------")
 func clear_grid() -> void:
 	for hucre in hucrelerin_sozlugu.values():
 		hucre.mevcut_tas = null
 
 func taslari_gridle_eslestir() -> void:
-	print("--- Taşlar Gridle Eşleştiriliyor ---")
+	# print("--- Taşlar Gridle Eşleştiriliyor ---")
 	
 	# Sahnedeki TÜM satranç taşlarını bulalım. 
 	# Önce gruptakilere bakalım (en hızlısı)
@@ -136,12 +137,12 @@ func taslari_gridle_eslestir() -> void:
 			# Taşı hücrenin tam merkezine hizala (Opsiyonel ama temiz durur)
 			tas.global_position.x = en_yakin_hucre.global_position.x
 			tas.global_position.z = en_yakin_hucre.global_position.z
-			print("- %s -> (%d, %d) hücresine yerleşti." % [tas.name, en_yakin_hucre.sutun, en_yakin_hucre.satir])
+			# print("- %s -> (%d, %d) hücresine yerleşti." % [tas.name, en_yakin_hucre.sutun, en_yakin_hucre.satir])
 	
-	print("---------------------------------")
+	# print("---------------------------------")
 
 func spawn_kings() -> void:
-	print("--- Krallar Yerleştiriliyor ---")
+	# print("--- Krallar Yerleştiriliyor ---")
 	
 	# White King (Row 4, Col 2) - Player Side
 	_spawn_king_to_cell(2, 4, "res://Pawn/king_white.tscn")
@@ -149,7 +150,7 @@ func spawn_kings() -> void:
 	# Black King (Row 0, Col 2) - AI Side
 	_spawn_king_to_cell(2, 0, "res://Pawn/king_black.tscn")
 	
-	print("-------------------------------")
+	# print("-------------------------------")
 
 func _spawn_king_to_cell(s: int, r: int, scene_path: String) -> void:
 	var coord = Vector2i(s, r)
@@ -174,4 +175,4 @@ func _spawn_king_to_cell(s: int, r: int, scene_path: String) -> void:
 			king.set_meta("current_defense", stats["defense"])
 			
 		hucre.mevcut_tas = king
-		print("- King (%s) -> (%d, %d) yerleştirildi." % [scene_path.get_file(), s, r])
+		# print("- King (%s) -> (%d, %d) yerleştirildi." % [scene_path.get_file(), s, r])

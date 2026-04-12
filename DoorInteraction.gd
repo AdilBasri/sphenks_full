@@ -10,13 +10,13 @@ func _ready():
 	# Open door by rotating it inwards/outwards
 	target_rotation = original_rotation + Vector3(0, 85, 0)
 	
-	print("[DoorLogic] Door initialized at: ", get_parent().get_path())
+	# print("[DoorLogic] Door initialized at: ", get_parent().get_path())
 
 func toggle_door():
 	is_open = !is_open
 	var target = target_rotation if is_open else original_rotation
 	
-	print("[DoorLogic] Toggling door. Open: ", is_open)
+	# print("[DoorLogic] Toggling door. Open: ", is_open)
 	
 	var tw = get_tree().create_tween()
 	tw.tween_property(get_parent(), "rotation_degrees:y", target.y, 1.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)

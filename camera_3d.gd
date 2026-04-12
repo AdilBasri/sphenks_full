@@ -166,11 +166,11 @@ func stand_up():
 	# Bakış yönünü mevcut rotasyona kilitleyelim
 	yaw = rotation_degrees.y
 	pitch = rotation_degrees.x
-	print("PLAYER STANDING")
+# print("PLAYER STANDING")
 
 func sit_down():
 	if is_game_over:
-		print("Oyun bittiği için baştan yükleniyor...")
+# print("Oyun bittiği için baştan yükleniyor...")
 		Engine.time_scale = 1.0
 		get_tree().reload_current_scene()
 		return
@@ -195,7 +195,7 @@ func sit_down():
 	yaw = rotation_degrees.y
 	pitch = rotation_degrees.x
 	camera_returned_to_board.emit()
-	print("PLAYER SEATED")
+# print("PLAYER SEATED")
 
 func _input(event):
 	# Upgrade modunda: tüm guard'ları atla, direkt etkileşime izin ver
@@ -470,7 +470,7 @@ func interact_with_crosshair():
 	if not is_upgrade_mode:
 		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 		if not manager or manager.current_turn != manager.GameTurn.PLAYER:
-			print("Sıra sizde değil!")
+# print("Sıra sizde değil!")
 			return
 		
 
@@ -522,7 +522,7 @@ func interact_with_crosshair():
 						return
 					_select_hucre(hucre)
 				else:
-					print("Düşman taşı seçilemez! (Path: %s)" % path)
+# print("Düşman taşı seçilemez! (Path: %s)" % path)
 					_clear_selection()
 			else:
 				_clear_selection()
@@ -831,7 +831,7 @@ func place_held_piece():
 	piece_placed.emit()
 	
 func trigger_win():
-	print("VICTORY! King defeated.")
+# print("VICTORY! King defeated.")
 	is_game_over = true
 	# Character sound (Angry)
 	SesYoneticisi.play_angry(_get_enemy_pos())
@@ -857,7 +857,7 @@ func trigger_win():
 		get_node("/root/InspectUI").hide_piece()
 
 func _play_puke_sequence():
-	print("[Camera3D] Starting Puke Sequence...")
+# print("[Camera3D] Starting Puke Sequence...")
 	var sitting_node = get_tree().get_first_node_in_group("sitting_node")
 	
 	if not sitting_node and owner:
@@ -867,7 +867,7 @@ func _play_puke_sequence():
 		print("[Camera3D] ERROR: Sitting node NOT FOUND in group 'sitting_node' or relative to owner.")
 		return
 	
-	print("[Camera3D] Sitting node found: ", sitting_node.get_path())
+# print("[Camera3D] Sitting node found: ", sitting_node.get_path())
 	var sitting_anim = sitting_node.find_child("AnimationPlayer", true, false)
 	
 	if sitting_anim:
@@ -885,7 +885,7 @@ func _play_puke_sequence():
 			if a_puke: lib.add_animation("puke", a_puke)
 	
 	if sitting_anim and sitting_anim.has_animation("puke"):
-		print("[Camera3D] Playing 'puke' animation.")
+# print("[Camera3D] Playing 'puke' animation.")
 		sitting_anim.play("puke")
 		
 		# Create Bone Attachment for neck if it doesn't exist
@@ -903,7 +903,7 @@ func _play_puke_sequence():
 		
 		# Create Blood Effect
 		await get_tree().create_timer(0.3).timeout # Wait for mouth to open
-		print("[Camera3D] Spawning blood particles.")
+# print("[Camera3D] Spawning blood particles.")
 		
 		# Puke Sound 1
 		SesYoneticisi.play_puke()
@@ -942,7 +942,7 @@ func _play_puke_sequence():
 			print("[Camera3D] Waiting for animation to finish...")
 			await sitting_anim.animation_finished
 		
-		print("[Camera3D] Puke sequence complete.")
+# print("[Camera3D] Puke sequence complete.")
 		# Resume sitting loop
 		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 		if manager and manager.has_method("_start_sitting_loop"):
@@ -1000,7 +1000,7 @@ func _is_cell_valid_for_placement(hucre: GridHucre) -> bool:
 func _on_inspect_dismissed():
 	if held_piece:
 		held_piece.visible = true
-		print("İnceleme bitti, asıl taş tekrar görünür.")
+# print("İnceleme bitti, asıl taş tekrar görünür.")
 
 func apply_shake(intensity: float, duration: float):
 	shake_intensity = intensity
@@ -1035,7 +1035,7 @@ func _transition_to_seated_view():
 	is_transitioning_view = false
 
 func trigger_loss():
-	print("GAME OVER! Player King defeated.")
+# print("GAME OVER! Player King defeated.")
 	is_game_over = true
 	is_locked = true # Disable controls
 	
@@ -1112,7 +1112,7 @@ func return_to_table():
 	if manager and manager.has_method("restart_new_match") and not manager.is_tutorial_mode:
 		manager.restart_new_match()
 	
-	print("[Camera3D] Masaya dönüldü, imleç ve yeni maç tetiklendi.")
+# print("[Camera3D] Masaya dönüldü, imleç ve yeni maç tetiklendi.")
 
 func release_to_walk():
 	
@@ -1122,7 +1122,7 @@ func release_to_walk():
 	
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	if crosshair_ui: crosshair_ui.visible = true
-	print("PLAYER RELEASED TO WALK MODE")
+# print("PLAYER RELEASED TO WALK MODE")
 
 var hovered_whetstone: Node3D = null
 

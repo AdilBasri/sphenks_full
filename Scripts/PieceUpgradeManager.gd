@@ -45,7 +45,7 @@ func _find_markers():
 	var base_node = get_tree().current_scene
 	if not base_node: base_node = get_tree().root
 	
-	print("[PieceUpgradeManager] Markörler taranıyor...")
+	# print("[PieceUpgradeManager] Markörler taranıyor...")
 	
 	var fabrics = ["fabric2", "fabric3", "fabric4"]
 	for f_name in fabrics:
@@ -72,19 +72,19 @@ func _find_markers():
 	if whetstone_atk:
 		marker_atk = whetstone_atk.find_child("Marker3D", true, false)
 		_ensure_collision(whetstone_atk, "atk")
-		print("[PieceUpgradeManager] Whetstone ATK found at ", whetstone_atk.global_position)
+		# print("[PieceUpgradeManager] Whetstone ATK found at ", whetstone_atk.global_position)
 	else:
 		print("[PieceUpgradeManager] WARNING: whetstone_atk not found!")
 		
 	if whetstone_def:
 		marker_def = whetstone_def.find_child("Marker3D", true, false)
 		_ensure_collision(whetstone_def, "def")
-		print("[PieceUpgradeManager] Whetstone DEF found at ", whetstone_def.global_position)
+		# print("[PieceUpgradeManager] Whetstone DEF found at ", whetstone_def.global_position)
 	else:
 		print("[PieceUpgradeManager] WARNING: whetstone_def not found!")
 		
 	if altar_marker:
-		print("[PieceUpgradeManager] Altar target pos: ", altar_marker.global_position)
+		# print("[PieceUpgradeManager] Altar target pos: ", altar_marker.global_position)
 	else:
 		print("[PieceUpgradeManager] WARNING: Altar not found!")
 		
@@ -93,13 +93,13 @@ func _find_markers():
 	screen2 = base_node.find_child("screen2", true, false)
 	
 	if screen1:
-		print("[PieceUpgradeManager] Screen1 found.")
+		# print("[PieceUpgradeManager] Screen1 found.")
 		screen1.set_meta("skip_shader", true)
 		if screen1 is MeshInstance3D: screen1.material_override = null
 		atk_screen_label = screen1.find_child("*Label3D*", true, false)
 		
 	if screen2:
-		print("[PieceUpgradeManager] Screen2 found.")
+		# print("[PieceUpgradeManager] Screen2 found.")
 		screen2.set_meta("skip_shader", true)
 		if screen2 is MeshInstance3D: screen2.material_override = null
 		def_screen_label = screen2.find_child("*Label3D*", true, false)
@@ -108,7 +108,7 @@ func _ensure_collision(node: Node3D, type: String):
 # ... (rest of function remains same)
 	# Check if the node itself is a body
 	if node is CollisionObject3D:
-		print("[PieceUpgradeManager] Node ", node.name, " is itself a collision object. Tagging it.")
+		# print("[PieceUpgradeManager] Node ", node.name, " is itself a collision object. Tagging it.")
 		node.set_meta("is_whetstone", true)
 		node.set_meta("whetstone_type", type)
 		node.collision_layer |= 1 # Add to layer 1
@@ -116,7 +116,7 @@ func _ensure_collision(node: Node3D, type: String):
 
 	var existing_body = node.find_child("*StaticBody*", true, false)
 	if existing_body:
-		print("[PieceUpgradeManager] Found existing collision for ", node.name, ". Tagging it.")
+		# print("[PieceUpgradeManager] Found existing collision for ", node.name, ". Tagging it.")
 		existing_body.set_meta("is_whetstone", true)
 		existing_body.set_meta("whetstone_type", type)
 		existing_body.collision_layer |= 1 # Add to layer 1
