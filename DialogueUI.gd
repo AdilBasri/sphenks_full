@@ -32,6 +32,12 @@ func display_text(dialogue: String):
 	full_text = dialogue
 	text_label.text = ""
 	visible = true
+	
+	# Smooth fade-in
+	$Control.modulate.a = 0
+	var f_tw = create_tween()
+	f_tw.tween_property($Control, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE)
+	
 	continue_label.visible = false
 	is_typing = true
 	
@@ -60,7 +66,11 @@ func _input(event):
 			text_label.text = full_text
 			_on_typing_completed()
 		elif continue_label.visible:
-			# Close and signal
+			# Smooth fade-out before closing
+			var f_tw = create_tween()
+			f_tw.tween_property($Control, "modulate:a", 0.0, 0.2).set_trans(Tween.TRANS_SINE)
+			await f_tw.finished
+			
 			visible = false
 			background_audio.stop()
 			dialogue_finished.emit()

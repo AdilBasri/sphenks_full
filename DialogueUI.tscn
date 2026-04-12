@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://c6lkw4m6k6u8j" path="res://DialogueUI.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_box"]
-bg_color = Color(0, 0, 0, 1)
+bg_color = Color(0, 0, 0, 0.75)
 corner_radius_top_left = 15
 corner_radius_top_right = 15
 corner_radius_bottom_right = 15
@@ -23,10 +23,16 @@ mouse_filter = 2
 
 [node name="Panel" type="Panel" parent="Control"]
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 12
+anchor_top = 1.0
 anchor_right = 1.0
-offset_bottom = 120.0
+anchor_bottom = 1.0
+offset_left = 60.0
+offset_top = -140.0
+offset_right = -60.0
+offset_bottom = -20.0
 grow_horizontal = 2
+grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_box")
 
 [node name="RichTextLabel" type="RichTextLabel" parent="Control/Panel"]
