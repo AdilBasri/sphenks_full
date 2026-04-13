@@ -12,6 +12,7 @@ var typing_speed: float = 0.0
 var is_typing: bool = false
 var audio_pitch_down: float = 0.33
 var current_typing_id: int = 0
+const START_OFFSET: float = 0.45 # Dosya başındaki boşluğu atlamak için
 
 func _ready():
 	visible = false
@@ -22,8 +23,16 @@ func _ready():
 	if stream:
 		background_audio.stream = stream
 		background_audio.pitch_scale = audio_pitch_down
-		# Loop is usually property of stream or handled here
-		if stream is AudioStreamMP3: stream.loop = true
+		# Loop handling will be manual now to skip START_OFFSET
+		background_audio.play(START_OFFSET)
+		background_audio.stream_paused = true
+
+func _process(_delta):
+	# Loop kontrolü: Dosya sonuna yaklaşınca başa (boşluktan sonrasına) dön
+	if background_audio.playing:
+		var stream_len = background_audio.stream.get_length()
+		if background_audio.get_playback_position() >= stream_len - 0.05:
+			background_audio.play(START_OFFSET)
 
 func display_text(dialogue: String):
 	current_typing_id += 1
@@ -41,7 +50,8 @@ func display_text(dialogue: String):
 	continue_label.visible = false
 	is_typing = true
 	
-	background_audio.play()
+	# Sesi kaldığı yerden devam ettir
+	background_audio.stream_paused = false
 	
 	# Typewriter effect: complete full message in 3 seconds
 	typing_speed = 3.0 / float(full_text.length()) if full_text.length() > 0 else 0
@@ -72,7 +82,7 @@ func _input(event):
 			await f_tw.finished
 			
 			visible = false
-			background_audio.stop()
+			background_audio.stream_paused = true
 			dialogue_finished.emit()
 		
 		get_viewport().set_input_as_handled()
@@ -80,4 +90,4 @@ func _input(event):
 func _on_typing_completed():
 	is_typing = false
 	continue_label.visible = true
-	background_audio.stop()
+	background_audio.stream_paused = true
