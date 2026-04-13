@@ -691,7 +691,19 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 		var defender_stats = PieceDatabase.get_piece_stats(defender_path)
 		
 		var current_def = defender.get_meta("current_defense") if defender.has_meta("current_defense") else defender_stats["defense"]
-		current_def -= attacker_stats["attack"]
+		
+		# Check for invulnerability (Kings)
+		var is_king = defender.has_meta("is_king")
+		if is_king:
+			var tm = get_tree().get_first_node_in_group("tutorial_manager")
+			if tm and not tm.can_damage_king("white" in defender_path.to_lower()):
+				# Sync bounce back by setting def same as before so it doesn't drop to 0
+				pass
+			else:
+				current_def -= attacker_stats["attack"]
+		else:
+			current_def -= attacker_stats["attack"]
+			
 		defender.set_meta("current_defense", current_def)
 		
 		if camera.has_method("apply_shake"): camera.apply_shake(0.2, 0.3)
@@ -701,7 +713,6 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 			if camera.has_method("_create_puff"): camera._create_puff(to.global_position)
 			if camera.has_method("apply_shake"): camera.apply_shake(0.4, 0.5)
 			
-			var is_king = defender.has_meta("is_king")
 			var is_player_king = is_king and "white" in defender_path.to_lower()
 			
 			defender.queue_free()

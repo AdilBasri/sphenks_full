@@ -271,6 +271,18 @@ func start_sequence_7():
 		oy.round_number = 1
 		oy._show_phase_message() # PHASE 1 text on screen
 
+func can_damage_king(is_player_king: bool) -> bool:
+	if not is_tutorial_active: return true
+	
+	if is_player_king:
+		# Player King never takes damage in tutorial
+		return false
+	else:
+		# Enemy King only takes damage after the combat explanation is finished
+		if current_sequence < 5: return false
+		if current_sequence == 5 and dialogue_ui.visible: return false
+		return flags.combat_intro_done
+
 # --- Permission gate (blocks out-of-sequence board actions) ---
 
 func is_action_allowed(action: ActionType) -> bool:

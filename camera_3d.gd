@@ -646,7 +646,19 @@ func _execute_move(from: GridHucre, to: GridHucre):
 		
 		# Get or Initialize current defense
 		var current_def = defender.get_meta("current_defense") if defender.has_meta("current_defense") else defender_stats["defense"]
-		current_def -= attacker_stats["attack"]
+		
+		# Check for invulnerability (Kings)
+		var is_king = defender.has_meta("is_king")
+		if is_king:
+			var tm = get_tree().get_first_node_in_group("tutorial_manager")
+			if tm and not tm.can_damage_king("white" in defender_path.to_lower()):
+				# Sync bounce back
+				pass
+			else:
+				current_def -= attacker_stats["attack"]
+		else:
+			current_def -= attacker_stats["attack"]
+			
 		defender.set_meta("current_defense", current_def)
 		
 		if current_def <= 0:
@@ -654,7 +666,6 @@ func _execute_move(from: GridHucre, to: GridHucre):
 			_create_puff(to.global_position)
 			apply_shake(0.4, 0.5) # Bigger shake on kill
 			
-			var is_king = defender.has_meta("is_king")
 			var is_player_piece = "white" in defender_path.to_lower()
 			
 			defender.queue_free()
