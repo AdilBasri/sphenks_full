@@ -133,12 +133,16 @@ func play_hover():
 func play_angry(pos: Vector3):
 	var asp = play_spatial_sfx(angry_sound, pos)
 	# Trim to 1.80s as requested
-	get_tree().create_timer(1.80).timeout.connect(func(): if is_instance_valid(asp): asp.stop())
+	get_tree().create_timer(1.80).timeout.connect(func(): 
+		if is_instance_valid(asp): asp.stop()
+	)
 
 func play_evil_laugh():
 	var asp = play_sfx(evil_laugh_sound)
 	# Trim to 1.78s as requested
-	get_tree().create_timer(1.78).timeout.connect(func(): if is_instance_valid(asp): asp.stop())
+	get_tree().create_timer(1.78).timeout.connect(func(): 
+		if is_instance_valid(asp): asp.stop()
+	)
 
 func play_puke():
 	play_sfx(puke_sound)

@@ -66,16 +66,16 @@ func _ready():
 			for ap in all_anims:
 				print("- Sahne genelinde bulunan AP: ", ap.get_path(), " (Animasyonlar: ", ap.get_animation_list(), ")")
 	
+	# Setup Tutorial Manager
+	tutorial_manager = load("res://Scripts/TutorialManager.gd").new()
+	add_child(tutorial_manager)
+	tutorial_manager.tutorial_completed.connect(func(): is_tutorial_mode = false; start_game())
+
 	# Start the game loop after a brief wait
 	await get_tree().create_timer(1.0).timeout
 	
 	# Start Sitting Animation Loop
 	_start_sitting_loop()
-	
-	# Setup Tutorial Manager
-	tutorial_manager = load("res://Scripts/TutorialManager.gd").new()
-	add_child(tutorial_manager)
-	tutorial_manager.tutorial_completed.connect(func(): is_tutorial_mode = false; start_game())
 	
 	# Setup basement door interaction
 	_setup_basement_door()
