@@ -168,7 +168,7 @@ func start_sequence_5():
 		if not flags.enemy_spawned:
 			# Düşman hamlesi sırasında oyuncuyu engellemek için sırayı rakibe veriyoruz
 			oy.current_turn = oy.GameTurn.ENEMY 
-			oy._spawn_random_black_piece_for_enemy()
+			oy.start_chest_sequence()
 			flags.enemy_spawned = true
 
 func on_king_died(is_player_king: bool):
