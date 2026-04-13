@@ -250,7 +250,7 @@ func _input(event):
 				if _check_tutorial_permission(2): # 2 = INSPECT
 					var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
 					if path != "" and has_node("/root/InspectUI"):
-						get_node("/root/InspectUI").show_piece(path, false) # Masadaki taş için false
+						get_node("/root/InspectUI").show_piece(path, false, hucre.mevcut_tas) # Taşın kendisini de gönderiyoruz
 						return # Prevent deselection if we are inspecting
 		
 		# Default: Deselect on right click
@@ -788,7 +788,7 @@ func pick_up_piece(piece: Node3D, scene_path: String):
 	
 	# UI'yı göster
 	if has_node("/root/InspectUI"):
-		get_node("/root/InspectUI").show_piece(scene_path, true) # Sandık için true
+		get_node("/root/InspectUI").show_piece(scene_path, true, held_piece) # Sandık için true, held_piece gönderiliyor
 		# Gerçek taşı gizleyelim, UI (SubViewport) kendi kopyasını gösterecek (sevilen o keskin haliyle)
 		held_piece.visible = false
 

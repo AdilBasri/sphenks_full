@@ -16,6 +16,9 @@ var rotation_speed: float = 0.5
 var sensitivity: float = 0.2
 var _can_dismiss: bool = false
 
+var inspected_node: Node3D = null # The actual piece in the world
+var inspected_path: String = "" # Path to pieces database info
+
 func _ready():
 	blur_rect.material.set_shader_parameter("blur_amount", 0.0)
 	margin_container.modulate.a = 0
@@ -37,6 +40,29 @@ func _ready():
 	
 	_setup_upgrade_slots()
 
+func _process(_delta):
+	if is_active:
+		_update_labels()
+
+func _update_labels():
+	if inspected_path == "": return
+	var stats = PieceDatabase.get_piece_stats(inspected_path)
+	if stats.is_empty(): return
+	
+	var current_atk = stats.get("attack", 0)
+	var current_def = stats.get("defense", 0)
+	
+	# If we are inspecting a specific piece on the board, show its live stats
+	if inspected_node and is_instance_valid(inspected_node):
+		if inspected_node.has_meta("current_defense"):
+			current_def = inspected_node.get_meta("current_defense")
+		if inspected_node.has_meta("current_attack"):
+			current_atk = inspected_node.get_meta("current_attack")
+			
+	stats_label.text = "Attack: %d | Defense: %d" % [current_atk, current_def]
+	name_label.text = stats.get("name", "Piece")
+	desc_label.text = stats.get("description", "")
+
 func _setup_upgrade_slots():
 	for child in slots_container.get_children():
 		child.queue_free()
@@ -56,16 +82,17 @@ func _setup_upgrade_slots():
 
 var is_held_piece: bool = false
 
-func show_piece(piece_scene_path: String, from_chest: bool = false):
+func show_piece(piece_scene_path: String, from_chest: bool = false, node: Node3D = null):
+	inspected_path = piece_scene_path
+	inspected_node = node
+	
 	var stats = PieceDatabase.get_piece_stats(piece_scene_path)
 	if stats.is_empty(): return
 	
 	is_held_piece = from_chest
 	
-	# Update Text
-	name_label.text = stats["name"]
-	stats_label.text = "Attack: %d | Defense: %d" % [stats["attack"], stats["defense"]]
-	desc_label.text = stats["description"]
+	# Initial Update
+	_update_labels()
 	
 	# Setup 3D Viewport Piece
 	if viewport_piece: viewport_piece.queue_free()
@@ -115,6 +142,9 @@ func clear_viewport_piece():
 	if viewport_piece:
 		viewport_piece.queue_free()
 		viewport_piece = null
+	
+	inspected_node = null
+	inspected_path = ""
 	
 	is_active = false # Çifte kontrol
 	visible = false
