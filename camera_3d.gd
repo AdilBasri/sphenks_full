@@ -408,7 +408,8 @@ func _update_held_piece_label():
 	
 	# Taşın ekran üzerindeki konumunu hesapla (Sağ-üst)
 	var screen_pos = unproject_position(held_piece.global_position)
-	held_piece_name_label.global_position = screen_pos + Vector2(-40, -140) # İdeal mesafe (-110'dan -140'a)
+	var y_offset = -95 if "piyon" in held_piece_scene.to_lower() else -140
+	held_piece_name_label.global_position = screen_pos + Vector2(-40, y_offset)
 	held_piece_name_label.visible = true
 
 func _update_crosshair_position():
