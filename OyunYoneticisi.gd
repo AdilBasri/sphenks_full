@@ -335,6 +335,7 @@ func start_chest_sequence():
 		return
 	sequence_started = true
 	
+	
 	if anim_player:
 		# En uygun animasyonu seç (İçinde 'open' geçen)
 		var anim_name = anim_player.get_animation_list()[0]
