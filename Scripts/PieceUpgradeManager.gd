@@ -10,6 +10,7 @@ var selection_pieces: Array[Node3D] = []
 var selected_piece: Node3D = null
 var is_selection_active: bool = false
 var is_selection_ready: bool = false
+var is_upgrading: bool = false
 
 var fabric_markers: Array[Marker3D] = []
 var altar_marker: Marker3D = null
@@ -285,10 +286,14 @@ func select_piece(piece: Node3D):
 
 
 func process_upgrade(type: String):
-	if not selected_piece or upgrade_points <= 0: return
+	if not selected_piece or upgrade_points <= 0 or is_upgrading: return
+	
+	is_upgrading = true
 	
 	var target_marker = marker_atk if type == "atk" else marker_def
-	if not target_marker: return
+	if not target_marker:
+		is_upgrading = false
+		return
 	
 	# 1. Move to Whetstone
 	var tw = create_tween()
@@ -322,6 +327,8 @@ func process_upgrade(type: String):
 		var tw_back = create_tween()
 		tw_back.tween_property(selected_piece, "global_position", altar_marker.global_position, 0.4).set_trans(Tween.TRANS_SINE)
 		_update_screen_stats()
+		await tw_back.finished
+		is_upgrading = false
 
 func _update_screen_stats():
 	if not selected_piece: return
@@ -399,6 +406,7 @@ func _finish_upgrade():
 		tw.tween_callback(selected_piece.queue_free)
 		selected_piece = null
 	
+	is_upgrading = false
 	selection_pieces.clear()
 	
 	if camera and camera.has_method("exit_upgrade_selection_view"):
