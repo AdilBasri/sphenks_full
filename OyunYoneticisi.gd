@@ -179,6 +179,9 @@ func start_current_turn_logic():
 	if not is_game_active and is_tutorial_mode:
 		return
 		
+	# Apply King Healing at the start of each turn phase
+	_apply_king_healing(current_turn == GameTurn.ENEMY)
+		
 	if camera and camera.is_game_over:
 		is_game_active = false
 		return
@@ -759,6 +762,34 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 		piece.position = Vector3.ZERO
 	
 	next_turn()
+
+		
+func _apply_king_healing(is_enemy: bool):
+	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	if not grid: return
+	
+	for hucre in grid.hucrelerin_sozlugu.values():
+		var piece = hucre.mevcut_tas
+		if piece and piece.has_meta("is_king"):
+			var path = piece.get_meta("scene_path").to_lower()
+			var is_white = "white" in path
+			
+			if is_enemy and not is_white:
+				# Enemy King Healing Logic
+				var heal_amount = 1
+				if round_number == 3 or round_number == 6:
+					heal_amount = 2
+				
+				var cur_def = piece.get_meta("current_defense") if piece.has_meta("current_defense") else 0
+				piece.set_meta("current_defense", cur_def + heal_amount)
+				# print("[Healing] Enemy King +%d HP (Round %d, Total: %d)" % [heal_amount, round_number, cur_def + heal_amount])
+				
+			elif not is_enemy and is_white:
+				# Player King Healing Logic: Every 2 rounds
+				if round_number > 0 and round_number % 2 == 0:
+					var cur_def = piece.get_meta("current_defense") if piece.has_meta("current_defense") else 0
+					piece.set_meta("current_defense", cur_def + 1)
+					# print("[Healing] Player King +1 HP (Round %d, Total: %d)" % [round_number, cur_def + 1])
 
 # Taşın materyallerini ayarlama yardımcısı
 func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):

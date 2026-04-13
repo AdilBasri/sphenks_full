@@ -14,38 +14,38 @@ func _initialize_database():
 	var base_data = {
 		"pawn": {
 			"name": "Pawn",
-			"attack": 1,
-			"defense": 1,
+			"attack": 2,
+			"defense": 2,
 			"description": "Can move 1 square in any direction."
 		},
 		"castle": {
 			"name": "Castle",
-			"attack": 1,
-			"defense": 3,
+			"attack": 2,
+			"defense": 4,
 			"description": "Can move 1 square straight."
 		},
 		"bishop": {
 			"name": "Bishop",
-			"attack": 2,
-			"defense": 1,
+			"attack": 3,
+			"defense": 2,
 			"description": "Can move 1 square diagonally."
 		},
 		"horse": {
 			"name": "Horse",
-			"attack": 2,
+			"attack": 3,
 			"defense": 1,
 			"description": "Can move straight and diagonally, has 2 movement actions."
 		},
 		"king": {
 			"name": "King",
 			"attack": 0,
-			"defense": 3,
+			"defense": 5,
 			"description": "The objective is to kill the King. It cannot move and stands fixed in the center. Upon taking damage, a new piece is drawn to replace it."
 		},
 		"queen": {
 			"name": "Queen",
 			"attack": 3,
-			"defense": 2,
+			"defense": 3,
 			"description": "Can move 1 square in any direction (straight and diagonally)."
 		}
 	}
