@@ -335,6 +335,7 @@ func start_chest_sequence():
 		return
 	sequence_started = true
 	
+	if camera: camera.is_receiving_piece = true
 	
 	if anim_player:
 		# En uygun animasyonu seç (İçinde 'open' geçen)
@@ -426,8 +427,12 @@ func spawn_random_white_piece():
 	# Kamera scriptine bildirim gönder
 	if camera.has_method("pick_up_piece"):
 		camera.pick_up_piece(piece, random_path)
+		
+	sequence_started = false
+	if anim_player: anim_player.speed_scale = 1.0 # Kutuyu kapat
 
 func _spawn_random_black_piece_for_enemy():
+	if camera: camera.is_receiving_piece = true
 	var random_path = black_pieces[randi() % black_pieces.size()]
 	# print("Düşman taşı çıkarılıyor: ", random_path)
 	
@@ -436,7 +441,9 @@ func _spawn_random_black_piece_for_enemy():
 		SesYoneticisi.play_evil_laugh()
 	
 	var piece_scene = load(random_path)
-	if not piece_scene: return
+	if not piece_scene:
+		if camera: camera.is_receiving_piece = false
+		return
 	
 	var piece = piece_scene.instantiate()
 	piece.set_meta("render_on_top", true)
@@ -465,6 +472,11 @@ func _spawn_random_black_piece_for_enemy():
 	tw2.tween_property(piece, "global_position", ENEMY_DRAW_POS, 1.0).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
 	tw2.tween_property(piece, "rotation_degrees:y", 0.0, 1.0)
 	await tw2.finished
+	
+	if camera: camera.is_receiving_piece = false
+	
+	sequence_started = false
+	if anim_player: anim_player.speed_scale = 1.0 # Kutuyu kapat
 	
 	# AI Think and Place
 	await get_tree().create_timer(randf_range(1.5, 3.0)).timeout
@@ -794,10 +806,7 @@ func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
 	for child in node.get_children():
 		set_piece_render_priority(child, priority, x_ray)
 	
-	# Kutu kapansın (Animasyonun devamı)
-	# Eğer animasyon durdurulmuşsa devam ettir
-	anim_player.speed_scale = 1.0
-	sequence_started = false
+	# Not: sequence_started ve anim_player.speed_scale artık çağıran fonksiyonlarda sıfırlanıyor
 
 func _has_side_any_moves(is_white: bool) -> bool:
 	# 1. If currently holding a piece from box, they HAVE a move (placement)

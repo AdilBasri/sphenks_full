@@ -166,6 +166,8 @@ func start_sequence_5():
 	if oy:
 		oy.is_game_active = true # Activate game loop for combat
 		if not flags.enemy_spawned:
+			# Düşman hamlesi sırasında oyuncuyu engellemek için sırayı rakibe veriyoruz
+			oy.current_turn = oy.GameTurn.ENEMY 
 			oy._spawn_random_black_piece_for_enemy()
 			flags.enemy_spawned = true
 

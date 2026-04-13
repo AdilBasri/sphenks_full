@@ -224,6 +224,13 @@ func _input(event):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if is_game_over and current_state == PlayerState.SEATED: return
 		
+		# Guard: No interaction if a piece is being placed/received or it's not our turn
+		if is_placing_piece or is_receiving_piece: return
+		
+		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+		if manager and manager.current_turn != manager.GameTurn.PLAYER and not is_upgrade_mode:
+			return
+		
 		if held_piece:
 			if _check_tutorial_permission(0): # 0 = PLACE
 				place_held_piece()
@@ -233,7 +240,7 @@ func _input(event):
 					interact_with_crosshair()
 	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
-		if is_game_over: return
+		if is_game_over or is_placing_piece or is_receiving_piece: return
 		
 		# Check if we are right-clicking a piece to inspect it
 		var result = _raycast_from_mouse()
@@ -494,12 +501,9 @@ func interact_with_crosshair():
 	if tm and tm.dialogue_ui and tm.dialogue_ui.visible: return
 
 	
-	# Sıra ve game_active kontrolü sadece normal tahta etkileşiminde gerekli
+	# Not: Sıra kontrolü artık _input seviyesinde yapılıyor
 	if not is_upgrade_mode:
-		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
-		if not manager or manager.current_turn != manager.GameTurn.PLAYER:
-# print("Sıra sizde değil!")
-			return
+		pass
 		
 
 	var space_state = get_world_3d().direct_space_state
@@ -636,11 +640,14 @@ func _execute_move(from: GridHucre, to: GridHucre):
 	if not _check_tutorial_permission(1): # 1 = MOVE
 		return
 		
+	is_placing_piece = true
+	
 	# Friendly fire guard
 	if to.mevcut_tas:
 		var target_path = to.mevcut_tas.get_meta("scene_path") if to.mevcut_tas.has_meta("scene_path") else ""
 		if "white" in target_path.to_lower():
 			_clear_selection()
+			is_placing_piece = false
 			return
 		
 	var piece = from.mevcut_tas
@@ -715,6 +722,8 @@ func _execute_move(from: GridHucre, to: GridHucre):
 						tm.on_king_died(false)
 					else:
 						trigger_win()
+				
+				is_placing_piece = false
 				# King yakalandığında sıra geçişi ve kamera geçişi YOK
 				# (upgrade sekansı veya oyun sonu sekansı kamerayı yönetir)
 				return
@@ -736,6 +745,8 @@ func _execute_move(from: GridHucre, to: GridHucre):
 	# End Player Turn
 	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 	if manager: manager.next_turn()
+	
+	is_placing_piece = false
 	
 	# Auto-transition back to seated view when turn ends
 	_transition_to_seated_view()
@@ -825,19 +836,18 @@ func is_node_part_of_box(node: Node) -> bool:
 	return false
 
 func place_held_piece():
-	if is_receiving_piece: return
+	if is_receiving_piece or is_placing_piece: return
+	
+	is_placing_piece = true
 	
 	if current_state == PlayerState.STANDING:
 		await sit_down()
-		# After sitting down, the preview might need a refresh logic but usually 
-		# the player is still looking near the grid. 
-		# If the last_highlighted_cell is null (common after sitting transit), we abort
 		
 	if not last_highlighted_cell:
 		SesYoneticisi.play_error()
+		is_placing_piece = false
 		return
 	
-	is_placing_piece = true
 	if held_piece_name_label: held_piece_name_label.visible = false
 	var target_hucre = last_highlighted_cell
 	var target_pos = target_hucre.global_position
