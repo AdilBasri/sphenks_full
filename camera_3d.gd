@@ -397,9 +397,9 @@ func _update_piece_hover_info():
 func _update_held_piece_label():
 	if not held_piece_name_label: return
 	
-	# İnceleme ekranı açıkken veya el boşken gösterme
+	# İnceleme ekranı açıkken, el boşken veya yerleştirme (glide) sırasında gösterme
 	var inspect_ui = get_node_or_null("/root/InspectUI")
-	if not held_piece or (inspect_ui and inspect_ui.is_active):
+	if not held_piece or (inspect_ui and inspect_ui.is_active) or is_placing_piece:
 		held_piece_name_label.visible = false
 		return
 		
@@ -837,6 +837,7 @@ func place_held_piece():
 		return
 	
 	is_placing_piece = true
+	if held_piece_name_label: held_piece_name_label.visible = false
 	var target_hucre = last_highlighted_cell
 	var target_pos = target_hucre.global_position
 	
