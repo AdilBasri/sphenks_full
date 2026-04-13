@@ -54,9 +54,13 @@ func _setup_upgrade_slots():
 		slot.add_theme_stylebox_override("panel", style)
 		slots_container.add_child(slot)
 
-func show_piece(piece_scene_path: String):
+var is_held_piece: bool = false
+
+func show_piece(piece_scene_path: String, from_chest: bool = false):
 	var stats = PieceDatabase.get_piece_stats(piece_scene_path)
 	if stats.is_empty(): return
+	
+	is_held_piece = from_chest
 	
 	# Update Text
 	name_label.text = stats["name"]
@@ -69,16 +73,10 @@ func show_piece(piece_scene_path: String):
 	if scene:
 		viewport_piece = scene.instantiate()
 		viewport_piece_anchor.add_child(viewport_piece)
-		
-		# Set Anchor to the target position so rotation is centered
 		viewport_piece_anchor.position = Vector3(1.3, -0.507, -1.597)
 		viewport_piece_anchor.rotation_degrees = Vector3(3.8, 154.4, 0.8)
-		
-		# Piece itself stays at origin of anchor and gets much larger
 		viewport_piece.position = Vector3.ZERO
 		viewport_piece.scale = Vector3(15.0, 15.0, 15.0)
-		
-		# Apply global shader
 		_apply_ps1_to_viewport_piece(viewport_piece)
 	
 	is_active = true
@@ -88,7 +86,6 @@ func show_piece(piece_scene_path: String):
 	tween.tween_method(func(val): blur_rect.material.set_shader_parameter("blur_amount", val), 0.0, 4.0, 0.5)
 	tween.tween_property(margin_container, "modulate:a", 1.0, 0.5)
 	
-	# Prevent instant dismissal from the same click
 	_can_dismiss = false
 	get_tree().create_timer(0.2).timeout.connect(func(): _can_dismiss = true)
 
@@ -101,30 +98,37 @@ func _apply_ps1_to_viewport_piece(node: Node):
 func hide_piece():
 	if not is_active: return
 	is_active = false
-	dismissed.emit() # Signal for camera to show the real piece again
+	
+	# Tutorial ve diğer sistemlerin ilerlemesi için sinyali her zaman gönderiyoruz
+	dismissed.emit()
 	
 	var tween = create_tween().set_parallel(true)
-	tween.tween_method(func(val): blur_rect.material.set_shader_parameter("blur_amount", val), 4.0, 0.0, 0.4)
-	tween.tween_property(margin_container, "modulate:a", 0.0, 0.4)
+	tween.tween_method(func(val): blur_rect.material.set_shader_parameter("blur_amount", val), 4.0, 0.0, 0.3)
+	tween.tween_property(margin_container, "modulate:a", 0.0, 0.3)
 	
 	await tween.finished
-	visible = false
+	
+	# Animasyon biter bitmez temizliği yapıyoruz
+	clear_viewport_piece()
+
+func clear_viewport_piece():
 	if viewport_piece:
 		viewport_piece.queue_free()
 		viewport_piece = null
+	
+	is_active = false # Çifte kontrol
+	visible = false
+	blur_rect.material.set_shader_parameter("blur_amount", 0.0)
 
 func _input(event):
 	if not is_active: return
 	
-	# Rotation Logic
 	if event is InputEventMouseMotion:
 		viewport_piece_anchor.rotate_y(deg_to_rad(event.relative.x * sensitivity))
 		viewport_piece_anchor.rotate_object_local(Vector3.RIGHT, deg_to_rad(-event.relative.y * sensitivity))
 		get_viewport().set_input_as_handled()
 		
-	# Dismiss Logic - Consume the click so main camera doesn't place piece
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if _can_dismiss:
 			get_viewport().set_input_as_handled()
 			hide_piece()
-			dismissed.emit()

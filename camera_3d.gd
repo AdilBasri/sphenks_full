@@ -25,6 +25,7 @@ var ray_length: float = 10.0
 @onready var crosshair_ui: TextureRect = get_tree().root.find_child("Crosshair", true, false)
 @onready var camera2: Camera3D = get_parent().get_node("Camera3D2") if get_parent().has_node("Camera3D2") else null
 var piece_name_label: Label = null
+var held_piece_name_label: Label = null
 var cursor_3d_pos: Vector3 = Vector3.ZERO
 
 var is_zoomed_view: bool = false
@@ -131,6 +132,13 @@ func setup_chair_interaction():
 		piece_name_label.label_settings = settings
 		piece_name_label.visible = false
 		control.add_child(piece_name_label)
+		
+		# Eldeki taş ismi için aynı stilde ikinci etiket
+		held_piece_name_label = Label.new()
+		held_piece_name_label.name = "HeldPieceLabel"
+		held_piece_name_label.label_settings = settings # Aynı stil
+		held_piece_name_label.visible = false
+		control.add_child(held_piece_name_label)
 
 func stand_up():
 	if current_state != PlayerState.SEATED: return
@@ -235,7 +243,7 @@ func _input(event):
 				if _check_tutorial_permission(2): # 2 = INSPECT
 					var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
 					if path != "" and has_node("/root/InspectUI"):
-						get_node("/root/InspectUI").show_piece(path)
+						get_node("/root/InspectUI").show_piece(path, false) # Masadaki taş için false
 						return # Prevent deselection if we are inspecting
 		
 		# Default: Deselect on right click
@@ -330,6 +338,8 @@ func _process(_delta):
 	# Update Crosshair Position
 	_update_crosshair_position()
 	_update_piece_hover_info()
+	_update_held_piece_label() # Eldeki taşın ismini güncelle
+
 	if is_upgrade_mode:
 		_process_upgrade_interaction()
 
@@ -383,6 +393,23 @@ func _update_piece_hover_info():
 	else:
 		# Fallback: Look at player's general area
 		cursor_3d_pos = global_position
+
+func _update_held_piece_label():
+	if not held_piece_name_label: return
+	
+	# İnceleme ekranı açıkken veya el boşken gösterme
+	var inspect_ui = get_node_or_null("/root/InspectUI")
+	if not held_piece or (inspect_ui and inspect_ui.is_active):
+		held_piece_name_label.visible = false
+		return
+		
+	# İsmi al ve göster
+	held_piece_name_label.text = PieceDatabase.get_piece_display_name(held_piece_scene)
+	
+	# Taşın ekran üzerindeki konumunu hesapla (Sağ-üst)
+	var screen_pos = unproject_position(held_piece.global_position)
+	held_piece_name_label.global_position = screen_pos + Vector2(-40, -140) # İdeal mesafe (-110'dan -140'a)
+	held_piece_name_label.visible = true
 
 func _update_crosshair_position():
 	if not crosshair_ui: return
@@ -742,14 +769,15 @@ func pick_up_piece(piece: Node3D, scene_path: String):
 	held_piece.reparent(self)
 	
 	# Kullanıcının istediği "yakın ve büyük" görünüm için optimize edilmiş değerler:
-	held_piece.position = Vector3(0.4, -0.4, -0.6) 
-	held_piece.rotation_degrees = Vector3(3.8, 154.4, 0.8)
-	held_piece.scale = Vector3(1.0, 1.0, 1.0)
+	# 'Elde tutma' (Yeni sağ-üst çapraz ve 1.3x büyük) konumu ile eşle
+	held_piece.position = Vector3(0.75, -0.05, -0.8) 
+	held_piece.rotation_degrees = Vector3(5, 155, 0)
+	held_piece.scale = Vector3(4.2, 4.2, 4.2)
 	
 	# UI'yı göster
 	if has_node("/root/InspectUI"):
-		get_node("/root/InspectUI").show_piece(scene_path)
-		# Gerçek taşı gizleyelim (UI kendi kopyasını gösterecek)
+		get_node("/root/InspectUI").show_piece(scene_path, true) # Sandık için true
+		# Gerçek taşı gizleyelim, UI (SubViewport) kendi kopyasını gösterecek (sevilen o keskin haliyle)
 		held_piece.visible = false
 
 func _process_placement_preview():
@@ -819,6 +847,10 @@ func place_held_piece():
 	
 	# Taşı grid'e taşıyalım
 	held_piece.reparent(get_tree().root)
+	
+	# InspectUI temizliğini burada yapalım ki "Glide" anında UI tamamen gitsin
+	if has_node("/root/InspectUI"):
+		get_node("/root/InspectUI").clear_viewport_piece()
 	
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(held_piece, "global_position", target_pos, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -993,10 +1025,10 @@ func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
 						new_mat.no_depth_test = x_ray
 					node.set_surface_override_material(i, new_mat)
 		
-		# GlobalShaderApplier'ı manuel tetikleyelim
+		# GlobalShaderApplier'ı sadece ilk kez veya zorunluysa tetikleyelim
 		var applier = get_tree().root.find_child("GlobalShaderApplier", true, false)
-		if applier and applier.has_method("_apply_toon_ps1"):
-			applier._apply_toon_ps1(node, true)
+		if applier and applier.has_method("_process_node"):
+			applier._process_node(node)
 
 	for child in node.get_children():
 		set_piece_render_priority(child, priority, x_ray)
@@ -1014,8 +1046,19 @@ func _is_cell_valid_for_placement(hucre: GridHucre) -> bool:
 
 func _on_inspect_dismissed():
 	if held_piece:
+		# Kesikliği önlemek için: Önce taşı yaklaşık UI konumunda (ortada) hazırla, sonra süzdür
+		held_piece.position = Vector3(0.1, -0.1, -0.8) # Başlangıç (Süzülme başlangıcı)
+		held_piece.rotation_degrees = Vector3(5, 155, 0)
+		held_piece.scale = Vector3(3.2, 3.2, 3.2)
 		held_piece.visible = true
-# print("İnceleme bitti, asıl taş tekrar görünür.")
+		
+		# Şimdi eldeki asıl "büyük ve sağ-üst" yerine süzülerek gitsin
+		var tw = create_tween().set_parallel(true)
+		tw.tween_property(held_piece, "position", Vector3(0.75, -0.05, -0.8), 0.6).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+		tw.tween_property(held_piece, "scale", Vector3(4.2, 4.2, 4.2), 0.6).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+		
+		# Global shader (Kenarlık vb.) ve önde görünme (X-Ray) aktif
+		set_piece_render_priority(held_piece, 10, true)
 
 func apply_shake(intensity: float, duration: float):
 	shake_intensity = intensity

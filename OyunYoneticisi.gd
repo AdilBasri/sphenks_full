@@ -413,9 +413,10 @@ func spawn_random_white_piece():
 	piece.reparent(camera)
 	
 	var drift_tween = create_tween().set_parallel(true)
-	# Kameraya göre yerel konuma gidiyoruz (Pürüzsüz geçiş)
-	drift_tween.tween_property(piece, "position", Vector3(0.4, -0.4, -0.6), 1.0).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
-	drift_tween.tween_property(piece, "rotation_degrees", Vector3(3.8, 154.4, 0.8), 1.0)
+	# 'Elde tutma' (Yeni sağ-üst çapraz ve dev boyut) konumuna süzül
+	drift_tween.tween_property(piece, "position", Vector3(0.75, -0.05, -0.8), 1.0).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+	drift_tween.tween_property(piece, "rotation_degrees", Vector3(5, 155, 0), 1.0)
+	drift_tween.tween_property(piece, "scale", Vector3(4.2, 4.2, 4.2), 1.0)
 	
 	await drift_tween.finished
 	
