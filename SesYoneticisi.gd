@@ -6,7 +6,8 @@ var fall_sound = preload("res://Assets/Sounds/fall.mp3")
 var handing_item_sound = preload("res://Assets/Sounds/handing_item.mp3")
 var place_block_sound = preload("res://Assets/Sounds/place_block.mp3")
 var walking_sound = preload("res://Assets/Sounds/walking.mp3")
-var bgm_sound = preload("res://Assets/Sounds/background (2).mp3")
+var bgm_intro = preload("res://Assets/Sounds/background_ilk_kisim.mp3")
+var bgm_loop = preload("res://Assets/Sounds/background_ikinci_kisim.mp3")
 var angry_sound = preload("res://Assets/Sounds/angry.mp3")
 var evil_laugh_sound = preload("res://Assets/Sounds/evil_laugh.mp3")
 var puke_sound = preload("res://Assets/Sounds/puke.mp3")
@@ -80,14 +81,23 @@ func setup_walking_player():
 	add_child(walking_player)
 
 func setup_bgm_player():
-	if bgm_sound is AudioStreamMP3:
-		bgm_sound.loop = true
+	if bgm_intro is AudioStreamMP3:
+		bgm_intro.loop = false
 	
 	bgm_player = AudioStreamPlayer.new()
-	bgm_player.stream = bgm_sound
+	bgm_player.stream = bgm_intro
 	bgm_player.bus = "Music"
 	add_child(bgm_player)
+	
+	bgm_player.finished.connect(_on_bgm_finished)
 	bgm_player.play()
+
+func _on_bgm_finished():
+	if bgm_player.stream == bgm_intro:
+		if bgm_loop is AudioStreamMP3:
+			bgm_loop.loop = true
+		bgm_player.stream = bgm_loop
+		bgm_player.play()
 
 # Global SFX player helper
 func play_sfx(stream: AudioStream, pitch_scale: float = 1.0, volume_db: float = 0.0) -> AudioStreamPlayer:
