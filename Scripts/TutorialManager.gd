@@ -42,7 +42,7 @@ func _ready():
 
 func _connect_signals():
 	var camera = get_viewport().get_camera_3d()
-	if camera:
+	if camera and camera.has_signal("piece_placed"):
 		camera.piece_placed.connect(on_piece_placed)
 		camera.piece_moved.connect(on_piece_moved)
 		camera.camera_returned_to_board.connect(on_camera_returned_to_board)
@@ -55,10 +55,10 @@ func _connect_signals():
 		inspect_ui.dismissed.connect(on_piece_info_closed)
 
 func _try_connect_upgrade_manager(camera: Camera3D) -> bool:
-	if not camera.upgrade_manager: return false
-	if camera.upgrade_manager.is_connected("piece_placed_on_altar", on_piece_on_altar): return true
-	camera.upgrade_manager.piece_placed_on_altar.connect(on_piece_on_altar)
-	# print("[TutorialManager] Connected to piece_placed_on_altar signal.")
+	var um = camera.get("upgrade_manager")
+	if not um: return false
+	if um.is_connected("piece_placed_on_altar", on_piece_on_altar): return true
+	um.piece_placed_on_altar.connect(on_piece_on_altar)
 	return true
 
 

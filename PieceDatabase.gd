@@ -139,3 +139,16 @@ func get_valid_moves(current_pos: Vector2i, piece_path: String) -> Array[Vector2
 			moves.append(target)
 			
 	return moves
+
+func get_raw_stats() -> Dictionary:
+	return {
+		"white": white_stats,
+		"black": black_stats
+	}
+
+func set_raw_stats(data: Dictionary):
+	if data.has("white"):
+		white_stats = data["white"]
+	if data.has("black"):
+		black_stats = data["black"]
+	print("[PieceDatabase] Stats restored from save.")

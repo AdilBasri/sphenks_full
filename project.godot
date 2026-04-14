@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Sphenks_Full"
-run/main_scene="uid://uow6rxog5nvv"
+run/main_scene="res://anamenu.tscn"
 config/features=PackedStringArray("4.5", "Forward Plus")
 
 [autoload]
@@ -20,6 +20,7 @@ GlobalShaderApplier="*res://Shaders/GlobalShaderApplier.gd"
 PieceDatabase="*res://PieceDatabase.gd"
 InspectUI="*res://InspectUI.tscn"
 SesYoneticisi="*res://SesYoneticisi.gd"
+SettingsManager="*res://SettingsManager.gd"
 
 [display]
 
@@ -29,7 +30,13 @@ window/size/mode=3
 window/size/window_width_override=1920
 window/size/window_height_override=1080
 window/stretch/mode="viewport"
-window/stretch/scale_mode="integer"
+window/stretch/scale_mode="fractional"
+window/stretch/aspect="keep"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+textures/default_filters/use_nearest_mipmap_filter=true
 
 [dotnet]
 

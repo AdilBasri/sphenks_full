@@ -23,13 +23,12 @@ func _ready():
 	if stream:
 		background_audio.stream = stream
 		background_audio.pitch_scale = audio_pitch_down
-		# Loop handling will be manual now to skip START_OFFSET
-		background_audio.play(START_OFFSET)
-		background_audio.stream_paused = true
+		# We won't play it yet. Only on display_text.
 
 func _process(_delta):
 	# Loop kontrolü: Dosya sonuna yaklaşınca başa (boşluktan sonrasına) dön
-	if background_audio.playing:
+	# Sadece AKTİF konuşurken ve duraklatılmamışken döngüye girsin
+	if background_audio.playing and not background_audio.stream_paused:
 		var stream_len = background_audio.stream.get_length()
 		if background_audio.get_playback_position() >= stream_len - 0.05:
 			background_audio.play(START_OFFSET)
@@ -50,7 +49,9 @@ func display_text(dialogue: String):
 	continue_label.visible = false
 	is_typing = true
 	
-	# Sesi kaldığı yerden devam ettir
+	# Sesi başlat veya devam ettir
+	if not background_audio.playing:
+		background_audio.play(START_OFFSET)
 	background_audio.stream_paused = false
 	
 	# Typewriter effect: complete full message in 3 seconds
@@ -83,6 +84,7 @@ func _input(event):
 			
 			visible = false
 			background_audio.stream_paused = true
+			background_audio.stop() # Force full stop
 			dialogue_finished.emit()
 		
 		get_viewport().set_input_as_handled()

@@ -1,0 +1,261 @@
+[gd_scene load_steps=9 format=3 uid="uid://cx6mshw0koy8n"]
+
+[ext_resource type="Script" path="res://PauseMenu.gd" id="1_script"]
+[ext_resource type="FontFile" path="res://Assets/fonts/dominica.ttf" id="2_font"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay"]
+bg_color = Color(0, 0, 0, 0.705882)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+bg_color = Color(0, 0, 0, 0.2)
+border_width_left = 4
+border_color = Color(0.85, 0.1, 0.1, 0)
+expand_margin_left = 10.0
+expand_margin_top = 5.0
+expand_margin_right = 10.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
+bg_color = Color(0.85, 0.1, 0.1, 0.2)
+border_width_left = 6
+border_color = Color(0.85, 0.1, 0.1, 1)
+expand_margin_left = 12.0
+expand_margin_top = 5.0
+expand_margin_right = 10.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="Theme" id="Theme_pause"]
+default_font = ExtResource("2_font")
+default_font_size = 22
+Button/colors/font_color = Color(0.9, 0.9, 0.9, 1)
+Button/colors/font_hover_color = Color(1, 0.3, 0.3, 1)
+Button/colors/font_outline_color = Color(0, 0, 0, 1)
+Button/constants/outline_size = 6
+Button/styles/focus = SubResource("StyleBoxFlat_btn_normal")
+Button/styles/hover = SubResource("StyleBoxFlat_btn_hover")
+Button/styles/normal = SubResource("StyleBoxFlat_btn_normal")
+Button/styles/pressed = SubResource("StyleBoxFlat_btn_hover")
+Label/colors/font_outline_color = Color(0, 0, 0, 1)
+Label/constants/outline_size = 4
+
+[sub_resource type="LabelSettings" id="LabelSettings_pause_title"]
+font = ExtResource("2_font")
+font_size = 48
+font_color = Color(0.85098, 0.101961, 0.101961, 1)
+outline_size = 10
+outline_color = Color(0, 0, 0, 1)
+
+[node name="PauseMenu" type="CanvasLayer"]
+process_mode = 3
+layer = 1000
+script = ExtResource("1_script")
+
+[node name="Control" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_pause")
+
+[node name="Overlay" type="Panel" parent="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
+
+[node name="PauseTitle" type="Label" parent="Control"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 40.0
+offset_right = 100.0
+offset_bottom = 91.0
+grow_horizontal = 2
+text = "PAUSED"
+label_settings = SubResource("LabelSettings_pause_title")
+horizontal_alignment = 1
+
+[node name="MenuOptions" type="VBoxContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -104.0
+offset_top = -60.0
+offset_right = 104.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="ResumeButton" type="Button" parent="Control/MenuOptions"]
+layout_mode = 2
+text = "RESUME"
+
+[node name="SettingsButton" type="Button" parent="Control/MenuOptions"]
+layout_mode = 2
+text = "SETTINGS"
+
+[node name="MainMenuButton" type="Button" parent="Control/MenuOptions"]
+layout_mode = 2
+text = "ANA MENU"
+
+[node name="ExitButton" type="Button" parent="Control/MenuOptions"]
+layout_mode = 2
+text = "EXIT"
+
+[node name="SettingsPanel" type="Panel" parent="Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -140.0
+offset_right = 150.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Control/SettingsPanel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 8.0
+offset_right = 100.0
+offset_bottom = 33.0
+grow_horizontal = 2
+text = "- SETTINGS -"
+horizontal_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/SettingsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 40.0
+offset_right = -20.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Resolution" type="HBoxContainer" parent="Control/SettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Control/SettingsPanel/VBoxContainer/Resolution"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Res"
+
+[node name="Button" type="Button" parent="Control/SettingsPanel/VBoxContainer/Resolution"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "1920x1080"
+
+[node name="Fullscreen" type="HBoxContainer" parent="Control/SettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Control/SettingsPanel/VBoxContainer/Fullscreen"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Full"
+
+[node name="CheckBox" type="CheckBox" parent="Control/SettingsPanel/VBoxContainer/Fullscreen"]
+layout_mode = 2
+button_pressed = true
+
+[node name="MasterVolume" type="HBoxContainer" parent="Control/SettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Control/SettingsPanel/VBoxContainer/MasterVolume"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Master"
+
+[node name="HSlider" type="HSlider" parent="Control/SettingsPanel/VBoxContainer/MasterVolume"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="SFXVolume" type="HBoxContainer" parent="Control/SettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Control/SettingsPanel/VBoxContainer/SFXVolume"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "SFX"
+
+[node name="HSlider" type="HSlider" parent="Control/SettingsPanel/VBoxContainer/SFXVolume"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="MusicVolume" type="HBoxContainer" parent="Control/SettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Control/SettingsPanel/VBoxContainer/MusicVolume"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Music"
+
+[node name="HSlider" type="HSlider" parent="Control/SettingsPanel/VBoxContainer/MusicVolume"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+value = 0.8
+
+[node name="BackButton" type="Button" parent="Control/SettingsPanel"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -40.0
+offset_right = 60.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "BACK"
+
+[connection signal="pressed" from="Control/MenuOptions/ResumeButton" to="." method="resume"]
+[connection signal="pressed" from="Control/MenuOptions/SettingsButton" to="." method="_on_settings_pressed"]
+[connection signal="pressed" from="Control/MenuOptions/MainMenuButton" to="." method="_on_main_menu_pressed"]
+[connection signal="pressed" from="Control/MenuOptions/ExitButton" to="." method="_on_exit_pressed"]
+[connection signal="pressed" from="Control/SettingsPanel/VBoxContainer/Resolution/Button" to="." method="_on_res_pressed"]
+[connection signal="toggled" from="Control/SettingsPanel/VBoxContainer/Fullscreen/CheckBox" to="." method="_on_fullscreen_toggled"]
+[connection signal="value_changed" from="Control/SettingsPanel/VBoxContainer/MasterVolume/HSlider" to="." method="_on_master_volume_changed"]
+[connection signal="value_changed" from="Control/SettingsPanel/VBoxContainer/SFXVolume/HSlider" to="." method="_on_sfx_volume_changed"]
+[connection signal="value_changed" from="Control/SettingsPanel/VBoxContainer/MusicVolume/HSlider" to="." method="_on_music_volume_changed"]
+[connection signal="pressed" from="Control/SettingsPanel/BackButton" to="." method="_on_back_pressed"]

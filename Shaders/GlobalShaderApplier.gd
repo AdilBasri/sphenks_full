@@ -82,7 +82,8 @@ func _is_excluded(node: Node) -> bool:
 	var result = false
 	while p and p != get_tree().root:
 		var lname = p.name.to_lower()
-		if lname == "fabric1" or lname == "altar" or lname == "ashtray" or "whetstone" in lname:
+		if lname == "fabric1" or lname == "altar" or lname == "ashtray" or "whetstone" in lname \
+		or "vent" in lname or "kapi" in lname or "door" in lname or "kapı" in lname:
 			result = true
 			break
 		p = p.get_parent()
@@ -151,7 +152,7 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 
 	# 2. Configure parameters based on whether it's a piece or environment
 	var jitter = 0.08
-	var resolution = 480.0
+	var resolution = 360.0
 	var steps = 5
 	var dither = 0.35
 	var light_int = 1.0

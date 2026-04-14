@@ -34,6 +34,10 @@ const PLAYER_DRAW_POS = Vector3(0.109, -0.50, -1.597)
 const ENEMY_DRAW_POS = Vector3(-0.29, -0.50, -2.06)
 
 func _ready():
+	if get_tree().current_scene.name == "anamenu":
+		is_game_active = false
+		return
+		
 	add_to_group("oyun_yoneticisi")
 	# Referansları bulalım
 	camera = get_viewport().get_camera_3d()
@@ -66,13 +70,29 @@ func _ready():
 			for ap in all_anims:
 				print("- Sahne genelinde bulunan AP: ", ap.get_path(), " (Animasyonlar: ", ap.get_animation_list(), ")")
 	
-	# Setup Tutorial Manager
-	tutorial_manager = load("res://Scripts/TutorialManager.gd").new()
-	add_child(tutorial_manager)
-	tutorial_manager.tutorial_completed.connect(func(): is_tutorial_mode = false; start_game())
+	# --- LOAD GAME DATA ---
+	var save_data = SettingsManager.load_game_data()
+	if not save_data.is_empty():
+		is_tutorial_mode = save_data.get("is_tutorial_mode", true)
+		phase_number = save_data.get("phase_number", 1)
+		if save_data.has("piece_stats"):
+			PieceDatabase.set_raw_stats(save_data["piece_stats"])
+		print("[OyunYoneticisi] Game Loaded. Phase: ", phase_number, " Tutorial Mode: ", is_tutorial_mode)
+
+	# Setup Tutorial Manager ONLY if needed
+	if is_tutorial_mode:
+		tutorial_manager = load("res://Scripts/TutorialManager.gd").new()
+		add_child(tutorial_manager)
+		tutorial_manager.tutorial_completed.connect(_on_tutorial_completed)
 
 	# Start the game loop after a brief wait
 	await get_tree().create_timer(1.0).timeout
+	
+	if not is_tutorial_mode:
+		print("[OyunYoneticisi] Starting directly in Phase ", phase_number)
+		start_game()
+	else:
+		print("[OyunYoneticisi] Starting Tutorial...")
 	
 	# Start Sitting Animation Loop
 	_start_sitting_loop()
@@ -242,6 +262,9 @@ func restart_new_match():
 	await get_tree().create_timer(0.5).timeout
 	
 	_show_phase_message()
+	
+	# Save progress at the start of a new Phase
+	save_game()
 	
 	await get_tree().create_timer(1.2).timeout
 	is_game_active = true
@@ -837,3 +860,16 @@ func _has_side_any_moves(is_white: bool) -> bool:
 					return true
 					
 	return false
+func _on_tutorial_completed():
+	is_tutorial_mode = false
+	save_game()
+	start_game()
+
+func save_game():
+	var save_data = {
+		"is_tutorial_mode": is_tutorial_mode,
+		"phase_number": phase_number,
+		"piece_stats": PieceDatabase.get_raw_stats()
+	}
+	SettingsManager.save_game_data(save_data)
+	print("[OyunYoneticisi] Game Saved automatically.")

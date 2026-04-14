@@ -53,6 +53,11 @@ signal piece_moved
 signal camera_returned_to_board
 
 func _ready():
+	if get_tree().current_scene.name == "anamenu":
+		if crosshair_ui:
+			crosshair_ui.visible = false
+		return
+		
 	# Capture mouse (HIDE)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	if current_state == PlayerState.SEATED:
@@ -205,7 +210,18 @@ func sit_down():
 	camera_returned_to_board.emit()
 # print("PLAYER SEATED")
 
+func restore_mouse_mode():
+	if current_state == PlayerState.SEATED:
+		Input.mouse_mode = Input.MOUSE_MODE_CONFINED_HIDDEN
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
 func _input(event):
+	if event.is_action_pressed("ui_cancel"):
+		var pm = get_tree().root.find_child("PauseMenu", true, false)
+		if pm:
+			pm.pause()
+
 	# Upgrade modunda: tüm guard'ları atla, direkt etkileşime izin ver
 	if is_upgrade_mode and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		_handle_upgrade_click()

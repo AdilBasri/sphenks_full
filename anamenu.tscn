@@ -1,0 +1,349 @@
+[gd_scene load_steps=9 format=3 uid="uid://crvmwq3b5my25"]
+
+[ext_resource type="PackedScene" uid="uid://uow6rxog5nvv" path="res://camera.tscn" id="1_40i5i"]
+[ext_resource type="Script" path="res://anamenu.gd" id="2_script"]
+[ext_resource type="FontFile" path="res://Assets/fonts/dominica.ttf" id="3_font"]
+[ext_resource type="FontFile" path="res://Assets/fonts/Helvetica Punk.ttf" id="4_font"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_title"]
+font = ExtResource("3_font")
+font_size = 72
+font_color = Color(0.85, 0.1, 0.1, 1)
+outline_size = 12
+outline_color = Color(0, 0, 0, 1)
+shadow_size = 15
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_offset = Vector2(3, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+bg_color = Color(0, 0, 0, 0.1)
+border_width_left = 4
+border_color = Color(0.85, 0.1, 0.1, 0)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+expand_margin_left = 10.0
+expand_margin_top = 5.0
+expand_margin_right = 10.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
+bg_color = Color(0.85, 0.1, 0.1, 0.2)
+border_width_left = 6
+border_color = Color(0.85, 0.1, 0.1, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+expand_margin_left = 12.0
+expand_margin_top = 5.0
+expand_margin_right = 10.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="Theme" id="Theme_menu"]
+default_font = ExtResource("3_font")
+default_font_size = 22
+Button/colors/font_color = Color(0.9, 0.9, 0.9, 1)
+Button/colors/font_hover_color = Color(1, 0.3, 0.3, 1)
+Button/colors/font_outline_color = Color(0, 0, 0, 1)
+Button/constants/outline_size = 6
+Button/styles/focus = SubResource("StyleBoxFlat_btn_normal")
+Button/styles/hover = SubResource("StyleBoxFlat_btn_hover")
+Button/styles/normal = SubResource("StyleBoxFlat_btn_normal")
+Button/styles/pressed = SubResource("StyleBoxFlat_btn_hover")
+Label/colors/font_outline_color = Color(0, 0, 0, 1)
+Label/constants/outline_size = 4
+Label/fonts/font = ExtResource("3_font")
+
+[node name="anamenu" type="Node3D"]
+script = ExtResource("2_script")
+
+[node name="GameRoom" parent="." instance=ExtResource("1_40i5i")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.766044, 0.166366, 0.620885, 0, 0.965926, -0.258819, -0.642788, 0.198366, 0.739943, 1.46, 0.31, 2.708)
+current = true
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_menu")
+
+[node name="Title" type="Label" parent="CanvasLayer/Control"]
+layout_mode = 1
+offset_left = 30.0
+offset_top = 20.0
+offset_right = 405.0
+offset_bottom = 97.0
+text = "INTERRED"
+label_settings = SubResource("LabelSettings_title")
+
+[node name="MenuOptions" type="VBoxContainer" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 40.0
+offset_top = -45.0
+offset_right = 240.0
+offset_bottom = 145.0
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="PlayButton" type="Button" parent="CanvasLayer/Control/MenuOptions"]
+layout_mode = 2
+text = "PLAY"
+alignment = 0
+
+[node name="OnlineButton" type="Button" parent="CanvasLayer/Control/MenuOptions"]
+modulate = Color(1, 1, 1, 0.4)
+layout_mode = 2
+disabled = true
+text = "ONLINE"
+alignment = 0
+
+[node name="SettingsButton" type="Button" parent="CanvasLayer/Control/MenuOptions"]
+layout_mode = 2
+text = "SETTINGS"
+alignment = 0
+
+[node name="ResetButton" type="Button" parent="CanvasLayer/Control/MenuOptions"]
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(1, 0, 0, 1)
+text = "RESET SAVE"
+alignment = 0
+
+[node name="ExitButton" type="Button" parent="CanvasLayer/Control/MenuOptions"]
+layout_mode = 2
+text = "EXIT"
+alignment = 0
+
+[node name="SettingsPanel" type="Panel" parent="CanvasLayer/Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -340.0
+offset_top = -140.0
+offset_right = -40.0
+offset_bottom = 160.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/SettingsPanel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 8.0
+offset_right = 100.0
+offset_bottom = 33.0
+grow_horizontal = 2
+text = "- SETTINGS -"
+horizontal_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Control/SettingsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 40.0
+offset_right = -20.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Resolution" type="HBoxContainer" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/Resolution"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Resolution"
+
+[node name="Button" type="Button" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/Resolution"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "1920x1080"
+
+[node name="Fullscreen" type="HBoxContainer" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/Fullscreen"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Fullscreen"
+
+[node name="CheckBox" type="CheckBox" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/Fullscreen"]
+layout_mode = 2
+button_pressed = true
+
+[node name="MasterVolume" type="HBoxContainer" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/MasterVolume"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Master"
+
+[node name="HSlider" type="HSlider" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/MasterVolume"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="SFXVolume" type="HBoxContainer" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/SFXVolume"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "SFX"
+
+[node name="HSlider" type="HSlider" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/SFXVolume"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="MusicVolume" type="HBoxContainer" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/MusicVolume"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Music"
+
+[node name="HSlider" type="HSlider" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/MusicVolume"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+value = 0.8
+
+[node name="Colorblind" type="HBoxContainer" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/Colorblind"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Colorblind"
+
+[node name="Button" type="Button" parent="CanvasLayer/Control/SettingsPanel/VBoxContainer/Colorblind"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "Off"
+
+[node name="BackButton" type="Button" parent="CanvasLayer/Control/SettingsPanel"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -40.0
+offset_right = 60.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "BACK"
+
+[node name="ConfirmPanel" type="Panel" parent="CanvasLayer/Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -80.0
+offset_right = 160.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/ConfirmPanel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 30.0
+offset_right = 150.0
+offset_bottom = 80.0
+grow_horizontal = 2
+text = "ARE YOU SURE?
+Save will be deleted."
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/Control/ConfirmPanel"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -55.0
+offset_right = 100.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 40
+
+[node name="YesButton" type="Button" parent="CanvasLayer/Control/ConfirmPanel/HBoxContainer"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_colors/font_hover_color = Color(1, 0, 0, 1)
+text = "YES"
+
+[node name="NoButton" type="Button" parent="CanvasLayer/Control/ConfirmPanel/HBoxContainer"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "NO"
+
+[connection signal="mouse_entered" from="CanvasLayer/Control/MenuOptions/PlayButton" to="." method="_on_button_hover"]
+[connection signal="pressed" from="CanvasLayer/Control/MenuOptions/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="mouse_entered" from="CanvasLayer/Control/MenuOptions/SettingsButton" to="." method="_on_button_hover"]
+[connection signal="pressed" from="CanvasLayer/Control/MenuOptions/SettingsButton" to="." method="_on_settings_button_pressed"]
+[connection signal="mouse_entered" from="CanvasLayer/Control/MenuOptions/ResetButton" to="." method="_on_button_hover"]
+[connection signal="pressed" from="CanvasLayer/Control/MenuOptions/ResetButton" to="." method="_on_reset_save_button_pressed"]
+[connection signal="mouse_entered" from="CanvasLayer/Control/MenuOptions/ExitButton" to="." method="_on_button_hover"]
+[connection signal="pressed" from="CanvasLayer/Control/MenuOptions/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/SettingsPanel/VBoxContainer/Resolution/Button" to="." method="_on_resolution_button_pressed"]
+[connection signal="toggled" from="CanvasLayer/Control/SettingsPanel/VBoxContainer/Fullscreen/CheckBox" to="." method="_on_fullscreen_toggled"]
+[connection signal="value_changed" from="CanvasLayer/Control/SettingsPanel/VBoxContainer/MasterVolume/HSlider" to="." method="_on_master_volume_changed"]
+[connection signal="value_changed" from="CanvasLayer/Control/SettingsPanel/VBoxContainer/SFXVolume/HSlider" to="." method="_on_sfx_volume_changed"]
+[connection signal="value_changed" from="CanvasLayer/Control/SettingsPanel/VBoxContainer/MusicVolume/HSlider" to="." method="_on_music_volume_changed"]
+[connection signal="pressed" from="CanvasLayer/Control/SettingsPanel/VBoxContainer/Colorblind/Button" to="." method="_on_colorblind_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/SettingsPanel/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/ConfirmPanel/HBoxContainer/YesButton" to="." method="_on_confirm_yes"]
+[connection signal="pressed" from="CanvasLayer/Control/ConfirmPanel/HBoxContainer/NoButton" to="." method="_on_confirm_no"]

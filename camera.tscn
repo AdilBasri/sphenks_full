@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=52 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
@@ -38,6 +38,7 @@
 [ext_resource type="Animation" uid="uid://dp5eolmpu3nkh" path="res://puke.res" id="36_puke"]
 [ext_resource type="PackedScene" uid="uid://c5n6oyf767usb" path="res://Assets/whetstone/scene.gltf" id="37_0d0sc"]
 [ext_resource type="PackedScene" uid="uid://d0qlgknpqe0aj" path="res://Assets/points/scene.gltf" id="38_4acqy"]
+[ext_resource type="PackedScene" path="res://PauseMenu.tscn" id="39_pause"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
 _data = {
@@ -369,7 +370,7 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.3
 shape = SubResource("BoxShape3D_bi1g6")
 
 [node name="stairway" parent="." instance=ExtResource("18_woum2")]
-transform = Transform3D(0.007, 0, 0, 0, 0.007, 0, 0, 0, 0.007, 31.277828, -0.72203207, 38.91188)
+transform = Transform3D(0.007, 0, 0, 0, 0.007, 0, 0, 0, 0.007, 31.1, -1.142, 38.912)
 
 [node name="box" parent="." instance=ExtResource("14_w2vvk")]
 transform = Transform3D(0.034878254, 0, 0.49878204, 0, 0.5, 0, -0.49878204, 0, 0.034878254, -0.35025346, -0.7010992, -1.9459783)
@@ -904,6 +905,8 @@ surface_material_override/0 = SubResource("StandardMaterial3D_tk8v5")
 
 [node name="Label3D" type="Label3D" parent="screen2"]
 transform = Transform3D(1.0000001, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.25126648, 0.058872685, 0)
+
+[node name="PauseMenu" parent="." instance=ExtResource("39_pause")]
 
 [editable path="Sitting"]
 [editable path="box"]
