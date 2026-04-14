@@ -745,13 +745,29 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 		else:
 			current_def -= attacker_stats["attack"]
 			
-		defender.set_meta("current_defense", current_def)
+		# Premium Damage Feedback (Material Aware)
+		var is_white_defender = "white" in defender_path.to_lower()
+		var hit_intensity = 0.33 if current_def > 0 else 1.0
+		var is_king_death = is_king and current_def <= 0
+		_spawn_shatter_fx(defender.global_position, defender, hit_intensity, is_king_death)
 		
-		if camera.has_method("apply_shake"): camera.apply_shake(0.2, 0.3)
+		# King Specific Hit Feedback
+		if is_king:
+			if not is_white_defender:
+				# Enemy King Hit: Play Chime
+				SesYoneticisi.play_hover() 
+			else:
+				# Player King Hit: INTENSE Shake
+				if camera.has_method("apply_shake"): camera.apply_shake(1.0, 1.0)
+		
+		if camera.has_method("apply_shake") and not (is_king and is_white_defender):
+			camera.apply_shake(0.2, 0.3)
 		
 		if current_def <= 0:
 			# Capture!
-			if camera.has_method("_create_puff"): camera._create_puff(to.global_position)
+			if not is_white_defender:
+				# React physically only when enemy piece is lost
+				_enemy_react_to_damage(is_king)
 			if camera.has_method("apply_shake"): camera.apply_shake(0.4, 0.5)
 			
 			var is_player_king = is_king and "white" in defender_path.to_lower()
@@ -873,3 +889,69 @@ func save_game():
 	}
 	SettingsManager.save_game_data(save_data)
 	print("[OyunYoneticisi] Game Saved automatically.")
+func _spawn_shatter_fx(pos: Vector3, piece_node: Node3D, intensity: float = 1.0, is_king_death: bool = false):
+	var fx_scene = load("res://FX/ShatterFX.tscn")
+	if fx_scene:
+		var fx = fx_scene.instantiate()
+		fx.intensity = intensity
+		fx.is_king_death = is_king_death
+		
+		# Detect color from piece
+		var piece_color = Color(0.95, 0.95, 0.95) # Default white
+		var path = piece_node.get_meta("scene_path").to_lower() if piece_node.has_meta("scene_path") else ""
+		if "black" in path: piece_color = Color(0.1, 0.1, 0.1)
+		
+		fx.piece_color = piece_color
+		get_tree().root.add_child(fx)
+		fx.global_position = pos
+
+func _enemy_react_to_damage(is_king_hit: bool = false):
+	# 1. Sound effects (Pitched down further if King hit)
+	var pitch = 2.0 if is_king_hit else 1.0
+	SesYoneticisi.play_impact_slam()
+	
+	# 2. Find character node
+	var sitting_node = get_tree().get_first_node_in_group("sitting_node")
+	if not sitting_node: return
+	
+	var skel = sitting_node.find_child("Skeleton3D", true, false)
+	if not skel: return
+	
+	# 3. Play groan ONLY if King hit
+	if is_king_hit:
+		get_tree().create_timer(0.05).timeout.connect(func():
+			SesYoneticisi.play_enemy_groan(skel.global_position)
+		)
+
+	# 4. Procedural Torso Slam (Animation override via code/tween)
+	if sitting_node.has_meta("slam_tween"):
+		var old_tw = sitting_node.get_meta("slam_tween")
+		if old_tw.is_valid(): old_tw.kill()
+	
+	var tw = create_tween()
+	sitting_node.set_meta("slam_tween", tw)
+	
+	var bone_idx = 0 
+	var skel_node: Skeleton3D = skel
+	var original_pose = skel_node.get_bone_pose_rotation(bone_idx)
+	
+	# Slam forward (Pitch rotation) - MORE violent for King
+	var slam_angle = 35 if is_king_hit else 15
+	var slam_rot = original_pose * Quaternion(Vector3(1, 0, 0), deg_to_rad(slam_angle))
+	
+	tw.set_parallel(true)
+	# Fast slam forward
+	tw.tween_method(func(q: Quaternion): skel_node.set_bone_pose_rotation(bone_idx, q), original_pose, slam_rot, 0.04).set_trans(Tween.TRANS_EXPO)
+	
+	# Shake the character node intensely
+	var original_pos = sitting_node.position
+	var shake_range = 0.05 if is_king_hit else 0.02
+	for i in range(12):
+		var offset = Vector3(randf_range(-shake_range, shake_range), randf_range(-0.02, 0.02), randf_range(-shake_range, shake_range))
+		tw.tween_property(sitting_node, "position", original_pos + offset, 0.02)
+	
+	# Bounce back
+	tw.set_parallel(false)
+	var bounce_time = 0.8 if is_king_hit else 0.5
+	tw.tween_method(func(q: Quaternion): skel_node.set_bone_pose_rotation(bone_idx, q), slam_rot, original_pose, bounce_time).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(sitting_node, "position", original_pos, 0.1)

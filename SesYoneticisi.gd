@@ -169,6 +169,20 @@ func set_walking(is_moving: bool):
 	else:
 		walking_player.stream_paused = true
 
+func play_impact_slam():
+	# Use place_block pitched WAY down for a thud
+	play_sfx(place_block_sound, 0.4, 2.0)
+	# Also play a low rumble by using fall sound
+	play_sfx(fall_sound, 0.6, -5.0)
+
+func play_enemy_groan(pos: Vector3):
+	# Use angry pitched down for a groan
+	var asp = play_spatial_sfx(angry_sound, pos, 0.7, 5.0)
+	# Trim to 1.8s as requested for angry sound
+	get_tree().create_timer(1.8).timeout.connect(func():
+		if is_instance_valid(asp): asp.stop()
+	)
+
 func play_whetstone(type: String):
 	var stream = whetstone_atk_sound if type == "atk" else whetstone_def_sound
 	var asp = play_sfx(stream)

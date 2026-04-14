@@ -712,9 +712,31 @@ func _execute_move(from: GridHucre, to: GridHucre):
 			
 		defender.set_meta("current_defense", current_def)
 		
+		# Feedback triggers
+		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+		if manager:
+			var is_white_defender = "white" in defender_path.to_lower()
+			var hit_intensity = 0.33 if current_def > 0 else 1.0
+			var is_king_death = is_king and current_def <= 0
+			manager._spawn_shatter_fx(defender.global_position, defender, hit_intensity, is_king_death)
+			
+			# King Specific Hit Feedback
+			if is_king:
+				if not is_white_defender:
+					# Enemy King Hit: Play Chime
+					SesYoneticisi.play_hover() 
+				else:
+					# Player King Hit: INTENSE Shake
+					apply_shake(1.0, 1.0)
+			
+			if not (is_king and is_white_defender):
+				apply_shake(0.2, 0.3)
+		
 		if current_def <= 0:
 			# Capture!
-			_create_puff(to.global_position)
+			if manager and not ("white" in defender_path.to_lower()):
+				# React physically only when enemy piece is lost
+				manager._enemy_react_to_damage(is_king)
 			apply_shake(0.4, 0.5) # Bigger shake on kill
 			
 			var is_player_piece = "white" in defender_path.to_lower()
@@ -767,28 +789,6 @@ func _execute_move(from: GridHucre, to: GridHucre):
 	# Auto-transition back to seated view when turn ends
 	_transition_to_seated_view()
 
-
-func _create_puff(pos: Vector3):
-	# Simple code-based puff effect using a Sphere
-	var puff = MeshInstance3D.new()
-	var sphere = SphereMesh.new()
-	sphere.radius = 0.05
-	sphere.height = 0.1
-	puff.mesh = sphere
-	
-	var mat = StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(1, 1, 1, 0.8)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	puff.material_override = mat
-	
-	get_tree().root.add_child(puff)
-	puff.global_position = pos + Vector3(0, 0.1, 0)
-	
-	var tw = create_tween().set_parallel(true)
-	tw.tween_property(puff, "scale", Vector3(3, 3, 3), 0.3).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
-	tw.tween_property(mat, "albedo_color:a", 0.0, 0.3)
-	tw.chain().tween_callback(puff.queue_free)
 
 func pick_up_piece(piece: Node3D, scene_path: String):
 	held_piece = piece
@@ -1145,8 +1145,6 @@ func trigger_loss():
 	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 	if manager: manager.cleanup_board()
 	
-	if ui:
-		ui.show_game_over()
 	else:
 		# Fallback: create it if it doesn't exist
 		var script = load("res://GameOverUI.gd")
