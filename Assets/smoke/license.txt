@@ -1,0 +1,11 @@
+Model Information:
+* title:	Cigaratte Package
+* source:	https://sketchfab.com/3d-models/cigaratte-package-bae86843a26b4fef844636d2c3ecae51
+* author:	Zenizhiv Green (https://sketchfab.com/ZenizhivGreen)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Cigaratte Package" (https://sketchfab.com/3d-models/cigaratte-package-bae86843a26b4fef844636d2c3ecae51) by Zenizhiv Green (https://sketchfab.com/ZenizhivGreen) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
