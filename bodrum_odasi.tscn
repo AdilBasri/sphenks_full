@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://dy2noq2fsu1wo"]
+[gd_scene load_steps=9 format=3 uid="uid://dy2noq2fsu1wo"]
 
 [ext_resource type="PackedScene" uid="uid://binnfwp8k7a0s" path="res://Assets/floor/scene.gltf" id="1_18aug"]
 [ext_resource type="PackedScene" uid="uid://b4nlsyt45jnq0" path="res://Assets/ceiling/scene.gltf" id="2_5di8h"]
@@ -7,6 +7,9 @@
 [ext_resource type="PackedScene" uid="uid://daeik0psu8u7e" path="res://Assets/vent/scene.gltf" id="5_s3ge8"]
 [ext_resource type="PackedScene" uid="uid://bkpauf5vbnlxm" path="res://Assets/shelves/scene.gltf" id="6_jlete"]
 [ext_resource type="PackedScene" uid="uid://cksmvb2kuwuxx" path="res://shelves_visual.tscn" id="7_mjqnq"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_18aug"]
+size = Vector3(0.1459961, 0.7973938, 1.1894531)
 
 [node name="Bodrum_Odasi" type="Node3D"]
 
@@ -296,5 +299,13 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.9
 
 [node name="shelves2" parent="." instance=ExtResource("7_mjqnq")]
 transform = Transform3D(-2.1855694e-08, 0, -0.5, 0, 0.5, 0, 0.5, 0, -2.1855694e-08, 1.8760805, -1.2499995, -0.65564406)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+collision_layer = 255
+collision_mask = 255
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5991691, -0.92419595, 2.2179801)
+shape = SubResource("BoxShape3D_18aug")
 
 [editable path="kapi"]

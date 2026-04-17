@@ -1,3 +1,4 @@
+@tool
 extends Camera3D
 
 @export var sensitivity: float = 0.08
@@ -119,13 +120,14 @@ func _ready():
 	if not hand_node:
 		hand_node = get_node_or_null("Sketchfab_Scene") # Fallback
 	
-	if hand_node:
+	if hand_node and not Engine.is_editor_hint():
 		hand_node.visible = false
 		_setup_hand_visuals(hand_node)
 		hand_base_pos = hand_node.position
 		hand_base_rot = hand_node.rotation_degrees
 	
 	_sync_paper_colliders(get_parent())
+	_apply_drawer_materials()
 
 func setup_chair_interaction():
 	var chair = get_tree().root.find_child("chair", true, false)
@@ -366,6 +368,10 @@ func _is_any_ui_active() -> bool:
 	return false
 
 func _process(_delta):
+	if Engine.is_editor_hint():
+		_apply_drawer_materials()
+		return
+		
 	if is_locked: return
 	
 	# Shake logic
@@ -1444,8 +1450,9 @@ func _hand_reach():
 	is_holding_interaction = true
 	is_punching = true
 	
-	# Raycast for papers before reaching
+	# Raycast for papers and drawers before reaching
 	_try_grab_paper()
+	_try_interact_drawer()
 	
 	var target_pos = Vector3(0, -0.05, -0.1)
 	var target_rot = Vector3(-25.0, 5.0, -2.0)
@@ -1471,6 +1478,53 @@ func _hand_retract():
 		
 	is_holding_interaction = false
 	is_punching = false
+
+func _try_interact_drawer():
+	var space_state = get_world_3d().direct_space_state
+	var v_size = get_viewport().get_visible_rect().size
+	var crosshair_pos = v_size / 2.0
+	var origin = project_ray_origin(crosshair_pos)
+	var end = origin + project_ray_normal(crosshair_pos) * 2.5
+	
+	var query = PhysicsRayQueryParameters3D.create(origin, end)
+	var result = space_state.intersect_ray(query)
+	
+	if result:
+		var hit_node = result.collider
+		var target = hit_node
+		
+		# Find parent node named 'drawer'
+		while target and not ("drawer" in target.name.to_lower()):
+			target = target.get_parent()
+			
+		if target:
+			var anim_player = target.find_child("AnimationPlayer", true, false)
+			if anim_player:
+				# Determine animation index from name
+				var anim_idx = "01"
+				if "2" in target.name: anim_idx = "02"
+				elif "3" in target.name: anim_idx = "03"
+				elif "4" in target.name: anim_idx = "04"
+				elif "5" in target.name: anim_idx = "05"
+				
+				var anim_name = "DRAWER_" + anim_idx + ".001Action"
+				
+				# Check list to be sure
+				var anim_list = anim_player.get_animation_list()
+				if anim_name not in anim_list and anim_list.size() > 0:
+					anim_name = anim_list[0] # Fallback to first if name mismatch
+				
+				# Toggle logic
+				var is_open = target.get_meta("is_open") if target.has_meta("is_open") else false
+				
+				if not is_open:
+					anim_player.play(anim_name)
+					target.set_meta("is_open", true)
+				else:
+					anim_player.play_backwards(anim_name)
+					target.set_meta("is_open", false)
+				
+				SesYoneticisi.play_handing()
 
 func _try_grab_paper():
 	var space_state = get_world_3d().direct_space_state
@@ -1592,3 +1646,33 @@ func play_hand_animation():
 	_hand_reach()
 	await get_tree().create_timer(0.2).timeout
 	_hand_retract()
+
+
+func _apply_drawer_materials():
+	var mat_wood = load("res://Masa_Ahsap.tres")
+	if not mat_wood: return
+	
+	# Create a silver material for handles
+	var mat_silver = StandardMaterial3D.new()
+	mat_silver.albedo_color = Color(0.75, 0.75, 0.8) # Silverish
+	mat_silver.metallic = 1.0
+	mat_silver.roughness = 0.2
+	
+	# Find all drawer containers
+	var drawer_names = ["drawer", "drawer2", "drawer3", "drawer4", "drawer5"]
+	for d_name in drawer_names:
+		var d = get_tree().root.find_child(d_name, true, false) if not Engine.is_editor_hint() else get_parent().find_child(d_name, true, false)
+		if d:
+			_recursive_apply_material(d, mat_wood, mat_silver)
+
+func _recursive_apply_material(node: Node, mat_wood: Material, mat_silver: Material):
+	if node is MeshInstance3D:
+		# ALEX Drawer handle logic: Typically the 'BLACK' or 'PLASTIC' parts are handles/rails
+		var nname = node.name.to_lower()
+		if "black" in nname or "handle" in nname or "knob" in nname:
+			node.material_override = mat_silver
+		else:
+			node.material_override = mat_wood
+	
+	for child in node.get_children():
+		_recursive_apply_material(child, mat_wood, mat_silver)

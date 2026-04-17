@@ -1,4 +1,4 @@
-[gd_scene load_steps=67 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=72 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
@@ -119,6 +119,21 @@ size = Vector3(1.5494385, 1.6668701, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tk8v5"]
 albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ogc1x"]
+size = Vector3(0.3876953, 1.3046875, 0.8536377)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_s1wh4"]
+size = Vector3(0.40338135, 0.7888794, 0.82373047)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_10roo"]
+size = Vector3(0.39282227, 1.2949219, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yhu6l"]
+size = Vector3(0.39453125, 1.3035889, 0.8696289)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tolek"]
+size = Vector3(0.40298462, 1.1060791, 0.81378174)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wh2a0"]
 size = Vector3(1, 1.5, 1.3282471)
@@ -998,17 +1013,47 @@ transform = Transform3D(1.0000001, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.25126648, 0
 [node name="drawer" parent="." instance=ExtResource("41_131b7")]
 transform = Transform3D(3.490597e-05, 0.00020947214, 0.9999998, 2.9802322e-08, 1, -0.00020945072, -1.0000002, 8.940697e-08, 3.4909695e-05, -2.0958905, -1.25, 0.25627112)
 
+[node name="StaticBody3D" type="StaticBody3D" parent="drawer"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="drawer/StaticBody3D"]
+transform = Transform3D(1.0000304, 7.1054274e-15, -9.276846e-10, -7.531753e-13, 1, 1.2956517e-12, -2.6921043e-10, 3.120836e-12, 1, -0.0034168065, 0.15234375, -0.07318306)
+shape = SubResource("BoxShape3D_ogc1x")
+
 [node name="drawer2" parent="." instance=ExtResource("41_131b7")]
 transform = Transform3D(3.490597e-05, 0.00020947214, 0.9999998, 2.9802322e-08, 1, -0.00020945072, -1.0000002, 8.940697e-08, 3.4909695e-05, -2.0958905, -1.25, -0.13917434)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="drawer2"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="drawer2/StaticBody3D"]
+transform = Transform3D(1.0000373, 7.1054274e-15, -1.1386874e-09, -9.30811e-13, 1, 1.2956595e-12, -3.274181e-10, 3.120836e-12, 1, -0.0042996407, 0.41301066, -0.009864807)
+shape = SubResource("BoxShape3D_s1wh4")
 
 [node name="drawer3" parent="." instance=ExtResource("41_131b7")]
 transform = Transform3D(3.490597e-05, 0.00020947214, 0.9999998, 2.9802322e-08, 1, -0.00020945072, -1.0000002, 8.940697e-08, 3.4909695e-05, -2.0958905, -1.25, -0.5372471)
 
+[node name="StaticBody3D" type="StaticBody3D" parent="drawer3"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="drawer3/StaticBody3D"]
+transform = Transform3D(1.0000243, 7.1054274e-15, -7.421477e-10, -6.004086e-13, 1, 1.2956448e-12, -2.1100277e-10, 3.120836e-12, 1, 0.005486667, 0.1474266, -0.1606245)
+shape = SubResource("BoxShape3D_10roo")
+
 [node name="drawer4" parent="." instance=ExtResource("41_131b7")]
 transform = Transform3D(3.490597e-05, 0.00020947214, 0.9999998, 2.9802322e-08, 1, -0.00020945072, -1.0000002, 8.940697e-08, 3.4909695e-05, -2.0958905, -1.25, -0.9320066)
 
+[node name="StaticBody3D" type="StaticBody3D" parent="drawer4"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="drawer4/StaticBody3D"]
+transform = Transform3D(1.0000312, 7.1054274e-15, -9.531504e-10, -7.780443e-13, 1, 1.2956527e-12, -2.764864e-10, 3.120836e-12, 1, 0.003904879, 0.15179431, -0.06518626)
+shape = SubResource("BoxShape3D_yhu6l")
+
 [node name="drawer5" parent="." instance=ExtResource("41_131b7")]
 transform = Transform3D(3.490597e-05, 0.00020947214, 0.9999998, 2.9802322e-08, 1, -0.00020945072, -1.0000002, 8.940697e-08, 3.4909695e-05, -2.0958905, -1.25, -1.3342985)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="drawer5"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="drawer5/StaticBody3D"]
+transform = Transform3D(1.0000583, 7.1054274e-15, -1.7789716e-09, -1.4601653e-12, 1, 1.2956833e-12, -5.0931703e-10, 3.120836e-12, 1, 0.000808239, 0.25909376, -0.08999395)
+shape = SubResource("BoxShape3D_tolek")
 
 [node name="newspaper" parent="." instance=ExtResource("41_6tiwl")]
 transform = Transform3D(0.4, 0, 0, 0, 0.3126082, 0.24955185, 0, -0.24955185, 0.3126082, 2.1378834, 0.039336443, 2.9803987)
@@ -1103,6 +1148,7 @@ shape = SubResource("BoxShape3D_xb44a")
 [editable path="alchol1/alchol2"]
 [editable path="screen1"]
 [editable path="screen2"]
+[editable path="drawer"]
 [editable path="newspaper"]
 [editable path="newspaper2"]
 [editable path="newspaper3"]
