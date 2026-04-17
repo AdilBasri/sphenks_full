@@ -58,20 +58,28 @@ func apply_resolution():
 	var res_map = [Vector2i(640, 360), Vector2i(1280, 720), Vector2i(1920, 1080)]
 	var target_res = res_map[settings.resolution]
 	
-	# In 'viewport' mode, changing content_scale_size changes the internal render resolution.
-	# Because we use Anchors in the UI, elements will remain in correct relative positions.
-	window.content_scale_size = target_res
+	# Using 'canvas_items' stretch mode in project settings ensures that UI 
+	# scales proportionally while maintaining the base design resolution (640x360).
+	# This keeps the layout "stuck together" as intended.
+	
+	# RESTORE AESTHETICS: Limit 3D rendering to 360p height to keep PS1 'crunchiness'
+	# regardless of the actual window/screen resolution.
+	var scale_3d = 1.0
+	if target_res.y > 0:
+		scale_3d = 360.0 / target_res.y
+	get_viewport().scaling_3d_scale = scale_3d
 	
 	if settings.fullscreen:
+		# In Godot 4, exclusive fullscreen sets the resolution of the target screen
 		window.mode = Window.MODE_EXCLUSIVE_FULLSCREEN
 	else:
 		window.mode = Window.MODE_WINDOWED
-		# Resize window to match the 'selected' resolution for windowed view
+		# Ensure we reset the window size strictly to target
 		window.size = target_res
 		
 		# Center window 
-		var screen = DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
-		window.position = (screen / 2) - (target_res / 2)
+		var screen_rect = DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen())
+		window.position = screen_rect.position + (Vector2i(screen_rect.size) / 2) - (target_res / 2)
 
 func apply_audio():
 	_set_bus_volume("Master", settings.master_volume)

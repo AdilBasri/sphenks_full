@@ -1,0 +1,11 @@
+Model Information:
+* title:	IKEA ALEX Drawer 23x14x27
+* source:	https://sketchfab.com/3d-models/ikea-alex-drawer-23x14x27-58a392b69b7b42a095d93e5615484c4e
+* author:	happydumplingx (https://sketchfab.com/travislikes3d)
+
+Model License:
+* license type:	CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+* requirements:	Author must be credited. No commercial use. Modified versions must have the same license.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "IKEA ALEX Drawer 23x14x27" (https://sketchfab.com/3d-models/ikea-alex-drawer-23x14x27-58a392b69b7b42a095d93e5615484c4e) by happydumplingx (https://sketchfab.com/travislikes3d) licensed under CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)

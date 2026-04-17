@@ -26,18 +26,13 @@ SettingsManager="*res://SettingsManager.gd"
 
 window/size/viewport_width=640
 window/size/viewport_height=360
-window/size/mode=3
-window/size/window_width_override=1920
-window/size/window_height_override=1080
-window/stretch/mode="viewport"
-window/stretch/scale_mode="fractional"
-window/stretch/aspect="keep"
+window/stretch/mode="canvas_items"
+
+[dotnet]
+
+project/assembly_name="Sphenks_Full"
 
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
 textures/default_filters/use_nearest_mipmap_filter=true
-
-[dotnet]
-
-project/assembly_name="Sphenks_Full"

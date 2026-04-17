@@ -18,8 +18,22 @@ var seated_rotation: Vector3
 var walk_speed: float = 2.0
 var head_bob_frequency: float = 12.0
 var head_bob_amplitude: float = 0.05
-var head_bob_time: float = 0.0
+var head_bob_time = 0.0
+
+# Centralized Paper Physics
+var falling_papers : Array = [] # Stores Dictionary: { node: Node3D, velocity: Vector3, is_settling: bool }
+var gravity_constant = 9.8
+var rotation_settle_speed = 8.0
 var interact_label: Label = null
+var hand_node: Node3D = null
+var is_punching: bool = false # Still used for one-shot check or state
+var is_holding_interaction: bool = false
+var held_object: Node3D = null
+var held_object_offset: Transform3D
+var hand_base_pos: Vector3
+var hand_base_rot: Vector3
+var hand_anim_pos: Vector3 = Vector3.ZERO
+var hand_anim_rot: Vector3 = Vector3.ZERO
 
 var ray_length: float = 10.0
 @onready var crosshair_ui: TextureRect = get_tree().root.find_child("Crosshair", true, false)
@@ -100,6 +114,19 @@ func _ready():
 		upgrade_manager.set_script(upgrade_script)
 		add_child(upgrade_manager)
 
+	# Setup Hand Node
+	hand_node = get_node_or_null("hand")
+	if not hand_node:
+		hand_node = get_node_or_null("Sketchfab_Scene") # Fallback
+	
+	if hand_node:
+		hand_node.visible = false
+		_setup_hand_visuals(hand_node)
+		hand_base_pos = hand_node.position
+		hand_base_rot = hand_node.rotation_degrees
+	
+	_sync_paper_colliders(get_parent())
+
 func setup_chair_interaction():
 	var chair = get_tree().root.find_child("chair", true, false)
 	if chair:
@@ -179,6 +206,9 @@ func stand_up():
 	# Bakış yönünü mevcut rotasyona kilitleyelim
 	yaw = rotation_degrees.y
 	pitch = rotation_degrees.x
+	
+	if hand_node:
+		hand_node.visible = true
 # print("PLAYER STANDING")
 
 func sit_down():
@@ -193,6 +223,9 @@ func sit_down():
 	if interact_label: interact_label.visible = false
 	current_state = PlayerState.TRANSITIONING
 	is_locked = true
+	
+	if hand_node:
+		hand_node.visible = false
 	
 	var tw = create_tween().set_parallel(true)
 	tw.tween_property(self, "position", seated_position, 1.0).set_trans(Tween.TRANS_SINE)
@@ -254,6 +287,12 @@ func _input(event):
 			if not is_upgrade_mode:
 				if _check_tutorial_permission(4): # 4 = BOARD_CLICK
 					interact_with_crosshair()
+					if current_state == PlayerState.STANDING:
+						_hand_reach()
+	
+	if event is InputEventMouseButton and not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if current_state == PlayerState.STANDING:
+			_hand_retract()
 	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		if is_game_over or is_placing_piece or is_receiving_piece: return
@@ -283,20 +322,27 @@ func _input(event):
 				# Signal that we are inspecting a board piece (for Sequence 5)
 				pass # This is handled by right-click in current version, but user requested left-click info check in tutorial
 	
-	if event is InputEventKey and event.pressed:
-		# Camera Switching Logic (W to Zoom, S to Back)
-		if current_state == PlayerState.SEATED and not is_transitioning_view:
-			if event.keycode == KEY_W and not is_zoomed_view:
-				_transition_to_board_view()
-			elif event.keycode == KEY_S and is_zoomed_view:
-				_transition_to_seated_view()
-				
-		if event.keycode == KEY_C and current_state == PlayerState.SEATED and not is_transitioning_view:
-			stand_up()
-			
+	if event is InputEventKey:
 		if event.keycode == KEY_E:
-			if current_state == PlayerState.STANDING and interact_label.visible:
-				sit_down()
+			if current_state == PlayerState.STANDING:
+				if event.pressed:
+					if interact_label.visible:
+						sit_down()
+					else:
+						_hand_reach()
+				else: # Released
+					_hand_retract()
+		
+		# Only check these on press
+		if event.pressed:
+			if current_state == PlayerState.SEATED and not is_transitioning_view:
+				if event.keycode == KEY_W and not is_zoomed_view:
+					_transition_to_board_view()
+				elif event.keycode == KEY_S and is_zoomed_view:
+					_transition_to_seated_view()
+					
+			if event.keycode == KEY_C and current_state == PlayerState.SEATED and not is_transitioning_view:
+				stand_up()
 
 	# Rotation
 	if event is InputEventMouseMotion:
@@ -340,6 +386,26 @@ func _process(_delta):
 	var breath_yaw = sin(t * 1.1) * 0.12
 	var breath_pitch = cos(t * 0.8) * 0.15
 	var breath_roll = sin(t * 0.5) * 0.08
+	
+	# Hand Jitter & Animation Apply
+	if hand_node and current_state == PlayerState.STANDING:
+		var jitter_time = t * 10.0 # Even lower frequency for stability
+		var jitter_pos = Vector3(
+			randf_range(-0.0003, 0.0003),
+			randf_range(-0.0003, 0.0003),
+			randf_range(-0.0003, 0.0003)
+		)
+		var jitter_rot = Vector3(
+			sin(jitter_time * 1.2) * 0.1,
+			cos(jitter_time * 0.8) * 0.1,
+			sin(jitter_time * 1.5) * 0.1
+		)
+		hand_node.position = hand_base_pos + hand_anim_pos + jitter_pos
+		hand_node.rotation_degrees = hand_base_rot + hand_anim_rot + jitter_rot
+		
+		# Held Object Follow
+		if held_object:
+			_process_held_object_follow()
 	
 	if current_state == PlayerState.SEATED:
 		if not is_transitioning_view:
@@ -452,6 +518,56 @@ func _update_crosshair_position():
 func _physics_process(_delta):
 	if current_state == PlayerState.STANDING and not is_upgrade_mode:
 		_process_movement(_delta)
+	
+	_process_falling_papers(_delta)
+
+func _process_falling_papers(_delta):
+	var to_remove = []
+	var space_state = get_world_3d().direct_space_state
+	
+	for i in range(falling_papers.size() - 1, -1, -1):
+		var data = falling_papers[i]
+		var node = data.node
+		if not is_instance_valid(node):
+			to_remove.append(i)
+			continue
+		
+		# Gravity applied to global Y
+		data.velocity.y -= gravity_constant * _delta
+		node.global_position += data.velocity * _delta
+		
+		# Smoothly rotate to face-up (-90 on X)
+		node.global_rotation_degrees.x = lerp(node.global_rotation_degrees.x, -90.0, _delta * rotation_settle_speed)
+		node.global_rotation_degrees.z = lerp(node.global_rotation_degrees.z, 0.0, _delta * rotation_settle_speed)
+		
+		# Robust Ground Detection
+		# Shoot a ray from current position downwards
+		var ray_origin = node.global_position + Vector3(0, 0.1, 0)
+		var ray_target = node.global_position - Vector3(0, 0.2, 0) # Look 20cm ahead
+		
+		var query = PhysicsRayQueryParameters3D.create(ray_origin, ray_target)
+		query.collision_mask = 1 # Environment/Colliders
+		query.exclude = [node] # Exclude self
+		
+		var result = space_state.intersect_ray(query)
+		
+		# Stop if hit surface OR hit basement limits
+		# Room floor is roughly around -0.7 to -1.2 depending on transform
+		if result or node.global_position.y <= -2.0:
+			if result:
+				node.global_position.y = result.position.y + 0.005 # Settle precisely
+				print("[PaperPhysics] ", node.name, " landed on ", result.collider.name, " at Y: ", node.global_position.y)
+			else:
+				node.global_position.y = -0.73 # Fallback
+				
+			node.global_rotation_degrees.x = -90
+			node.global_rotation_degrees.z = 0
+			node.global_rotation_degrees.y += randf_range(-20, 20)
+			
+			to_remove.append(i)
+	
+	for index in to_remove:
+		falling_papers.remove_at(index)
 
 func _process_movement(_delta):
 	var body = get_parent() as CharacterBody3D
@@ -501,7 +617,7 @@ func _process_chair_interaction():
 	var result = space_state.intersect_ray(query)
 	
 	if result:
-		if result.collider.has_meta("is_chair") or result.collider.has_meta("is_door"):
+		if result.collider.has_meta("is_chair"):
 			interact_label.visible = true
 		else:
 			interact_label.visible = false
@@ -544,13 +660,6 @@ func interact_with_crosshair():
 
 	if result:
 		var collider = result.collider
-		
-		# Door Interaction
-		if collider.has_meta("is_door"):
-			var door_mesh = collider.get_parent()
-			if door_mesh and door_mesh.has_meta("door_logic"):
-				door_mesh.get_meta("door_logic").toggle_door()
-				return
 		
 		if collider.has_meta("is_grid_cell"):
 			var hucre = collider.get_meta("grid_cell_node")
@@ -1310,3 +1419,176 @@ func _check_tutorial_permission(action_type: int) -> bool:
 		if not tm.is_action_allowed(action_type):
 			return false
 	return true
+
+func _setup_hand_visuals(node: Node):
+	if node is MeshInstance3D:
+		node.layers = 2 # Viewmodel layer
+		# Force Unshaded Material
+		for i in range(node.get_surface_override_material_count()):
+			var mat = node.get_surface_override_material(i)
+			if not mat: mat = node.mesh.surface_get_material(i)
+			if mat:
+				var new_mat = mat.duplicate()
+				if new_mat is StandardMaterial3D:
+					new_mat.roughness = 1.0 # Remove shine
+					new_mat.metallic = 0.0 # Standardize surface
+					new_mat.albedo_color = new_mat.albedo_color * 0.5 # Damp intensity to avoid blowouts
+				node.set_surface_override_material(i, new_mat)
+	
+	for child in node.get_children():
+		_setup_hand_visuals(child)
+
+func _hand_reach():
+	if not hand_node or is_holding_interaction: return
+	
+	is_holding_interaction = true
+	is_punching = true
+	
+	# Raycast for papers before reaching
+	_try_grab_paper()
+	
+	var target_pos = Vector3(0, -0.05, -0.1)
+	var target_rot = Vector3(-25.0, 5.0, -2.0)
+	
+	var tw = create_tween().set_parallel(true)
+	tw.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "hand_anim_pos", target_pos, 0.15)
+	tw.tween_property(self, "hand_anim_rot", target_rot, 0.15)
+
+func _hand_retract():
+	if not is_holding_interaction: return
+	
+	var tw_back = create_tween().set_parallel(true)
+	tw_back.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw_back.tween_property(self, "hand_anim_pos", Vector3.ZERO, 0.3)
+	tw_back.tween_property(self, "hand_anim_rot", Vector3.ZERO, 0.3)
+	
+	await tw_back.finished
+	
+	# Release object if held
+	if held_object:
+		_release_paper()
+		
+	is_holding_interaction = false
+	is_punching = false
+
+func _try_grab_paper():
+	var space_state = get_world_3d().direct_space_state
+	var v_size = get_viewport().get_visible_rect().size
+	var crosshair_pos = v_size / 2.0
+	var origin = project_ray_origin(crosshair_pos)
+	var end = origin + project_ray_normal(crosshair_pos) * 2.5 # Short range for grabbing
+	
+	var query = PhysicsRayQueryParameters3D.create(origin, end)
+	# Exclude self if needed, though ray starts from camera
+	var result = space_state.intersect_ray(query)
+	
+	if result:
+		var hit_node = result.collider
+		# Check if it's an interactable paper (poster, newspaper, generic "new")
+		var lname = hit_node.name.to_lower()
+		var pname = hit_node.get_parent().name.to_lower()
+		var gpname = hit_node.get_parent().get_parent().name.to_lower() if hit_node.get_parent().get_parent() else ""
+		
+		var is_paper = "poster" in lname or "newspaper" in lname or lname.contains("new") \
+					or "poster" in pname or "newspaper" in pname or pname.contains("new") \
+					or "newspaper" in gpname or gpname.contains("new")
+		
+		if is_paper:
+			var paper = hit_node
+			# Find the root paper node (named poster, newspaper, or new)
+			while paper and not ("poster" in paper.name.to_lower() or "newspaper" in paper.name.to_lower() or "new" in paper.name.to_lower()):
+				paper = paper.get_parent()
+			
+			if paper:
+				held_object = paper
+				# Disable collisions while holding to prevent pushing the player
+				_set_node_collision_active(held_object, false)
+				# Store offset transform relative to camera
+				held_object_offset = global_transform.affine_inverse() * held_object.global_transform
+
+func _process_held_object_follow():
+	if not held_object: return
+	# Smoothly follow camera with stored offset
+	var target_transform = global_transform * held_object_offset
+	held_object.global_transform = held_object.global_transform.interpolate_with(target_transform, 0.2)
+
+func _set_node_collision_active(node: Node, active: bool):
+	if node is CollisionShape3D:
+		node.disabled = not active
+	if node is CollisionObject3D:
+		# Also disable/enable the whole body if possible, or just bits
+		node.set_collision_layer_value(1, active) # Typically player/world layer
+		node.set_collision_mask_value(1, active)
+	
+	for child in node.get_children():
+		_set_node_collision_active(child, active)
+
+func _release_paper():
+	if not held_object: return
+	
+	var paper = held_object
+	held_object = null
+	
+	# Centralized Physics handling: Add to falling list
+	# Ensure no physics components already exist (clean fallback)
+	if paper.has_node("PaperPhysicsComponent"):
+		paper.get_node("PaperPhysicsComponent").queue_free()
+	
+	_set_node_collision_active(paper, false) # Keep disabled while falling to prevent glitches
+	
+	falling_papers.append({
+		"node": paper,
+		"velocity": Vector3(randf_range(-0.05, 0.05), 0, randf_range(-0.05, 0.05))
+	})
+
+func _sync_paper_colliders(root: Node):
+	for child in root.get_children():
+		var lname = child.name.to_lower()
+		if "poster" in lname or "newspaper" in lname or lname.begins_with("new"):
+			print("Syncing paper: ", child.name)
+			_fix_paper_collider(child)
+		_sync_paper_colliders(child)
+
+func _fix_paper_collider(paper_node: Node3D):
+	# Find the mesh to get the true dimensions
+	var mesh_node = _find_mesh_node(paper_node)
+	if not mesh_node: return
+	
+	var aabb = mesh_node.get_aabb()
+	var mesh_scale = mesh_node.scale
+	
+	# Find or Create StaticBody3D
+	var sb = paper_node.find_child("StaticBody3D", true, false)
+	if not sb:
+		sb = StaticBody3D.new()
+		paper_node.add_child(sb)
+	
+	# Reset StaticBody3D transform
+	sb.transform = Transform3D.IDENTITY
+	
+	# Find or Create CollisionShape3D
+	var cs = sb.find_child("CollisionShape3D", true, false)
+	if not cs:
+		cs = CollisionShape3D.new()
+		sb.add_child(cs)
+	
+	# Reset and Sync CollisionShape3D
+	cs.transform = Transform3D.IDENTITY
+	var box = BoxShape3D.new()
+	box.size = aabb.size * mesh_scale * 1.5 # Extra padding for easier grabbing
+	cs.shape = box
+	cs.position = aabb.get_center() * mesh_scale
+
+func _find_mesh_node(node: Node) -> MeshInstance3D:
+	if node is MeshInstance3D: return node
+	for child in node.get_children():
+		var m = _find_mesh_node(child)
+		if m: return m
+	return null
+
+func play_hand_animation():
+	# Legacy fallback or for quick taps
+	_hand_reach()
+	await get_tree().create_timer(0.2).timeout
+	_hand_retract()
