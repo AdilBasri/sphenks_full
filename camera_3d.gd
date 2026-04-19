@@ -63,11 +63,19 @@ var hovered_upgrade_piece: Node3D = null
 var blood_puke_scene = preload("res://BloodPuke.tscn")
 var is_receiving_piece: bool = false
 
+# Stylish Interaction Params
+var base_fov: float = 80.0
+var focus_fov: float = 72.0
+var interaction_jitter_intensity: float = 0.003 # Subtle jitter for held pieces
+var jitter_speed: float = 55.0 # Speed of the vibration
+var jitter_time: float = 0.0
+
 signal piece_placed
 signal piece_moved
 signal camera_returned_to_board
 
 func _ready():
+	base_fov = fov
 	if get_tree().current_scene.name == "anamenu":
 		if crosshair_ui:
 			crosshair_ui.visible = false
@@ -209,7 +217,7 @@ func stand_up():
 	yaw = rotation_degrees.y
 	pitch = rotation_degrees.x
 	
-	if hand_node:
+	if hand_node and not is_upgrade_mode:
 		hand_node.visible = true
 # print("PLAYER STANDING")
 
@@ -429,6 +437,9 @@ func _process(_delta):
 	
 	if current_state == PlayerState.STANDING:
 		_process_chair_interaction()
+	
+	# Stylish Piece Jitter (Vibration)
+	_process_piece_vibration(_delta)
 	
 	# Update Crosshair Position
 	_update_crosshair_position()
@@ -901,9 +912,27 @@ func _execute_move(from: GridHucre, to: GridHucre):
 	
 	is_placing_piece = false
 	
-	# Auto-transition back to seated view when turn ends
-	_transition_to_seated_view()
-
+# Handle high-frequency jitter for held/selected pieces
+func _process_piece_vibration(_delta):
+	jitter_time += _delta * jitter_speed
+	var jitter_offset = Vector3(
+		sin(jitter_time) * interaction_jitter_intensity,
+		cos(jitter_time * 1.1) * interaction_jitter_intensity,
+		sin(jitter_time * 0.9) * interaction_jitter_intensity
+	)
+	
+	# Mode 1: Held piece (from chest)
+	if held_piece and not is_placing_piece:
+		# Base position is Vector3(0.75, -0.05, -0.8) as defined in pick_up_piece
+		held_piece.position = Vector3(0.75, -0.05, -0.8) + jitter_offset
+		
+	# Mode 2: Selected piece (on board)
+	if selected_hucre and selected_hucre.mevcut_tas:
+		#selected_hucre.mevcut_tas.position = Vector3.ZERO + jitter_offset
+		# Since grid pieces are reparented, we might want to jitter their local transform
+		# But careful not to break the 'lift' interpolation
+		var lift_y = 0.1 # This matches the value in _select_hucre
+		selected_hucre.mevcut_tas.position = Vector3(0, lift_y, 0) + jitter_offset
 
 func pick_up_piece(piece: Node3D, scene_path: String):
 	held_piece = piece
@@ -1019,6 +1048,9 @@ func place_held_piece():
 	held_piece_scene = ""
 	is_placing_piece = false
 	piece_placed.emit()
+	
+	# Stylishly return to seated view after placement
+	_transition_to_seated_view()
 	
 func trigger_win():
 # print("VICTORY! King defeated.")
@@ -1217,20 +1249,27 @@ func reset_rotation():
 	is_locked = false
 
 func _transition_to_board_view():
-	if not camera2: return
+	if not camera2 or is_zoomed_view or is_transitioning_view: return
 	is_transitioning_view = true
 	var tw = create_tween().set_parallel(true)
-	tw.tween_property(self, "position", camera2.position, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_property(self, "rotation_degrees", camera2.rotation_degrees, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	# Premium transition with Quart easing and FOV focus
+	tw.tween_property(self, "position", camera2.position, 0.6).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(self, "rotation_degrees", camera2.rotation_degrees, 0.6).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(self, "fov", focus_fov, 0.6).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	
 	await tw.finished
 	is_zoomed_view = true
 	is_transitioning_view = false
 
 func _transition_to_seated_view():
+	if not is_zoomed_view or is_transitioning_view: return
 	is_transitioning_view = true
 	var tw = create_tween().set_parallel(true)
-	tw.tween_property(self, "position", seated_position, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_property(self, "rotation_degrees", seated_rotation, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	# Returning with same premium feel and FOV reset
+	tw.tween_property(self, "position", seated_position, 0.6).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(self, "rotation_degrees", seated_rotation, 0.6).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(self, "fov", base_fov, 0.6).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN_OUT)
+	
 	await tw.finished
 	is_zoomed_view = false
 	is_transitioning_view = false
@@ -1277,6 +1316,9 @@ func enter_upgrade_selection_view():
 	if current_state == PlayerState.SEATED:
 		stand_up()
 		await get_tree().create_timer(1.2).timeout 
+	
+	if hand_node:
+		hand_node.visible = false
 	
 	# Kullanıcının belirttiği kesin konum ve açı
 	var target_pos = Vector3(-1.062, -0.086, 2.303)

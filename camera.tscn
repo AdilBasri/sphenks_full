@@ -332,7 +332,7 @@ transform = Transform3D(0.0009979546, 6.0219754e-05, -2.1433632e-05, -5.3363663e
 visible = false
 
 [node name="Camera3D2" type="Camera3D" parent="CharacterBody3D"]
-transform = Transform3D(0.99999094, -0.004169807, 0.0008650448, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1321964, 1.6913002)
+transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1321964, 1.7357645)
 fov = 80.0
 
 [node name="OyuncuGrid" type="Node3D" parent="."]
