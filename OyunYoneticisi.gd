@@ -339,11 +339,13 @@ func cleanup_non_king_pieces():
 		grid.spawn_kings()
 
 func next_turn():
-	if is_processing_turn: return
+	if is_processing_turn or not is_game_active: return
 	is_processing_turn = true
 	
+	if camera and camera.has_method("stop_tracking"):
+		camera.stop_tracking()
+		
 	# Kill any pending AI thinking if turn is forced to switch
-	pending_ai_timer = null 
 	
 	if current_turn == GameTurn.PLAYER:
 		current_turn = GameTurn.ENEMY
@@ -475,6 +477,9 @@ func _spawn_random_black_piece_for_enemy():
 	var piece = piece_scene.instantiate()
 	piece.set_meta("render_on_top", true)
 	get_tree().root.add_child(piece)
+	
+	if camera and camera.has_method("start_tracking"):
+		camera.start_tracking(piece)
 	
 	piece.global_position = box.global_position
 	piece.scale = Vector3(0.1, 0.1, 0.1)
@@ -704,6 +709,10 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 	var piece = from.mevcut_tas
 	var path = piece.get_meta("scene_path")
 	from.mevcut_tas = null
+	
+	# Focus camera on the moving piece
+	if camera and camera.has_method("start_tracking"):
+		camera.start_tracking(piece)
 	
 	# Jump animation (Shared logic with camera_3d but automated)
 	var tw = create_tween()

@@ -136,12 +136,13 @@ size = Vector3(0.39453125, 1.3035889, 0.8696289)
 size = Vector3(0.40298462, 1.1060791, 0.81378174)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wh2a0"]
-size = Vector3(1, 1.5, 1.3282471)
+size = Vector3(1.4526367, 1.9884033, 1.9483032)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fawbm"]
-size = Vector3(1, 1, 1.168457)
+size = Vector3(1, 1, 2.168213)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_usasj"]
+size = Vector3(1, 1, 1.8046875)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_yyko5"]
 size = Vector3(7.3099365, 2.9033203, 6.159607)
@@ -1064,7 +1065,7 @@ transform = Transform3D(1.0000001, -1.7763568e-15, 0, 6.661338e-16, 1.0000001, 0
 [node name="StaticBody3D" type="StaticBody3D" parent="newspaper"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="newspaper/StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4927888, 0.24999952, -0.7543335)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26647043, 0.49420118, -1.0643616)
 shape = SubResource("BoxShape3D_wh2a0")
 
 [node name="newspaper2" parent="." instance=ExtResource("41_6tiwl")]
@@ -1076,7 +1077,7 @@ transform = Transform3D(1.0000001, -1.7763568e-15, 0, 6.661338e-16, 1.0000001, 0
 [node name="StaticBody3D" type="StaticBody3D" parent="newspaper2"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="newspaper2/StaticBody3D"]
-transform = Transform3D(0.99999714, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.1920929e-07, -0.08422947)
+transform = Transform3D(0.99999225, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.1920929e-07, -0.5841074)
 shape = SubResource("BoxShape3D_fawbm")
 
 [node name="newspaper3" parent="." instance=ExtResource("41_6tiwl")]
@@ -1088,6 +1089,7 @@ transform = Transform3D(1.0000001, -1.7763568e-15, 0, 6.661338e-16, 1.0000001, 0
 [node name="StaticBody3D" type="StaticBody3D" parent="newspaper3"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="newspaper3/StaticBody3D"]
+transform = Transform3D(0.9999995, 0, 0, 0, 0.9999997, 2.9802322e-08, 0, -2.9802322e-08, 0.9999997, 0, 2.3841858e-07, -0.40234423)
 shape = SubResource("BoxShape3D_usasj")
 
 [node name="new" parent="." instance=ExtResource("42_1stwh")]

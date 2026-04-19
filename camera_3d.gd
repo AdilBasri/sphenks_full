@@ -70,6 +70,13 @@ var interaction_jitter_intensity: float = 0.003 # Subtle jitter for held pieces
 var jitter_speed: float = 55.0 # Speed of the vibration
 var jitter_time: float = 0.0
 
+# Tracking Params
+var tracking_target: Node3D = null
+var is_tracking_enemy: bool = false
+var tracking_fov: float = 75.0
+var tracking_lerp_speed: float = 2.5 # Slower, calmer rotation
+var fov_tween: Tween = null
+
 signal piece_placed
 signal piece_moved
 signal camera_returned_to_board
@@ -322,6 +329,8 @@ func _input(event):
 		if held_piece:
 			SesYoneticisi.play_error()
 		_clear_selection()
+		if is_zoomed_view:
+			_transition_to_seated_view()
 	
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and not held_piece and not is_upgrade_mode:
 		# Check if we clicked an already standing piece to open info
@@ -426,10 +435,21 @@ func _process(_delta):
 			if is_zoomed_view and camera2:
 				position = camera2.position
 				rotation_degrees = camera2.rotation_degrees
+			elif is_tracking_enemy and tracking_target and is_instance_valid(tracking_target):
+				# Smoothly look at the tracking target (enemy piece)
+				var target_pos = tracking_target.global_position
+				var dir = (target_pos - global_position).normalized()
+				var target_quat = Quaternion(Basis.looking_at(dir, Vector3.UP))
+				var current_quat = Quaternion(basis)
+				var final_quat = current_quat.slerp(target_quat, _delta * tracking_lerp_speed)
+				basis = Basis(final_quat)
+				# FOV is now handled by Tween in start/stop tracking
 			else:
 				rotation_degrees.y = seated_rotation.y
 				rotation_degrees.x = seated_rotation.x
 				rotation_degrees.z = seated_rotation.z
+				# Reset FOV is now handled by Tween or board transitions
+				pass
 	elif not is_upgrade_mode:
 		rotation_degrees.y = yaw + breath_yaw + (shake_offset.x * 2.0)
 		rotation_degrees.x = pitch + breath_pitch + (shake_offset.y * 2.0)
@@ -698,8 +718,12 @@ func interact_with_crosshair():
 				else:
 # print("Düşman taşı seçilemez! (Path: %s)" % path)
 					_clear_selection()
+					if is_zoomed_view:
+						_transition_to_seated_view()
 			else:
 				_clear_selection()
+				if is_zoomed_view:
+					_transition_to_seated_view()
 
 func _raycast_from_mouse() -> Dictionary:
 	var space_state = get_world_3d().direct_space_state
@@ -774,9 +798,7 @@ func _clear_selection():
 		last_highlighted_cell.set_preview_piece("")
 		last_highlighted_cell = null
 		
-	# Auto-transition back to seated view when selection is cleared
-	if is_zoomed_view:
-		_transition_to_seated_view()
+	# Camera return is now handled explicitly at move end or cancel
 
 func _execute_move(from: GridHucre, to: GridHucre):
 	if not _check_tutorial_permission(1): # 1 = MOVE
@@ -911,6 +933,9 @@ func _execute_move(from: GridHucre, to: GridHucre):
 	if manager: manager.next_turn()
 	
 	is_placing_piece = false
+	
+	# LAND -> Return camera
+	_transition_to_seated_view()
 	
 # Handle high-frequency jitter for held/selected pieces
 func _process_piece_vibration(_delta):
@@ -1053,10 +1078,15 @@ func place_held_piece():
 	_transition_to_seated_view()
 	
 func trigger_win():
-# print("VICTORY! King defeated.")
+	if is_game_over: return
 	is_game_over = true
 	# Character sound (Angry)
 	SesYoneticisi.play_angry(_get_enemy_pos())
+	
+	# Clear tracking and return to seated view to see the character
+	stop_tracking()
+	if is_zoomed_view:
+		_transition_to_seated_view()
 	
 	# Give 1 second for the impact before sequence
 	await get_tree().create_timer(1.0).timeout
@@ -1073,11 +1103,23 @@ func trigger_win():
 		stand_up()
 		manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 		if manager: manager.cleanup_board()
-	Engine.time_scale = 1.0
 	
-	if has_node("/root/InspectUI"):
-		get_node("/root/InspectUI").hide_piece()
-
+func start_tracking(target: Node3D):
+	tracking_target = target
+	is_tracking_enemy = true
+	
+	if fov_tween: fov_tween.kill()
+	fov_tween = create_tween()
+	fov_tween.tween_property(self, "fov", tracking_fov, 0.6).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	
+func stop_tracking():
+	is_tracking_enemy = false
+	tracking_target = null
+	
+	if fov_tween: fov_tween.kill()
+	fov_tween = create_tween()
+	fov_tween.tween_property(self, "fov", base_fov, 0.8).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN_OUT)
+	
 func _play_puke_sequence():
 # print("[Camera3D] Starting Puke Sequence...")
 	var sitting_node = get_tree().get_first_node_in_group("sitting_node")
@@ -1121,7 +1163,19 @@ func _play_puke_sequence():
 				attachment.name = "PukeAttachment"
 				attachment.bone_name = "mixamorig_Neck"
 				skel.add_child(attachment)
+				
 			puke_origin_node = attachment
+			
+		# Spawn Particles
+		if blood_puke_scene:
+			var puke_fx = blood_puke_scene.instantiate()
+			puke_origin_node.add_child(puke_fx)
+			# Ensure it stops and cleans up
+			get_tree().create_timer(3.0).timeout.connect(func():
+				if is_instance_valid(puke_fx):
+					puke_fx.emitting = false
+					get_tree().create_timer(2.0).timeout.connect(puke_fx.queue_free)
+			)
 		
 		# Create Blood Effect
 		await get_tree().create_timer(0.3).timeout # Wait for mouth to open
@@ -1313,6 +1367,14 @@ func _transition_to_upgrade_view():
 
 func enter_upgrade_selection_view():
 	is_upgrade_mode = true
+	
+	# CLEAR HELD PIECE (Fix for softlock)
+	if held_piece:
+		held_piece.queue_free()
+		held_piece = null
+		held_piece_scene = ""
+	is_receiving_piece = false
+	
 	if current_state == PlayerState.SEATED:
 		stand_up()
 		await get_tree().create_timer(1.2).timeout 

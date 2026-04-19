@@ -52,34 +52,32 @@ func apply_all_settings():
 	apply_colorblind()
 
 func apply_resolution():
-	var window = get_window()
-	
 	# Resolution Map (Internal buffer size)
 	var res_map = [Vector2i(640, 360), Vector2i(1280, 720), Vector2i(1920, 1080)]
 	var target_res = res_map[settings.resolution]
 	
-	# Using 'canvas_items' stretch mode in project settings ensures that UI 
-	# scales proportionally while maintaining the base design resolution (640x360).
-	# This keeps the layout "stuck together" as intended.
-	
 	# RESTORE AESTHETICS: Limit 3D rendering to 360p height to keep PS1 'crunchiness'
-	# regardless of the actual window/screen resolution.
 	var scale_3d = 1.0
 	if target_res.y > 0:
 		scale_3d = 360.0 / target_res.y
 	get_viewport().scaling_3d_scale = scale_3d
 	
 	if settings.fullscreen:
-		# In Godot 4, exclusive fullscreen sets the resolution of the target screen
-		window.mode = Window.MODE_EXCLUSIVE_FULLSCREEN
+		# Use DisplayServer for most reliable "True Fullscreen" (Exclusive)
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
 	else:
-		window.mode = Window.MODE_WINDOWED
-		# Ensure we reset the window size strictly to target
-		window.size = target_res
+		# First return to windowed mode
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 		
-		# Center window 
-		var screen_rect = DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen())
-		window.position = screen_rect.position + (Vector2i(screen_rect.size) / 2) - (target_res / 2)
+		# Set size explicitly
+		DisplayServer.window_set_size(target_res)
+		
+		# Center window on current monitor
+		var screen = DisplayServer.window_get_current_screen()
+		var screen_rect = DisplayServer.screen_get_usable_rect(screen)
+		var window_size = DisplayServer.window_get_size()
+		var center_pos = screen_rect.position + (Vector2i(screen_rect.size) / 2) - (window_size / 2)
+		DisplayServer.window_set_position(center_pos)
 
 func apply_audio():
 	_set_bus_volume("Master", settings.master_volume)
