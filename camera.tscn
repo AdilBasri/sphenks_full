@@ -290,6 +290,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.653758, 0.27785105, -2.8270
 light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
 light_energy = 5.0
 
+[node name="OmniLight3D9" type="OmniLight3D" parent="WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2957531, -0.6153969, -1.9419051)
+light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
+light_energy = 5.0
+
+[node name="OmniLight3D10" type="OmniLight3D" parent="WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34398264, -0.6153969, -1.9175128)
+light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
+light_energy = 5.0
+
 [node name="light" parent="WorldEnvironment" instance=ExtResource("7_2jv0e")]
 transform = Transform3D(8, 0, 0, 0, 8, 0, 0, 0, 8, 0.19101596, 1.0415931, -2.5514631)
 
