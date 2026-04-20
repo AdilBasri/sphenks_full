@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://quxt6igoogoq"
+path="res://.godot/imported/Ashen Hallway.mp3-b3e405cacfdcf1bd0f2d7af6f35bf178.mp3str"
+
+[deps]
+
+source_file="res://Assets/Ashen Hallway.mp3"
+dest_files=["res://.godot/imported/Ashen Hallway.mp3-b3e405cacfdcf1bd0f2d7af6f35bf178.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

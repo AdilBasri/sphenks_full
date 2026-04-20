@@ -11,11 +11,14 @@ var bgm_loop = preload("res://Assets/Sounds/background_ikinci_kisim.mp3")
 var angry_sound = preload("res://Assets/Sounds/angry.mp3")
 var evil_laugh_sound = preload("res://Assets/Sounds/evil_laugh.mp3")
 var puke_sound = preload("res://Assets/Sounds/puke.mp3")
+var menu_music = preload("res://Assets/Ashen Hallway.mp3")
 
 var walking_player: AudioStreamPlayer
 var bgm_player_active: AudioStreamPlayer
 var bgm_player_fade: AudioStreamPlayer
+var menu_music_player: AudioStreamPlayer
 var bgm_loop_timer: Timer
+var startup_timer_finished: bool = false
 var crossfade_duration: float = 4.0
 
 func _ready():
@@ -29,7 +32,13 @@ func _ready():
 	add_child(bgm_loop_timer)
 	bgm_loop_timer.timeout.connect(_start_loop_crossfade)
 	
-	setup_bgm_player()
+	# Entrance Video Delay Management (17s)
+	# After 17s, we start menu music if we are in the menu
+	get_tree().create_timer(17.0).timeout.connect(func():
+		startup_timer_finished = true
+		if get_tree().current_scene.name == "anamenu":
+			start_menu_music()
+	)
 
 func setup_audio_buses():
 	# Mastering: Setup SFX, Footsteps, and Music buses with effects
@@ -90,7 +99,43 @@ func setup_walking_player():
 	walking_player.bus = "Footsteps"
 	add_child(walking_player)
 
+
+
+func start_menu_music():
+	# Configure loop
+	if menu_music is AudioStreamMP3:
+		menu_music.loop = true
+	
+	if not menu_music_player:
+		menu_music_player = AudioStreamPlayer.new()
+		menu_music_player.bus = "Music"
+		add_child(menu_music_player)
+	
+	# Don't restart if already playing
+	if menu_music_player.playing: return
+	
+	# Stop game BGM
+	if bgm_player_active: bgm_player_active.stop()
+	if bgm_player_fade: bgm_player_fade.stop()
+	bgm_loop_timer.stop()
+	
+	menu_music_player.stream = menu_music
+	menu_music_player.play()
+
+func stop_menu_music():
+	if menu_music_player and menu_music_player.playing:
+		# Use a quick fade for polish
+		var tw = create_tween()
+		tw.tween_property(menu_music_player, "volume_db", -80, 0.5)
+		tw.finished.connect(func():
+			menu_music_player.stop()
+			menu_music_player.volume_db = 0
+		)
+
 func setup_bgm_player(use_intro: bool = false):
+	# Ensure menu music is stopped when game BGM starts
+	stop_menu_music()
+	
 	if bgm_loop is AudioStreamMP3:
 		bgm_loop.loop = false
 	if bgm_intro is AudioStreamMP3:

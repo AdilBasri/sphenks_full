@@ -34,6 +34,10 @@ func _ready():
 	$CanvasLayer/Control.modulate.a = 0
 	var tw = create_tween()
 	tw.tween_property($CanvasLayer/Control, "modulate:a", 1.0, 1.0).set_trans(Tween.TRANS_SINE)
+	
+	# Start menu music (only if startup delay is done)
+	if SesYoneticisi.startup_timer_finished:
+		SesYoneticisi.start_menu_music()
 
 func update_play_button_text():
 	if SettingsManager.check_for_save():
@@ -57,6 +61,10 @@ func _on_play_button_pressed():
 	# Transition to game
 	var f_tw = create_tween()
 	f_tw.tween_property($CanvasLayer/Control, "modulate:a", 0.0, 0.5)
+	
+	# Fade out menu music manually for a smoother transition
+	SesYoneticisi.stop_menu_music()
+	
 	await f_tw.finished
 	get_tree().change_scene_to_file("res://camera.tscn")
 
