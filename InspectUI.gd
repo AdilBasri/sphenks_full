@@ -14,6 +14,7 @@ var is_active: bool = false
 var viewport_piece: Node3D = null
 var rotation_speed: float = 0.5
 var sensitivity: float = 0.2
+var is_opponent_piece: bool = false
 var _can_dismiss: bool = false
 
 var inspected_node: Node3D = null # The actual piece in the world
@@ -103,7 +104,8 @@ func show_piece(piece_scene_path: String, from_chest: bool = false, node: Node3D
 		viewport_piece_anchor.position = Vector3(1.3, -0.507, -1.597)
 		var base_rot = Vector3(3.8, 154.4, 0.8)
 		# Rakip taşları (black) 180 derece dönmüş olarak başlasın ki yüzleri bize dönsün
-		if piece_scene_path.to_lower().contains("black"):
+		is_opponent_piece = piece_scene_path.to_lower().contains("black")
+		if is_opponent_piece:
 			base_rot.y += 180.0
 		viewport_piece_anchor.rotation_degrees = base_rot
 		viewport_piece.position = Vector3.ZERO
@@ -158,8 +160,9 @@ func _input(event):
 	if not is_active: return
 	
 	if event is InputEventMouseMotion:
+		var mult = -1.0 if is_opponent_piece else 1.0
 		viewport_piece_anchor.rotate_y(deg_to_rad(event.relative.x * sensitivity))
-		viewport_piece_anchor.rotate_object_local(Vector3.RIGHT, deg_to_rad(-event.relative.y * sensitivity))
+		viewport_piece_anchor.rotate_object_local(Vector3.RIGHT, deg_to_rad(-event.relative.y * sensitivity * mult))
 		get_viewport().set_input_as_handled()
 		
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
