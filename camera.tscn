@@ -604,6 +604,10 @@ shape = SubResource("BoxShape3D_y36wg")
 [node name="poster7" parent="Posters" instance=ExtResource("25_0skcs")]
 transform = Transform3D(0.19987364, -0.0034176784, -0.0062325313, 0.0035828392, 0.1998981, 0.005283188, 0.0061390735, -0.0053915014, 0.19983304, 2.8727765, -0.059891723, -1.814426)
 
+[node name="poster8" parent="Posters" instance=ExtResource("25_0skcs")]
+transform = Transform3D(-0.039848417, 0.19182329, -0.04019787, -0.006983361, 0.039604593, 0.19591494, 0.19586553, 0.04043809, -0.0011930467, 0.50435126, -0.57794076, -0.4264177)
+visible = false
+
 [node name="vent" parent="." instance=ExtResource("26_n8g8v")]
 transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 1.983463, 0.42146164, -0.001840651)
 script = ExtResource("35_loop")
@@ -1087,6 +1091,9 @@ transform = Transform3D(1.0000001, -1.7763568e-15, 0, 6.661338e-16, 1.0000001, 0
 transform = Transform3D(0.9999995, 0, 0, 0, 0.9999997, 2.9802322e-08, 0, -2.9802322e-08, 0.9999997, 0, 2.3841858e-07, -0.40234423)
 shape = SubResource("BoxShape3D_usasj")
 
+[node name="DemoSonuCam" type="Camera3D" parent="."]
+transform = Transform3D(-1, 5.1014794e-08, -7.0994595e-08, 0, 0.81208354, 0.5835412, 8.742278e-08, 0.5835412, -0.81208354, 0, -0.1671457, -2.5333838)
+
 [editable path="Sitting"]
 [editable path="Masa/box"]
 [editable path="Posters/paint2"]
@@ -1096,6 +1103,7 @@ shape = SubResource("BoxShape3D_usasj")
 [editable path="Posters/poster5"]
 [editable path="Posters/poster6"]
 [editable path="Posters/poster7"]
+[editable path="Posters/poster8"]
 [editable path="alchol1"]
 [editable path="alchol1/alchol2"]
 [editable path="screen1"]
