@@ -1232,7 +1232,9 @@ func _play_puke_sequence():
 		return
 	
 # print("[Camera3D] Sitting node found: ", sitting_node.get_path())
-	var sitting_anim = sitting_node.find_child("AnimationPlayer", true, false)
+	var sitting_anim = sitting_node.get_node_or_null("AnimationPlayer")
+	if not sitting_anim:
+		sitting_anim = sitting_node.find_child("AnimationPlayer", true, false)
 	
 	if sitting_anim:
 		# FALLBACK INJECTION: Ensure 'puke' is present
@@ -1248,9 +1250,9 @@ func _play_puke_sequence():
 			var a_puke = load("res://puke.res")
 			if a_puke: lib.add_animation("puke", a_puke)
 	
-	# Animation playback REMOVED
-	# if sitting_anim and sitting_anim.has_animation("puke"):
-	# 	sitting_anim.play("puke")
+	if sitting_anim and sitting_anim.has_animation("puke"):
+		sitting_anim.active = true
+		sitting_anim.play("puke")
 		
 		# Create Bone Attachment for neck if it doesn't exist
 		var skel = sitting_node.find_child("Skeleton3D", true, false)

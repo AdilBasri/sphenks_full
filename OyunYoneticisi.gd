@@ -198,12 +198,13 @@ func _start_sitting_loop():
 		sitting_node = get_node_or_null("Sitting")
 	
 	if sitting_node:
-		var sitting_anim = sitting_node.find_child("AnimationPlayer", true, false)
+		var sitting_anim = sitting_node.get_node_or_null("AnimationPlayer")
+		if not sitting_anim:
+			sitting_anim = sitting_node.find_child("AnimationPlayer", true, false)
 		if sitting_anim:
 			# INJECTION LOGIC: Ensure animations are present
-			# Animation playback REMOVED
-			# if sitting_anim and sitting_anim.has_animation("puke"):
-			# 	sitting_anim.play("puke")
+			# Sitting loop should only play idle animation
+			# Puke is handled by camera_3d.gd sequence
 			if not sitting_anim.has_animation("oturma1") or not sitting_anim.has_animation("puke"):
 				print("[OyunYoneticisi] Injecting missing animations into Sitting AnimationPlayer...")
 				var lib: AnimationLibrary
@@ -239,13 +240,15 @@ func _start_sitting_loop():
 							if old_anim is Animation:
 								var new_anim = old_anim.duplicate()
 								var remapped_count = 0
-								for i in range(new_anim.get_track_count()):
-									var path = new_anim.track_get_path(i)
-									var path_str = str(path)
-									if "Skeleton3D:" in path_str:
-										var new_path = path_str.replace("Skeleton3D:", ".:")
-										new_anim.track_set_path(i, NodePath(new_path))
-										remapped_count += 1
+								# REMAPPING DISABLED: Using explicit root_node in Sitting.tscn instead
+								# for i in range(new_anim.get_track_count()):
+								# 	var path = new_anim.track_get_path(i)
+								# 	var path_str = str(path)
+								# 	if "Skeleton3D:" in path_str:
+								# 		var new_path = path_str.replace("Skeleton3D:", ".:")
+								# 		new_anim.track_set_path(i, NodePath(new_path))
+								# 		remapped_count += 1
+								pass
 								
 								if remapped_count > 0:
 									# print("[OyunYoneticisi] Remapped ", remapped_count, " tracks for ", anim_name)
