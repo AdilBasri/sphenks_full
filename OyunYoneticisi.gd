@@ -19,6 +19,7 @@ var black_pieces = [
 enum GameTurn { PLAYER, ENEMY }
 var current_turn: GameTurn = GameTurn.PLAYER
 var round_number: int = 1
+var phase_number: int = 1 # Moved here for better visibility
 var is_game_active: bool = false
 var is_tutorial_mode: bool = true
 var tutorial_manager: Node
@@ -97,11 +98,9 @@ func _ready():
 	else:
 		print("[OyunYoneticisi] Starting Tutorial...")
 	
-	# Start Sitting Animation Loop
-	_start_sitting_loop()
-	
 	# Setup basement door interaction
 	_setup_basement_door()
+
 
 func _input(event):
 	if event is InputEventKey and event.pressed:
@@ -157,14 +156,36 @@ func _on_phase_6_start():
 	if camera and camera.has_method("stand_up"):
 		camera.stand_up()
 	
-	# Show message
-	await get_tree().create_timer(1.5).timeout
-	var dialogue_ui = get_node_or_null("/root/DialogueUI")
-	if dialogue_ui:
-		dialogue_ui.display_text("Find the escape route.")
+	# Show message at Top Center
+	await get_tree().create_timer(1.2).timeout
+	_show_escape_instruction("Find a way to get out.")
 	
 	# Ensure door interaction is setup
 	_setup_basement_door()
+
+func _show_escape_instruction(text: String):
+	var canvas = CanvasLayer.new()
+	canvas.layer = 100
+	get_tree().root.add_child(canvas)
+	
+	var label = Label.new()
+	label.text = text
+	var settings = LabelSettings.new()
+	settings.font = load("res://Assets/fonts/dominica.ttf")
+	settings.font_size = 32 # Smaller
+	settings.font_color = Color.WHITE
+	settings.outline_size = 8
+	settings.outline_color = Color.BLACK
+	label.label_settings = settings
+	
+	label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	label.position.y += 40 # Higher (was 50)
+	canvas.add_child(label)
+	
+	label.modulate.a = 0
+	var tw = create_tween()
+	tw.tween_property(label, "modulate:a", 1.0, 1.0)
 
 func _start_sitting_loop():
 	# print("[OyunYoneticisi] Starting Sitting Animation Loop...")
@@ -291,8 +312,6 @@ func start_current_turn_logic():
 		else:
 			if current_turn == GameTurn.ENEMY:
 				_process_enemy_move_only()
-
-var phase_number: int = 1
 
 func restart_new_match():
 	is_game_active = false
@@ -644,18 +663,18 @@ func _process(delta):
 	if phase_number == 7 and not _all_news_removed:
 		_check_news_status()
 
+var _cached_news_node: Node = null
+
 func _check_news_status():
-	var news_node = get_tree().root.find_child("News", true, false)
-	if not news_node: return
+	if not _cached_news_node:
+		_cached_news_node = get_tree().root.find_child("News", true, false)
+		if not _cached_news_node:
+			_cached_news_node = get_tree().current_scene.find_child("News", true, false)
+			
+	if not _cached_news_node: return
 	
-	# Check if any child is still attached to the door (not in falling_papers list)
-	# Actually, since camera_3d reparents them or handles them, we check if they are still children of News node
-	var count = 0
-	for child in news_node.get_children():
-		# If it has a parent and that parent is still 'News', it's not 'torn off' yet
-		# In this setup, once grabbed, camera_3d manages it.
-		# Let's assume being a child of 'News' means it's on the door.
-		count += 1
+	var count = _cached_news_node.get_child_count()
+	# print("[OyunYoneticisi] Newspaper count: ", count)
 	
 	if count == 0 and not _all_news_removed:
 		_all_news_removed = true

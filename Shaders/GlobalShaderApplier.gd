@@ -83,7 +83,8 @@ func _is_excluded(node: Node) -> bool:
 	while p and p != get_tree().root:
 		var lname = p.name.to_lower()
 		if lname == "fabric1" or lname == "altar" or lname == "ashtray" or "whetstone" in lname \
-		or "vent" in lname or "kapi" in lname or "door" in lname or "kapı" in lname:
+		or "vent" in lname or "kapi" in lname or "door" in lname or "kapı" in lname \
+		or "hand" in lname or "chain" in lname:
 			result = true
 			break
 		p = p.get_parent()
@@ -117,13 +118,19 @@ func _is_chess_piece(node: Node) -> bool:
 	return false
 
 func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
-	# 0. Check for "render on top" override
+	# 0. Check for "render on top" override (via meta or specific demo names)
 	var render_on_top = false
 	var p = mesh
 	while p:
 		if p.has_meta("render_on_top") and p.get_meta("render_on_top") == true:
 			render_on_top = true
 			break
+		
+		var lname = p.name.to_lower()
+		if lname == "hand":
+			render_on_top = true
+			break
+			
 		p = p.get_parent()
 
 	# Skip only if we already have the correct shader AND correct priority
