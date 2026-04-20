@@ -16,22 +16,10 @@ var settings = {
 
 func _ready():
 	load_settings()
-	# Update: Global Custom Cursor setup
-	_setup_custom_cursor.call_deferred()
 	# We use call_deferred to ensure the window and other nodes are ready before applying
 	apply_all_settings.call_deferred()
 
-func _setup_custom_cursor():
-	var cursor_path = "res://Assets/cursor/Cursor.png"
-	if FileAccess.file_exists(cursor_path):
-		var img = load(cursor_path).get_image()
-		# Original is 360x360, we need it much smaller for a standard cursor
-		img.resize(24, 24, Image.INTERPOLATE_LANCZOS)
-		var tex = ImageTexture.create_from_image(img)
-		# Set globally for the app
-		Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW, Vector2(1,1))
-		Input.set_custom_mouse_cursor(tex, Input.CURSOR_IBEAM, Vector2(1,1))
-		Input.set_custom_mouse_cursor(tex, Input.CURSOR_POINTING_HAND, Vector2(1,1))
+
 
 func load_settings():
 	var err = config.load(SETTINGS_FILE)
@@ -63,16 +51,15 @@ func apply_resolution():
 	get_viewport().scaling_3d_scale = scale_3d
 	
 	if settings.fullscreen:
-		# Use DisplayServer for most reliable "True Fullscreen" (Exclusive)
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
+		# Standard FULLSCREEN (3) triggers native Mac Spaces better than EXCLUSIVE
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true)
 	else:
-		# First return to windowed mode
+		# Return to windowed mode
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-		
-		# Set size explicitly
 		DisplayServer.window_set_size(target_res)
 		
-		# Center window on current monitor
+		# Center window
 		var screen = DisplayServer.window_get_current_screen()
 		var screen_rect = DisplayServer.screen_get_usable_rect(screen)
 		var window_size = DisplayServer.window_get_size()

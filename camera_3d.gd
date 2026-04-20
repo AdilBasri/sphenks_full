@@ -582,10 +582,11 @@ func _update_crosshair_position():
 		return
 	
 	if current_state == PlayerState.SEATED:
-		# Follow mouse
-		crosshair_ui.global_position = get_viewport().get_mouse_position() - (crosshair_ui.size / 2.0)
+		# Hide in-game crosshair; global CustomCursor handles free mouse
+		crosshair_ui.visible = false
 	else:
-		# Center screen
+		# Show in-game crosshair at center for FPS style
+		crosshair_ui.visible = true
 		var v_size = get_viewport().get_visible_rect().size
 		crosshair_ui.global_position = (v_size / 2.0) - (crosshair_ui.size / 2.0)
 	
