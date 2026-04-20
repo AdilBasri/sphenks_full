@@ -120,17 +120,9 @@ func _start_demo_end_sequence():
 		_instant_black_cut()
 
 func _instant_black_cut():
-	# Create a simple black overlay instantly
-	var canvas = CanvasLayer.new()
-	canvas.layer = 100
-	get_tree().root.add_child(canvas)
-	
-	var rect = ColorRect.new()
-	rect.color = Color.BLACK
-	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	canvas.add_child(rect)
-	
-	print("DEMO END - FINAL CUT")
+	# Transition to Cinematic Credits Screen
+	get_tree().change_scene_to_file("res://EndCredits.tscn")
+	print("DEMO END - TRANSITIONING TO CREDITS")
 
 func toggle_door():
 	# Legacy method if needed, but we use interact() now

@@ -1449,21 +1449,12 @@ func trigger_loss():
 	
 	await tw.finished
 	
-	# Notify UI (will be created in root by OyunYoneticisi or here)
-	var ui = get_node_or_null("/root/GameOverUI")
+	# Wait a moment for dramatic effect
+	await get_tree().create_timer(1.0).timeout
 	
-	# Board cleanup
-	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
-	if manager: manager.cleanup_board()
-	
-	else:
-		# Fallback: create it if it doesn't exist
-		var script = load("res://GameOverUI.gd")
-		if script:
-			var new_ui = script.new()
-			new_ui.name = "GameOverUI"
-			get_tree().root.add_child(new_ui)
-			new_ui.show_game_over()
+	# Transition to Cinematic Credits Screen
+	get_tree().change_scene_to_file("res://EndCredits.tscn")
+
 
 func _transition_to_upgrade_view():
 	enter_upgrade_selection_view()

@@ -1,0 +1,111 @@
+[gd_scene load_steps=5 format=3 uid="uid://dp6h1m2n3n4n"]
+
+[ext_resource type="Script" path="res://EndCredits.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://bg4jwctahrmxn" path="res://Assets/teamhusk.png" id="2_th"]
+[ext_resource type="Texture2D" uid="uid://x8t774vxgglh" path="res://Assets/interred.png" id="3_int"]
+[ext_resource type="Texture2D" uid="uid://b66afu136wlub" path="res://Assets/whistlist.png" id="4_wl"]
+
+[sub_resource type="Shader" id="Shader_hypnotic"]
+code = "shader_type canvas_item;
+
+void fragment() {
+    vec2 uv = UV * 2.0 - 1.0;
+    uv.x *= 1.77; // Aspect ratio (640/360)
+    
+    float t = TIME * 0.4;
+    float d = length(uv);
+    float angle = atan(uv.y, uv.x);
+    
+    // Complex, multi-layered hypnotic wave patterns
+    float wave1 = sin(d * 12.0 - t * 4.0 + sin(angle * 3.0 + t));
+    float wave2 = cos(d * 18.0 + t * 2.0 - cos(angle * 5.0 - t * 0.5));
+    float wave3 = sin(uv.x * 10.0 + uv.y * 10.0 + t) * 0.5 + 0.5;
+    
+    float final_wave = (wave1 + wave2 + wave3) / 3.0;
+    
+    // Red/Blue palette as requested
+    vec3 color_blue = vec3(0.02, 0.05, 0.25); // Deep Mysterious Blue
+    vec3 color_red = vec3(0.4, 0.02, 0.08);   // Dark Velvet Red
+    
+    vec3 col = mix(color_blue, color_red, final_wave * 0.5 + 0.5);
+    
+    // Noise for texture
+    float noise = fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+    col += noise * 0.02;
+    
+    // Vignette for depth
+    col *= smoothstep(1.8, 0.4, d);
+    
+    COLOR = vec4(col, 1.0);
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_root"]
+shader = SubResource("Shader_hypnotic")
+
+[node name="EndCredits" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_root")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Logos" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TeamHusk" type="TextureRect" parent="Logos"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 300.0
+offset_bottom = 160.0
+texture = ExtResource("2_th")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Interred" type="TextureRect" parent="Logos"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -300.0
+offset_top = 40.0
+offset_right = -40.0
+offset_bottom = 160.0
+grow_horizontal = 0
+texture = ExtResource("3_int")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Whistlist" type="TextureRect" parent="Logos"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -225.0
+offset_top = -180.0
+offset_right = 225.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("4_wl")
+expand_mode = 1
+stretch_mode = 5
