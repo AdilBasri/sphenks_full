@@ -348,7 +348,8 @@ func restart_new_match():
 	print("[OyunYoneticisi] Phase %d hazırlanıyor..." % phase_number)
 	await get_tree().create_timer(0.5).timeout
 	
-	_show_phase_message()
+	if phase_number != 7:
+		_show_phase_message()
 	
 	if phase_number == 7:
 		_on_phase_6_start()
