@@ -1,4 +1,4 @@
-[gd_scene load_steps=72 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=71 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
@@ -13,16 +13,15 @@
 [ext_resource type="PackedScene" uid="uid://dsgmlkoip2udr" path="res://Assets/paint2/smierc_eng/scene.gltf" id="7_k3bkl"]
 [ext_resource type="PackedScene" uid="uid://b5mlgov7d0c4n" path="res://candle1.tscn" id="8_bbdvs"]
 [ext_resource type="PackedScene" uid="uid://c5e7b2v7x8y1" path="res://InspectUI.tscn" id="11_bi1g6"]
-[ext_resource type="PackedScene" uid="uid://d3lxhgiwslk0a" path="res://king_white.tscn" id="11_f3tc8"]
 [ext_resource type="Script" uid="uid://0rccufjia2dw" path="res://grid_generator.gd" id="11_grid"]
 [ext_resource type="Texture2D" uid="uid://dqardmtjbbmbf" path="res://Assets/cursor/Cursor.png" id="11_motcw"]
-[ext_resource type="PackedScene" uid="uid://dxykbh2n17nqv" path="res://hand.tscn" id="14_b67tg"]
+[ext_resource type="PackedScene" path="res://hand.tscn" id="14_b67tg"]
 [ext_resource type="PackedScene" uid="uid://berst0pur28ff" path="res://Assets/chair/scene.gltf" id="14_bbdvs"]
 [ext_resource type="Material" uid="uid://devmr4jwek26h" path="res://Masa_Ahsap.tres" id="14_urdi0"]
 [ext_resource type="PackedScene" uid="uid://bthkggqs1ca4q" path="res://Assets/box/scene.gltf" id="14_w2vvk"]
 [ext_resource type="PackedScene" uid="uid://dxkvsxq0j5mgj" path="res://Assets/glitched_skull/scene.gltf" id="18_aw76i"]
 [ext_resource type="PackedScene" uid="uid://dltn2ue8cb2m6" path="res://Assets/chain/chains_12mb/scene.gltf" id="19_aw76i"]
-[ext_resource type="Script" uid="uid://dsq5ui7ws5gbu" path="res://EnemyHeadLook.gd" id="20_head"]
+[ext_resource type="Script" path="res://EnemyHeadLook.gd" id="20_head"]
 [ext_resource type="PackedScene" uid="uid://dvi6tw2xcavov" path="res://Assets/poster/poster_from_soviet_union/scene.gltf" id="23_k3bkl"]
 [ext_resource type="PackedScene" uid="uid://cd1kd4sf1pnl3" path="res://Assets/poster/soviet_posters/scene.gltf" id="24_21nal"]
 [ext_resource type="PackedScene" uid="uid://ejxn6qum5b3v" path="res://Assets/poster/the_final_storm_prototype_missing_poster/scene.gltf" id="25_0skcs"]
@@ -38,7 +37,7 @@
 [ext_resource type="Animation" uid="uid://dp5eolmpu3nkh" path="res://puke.res" id="36_puke"]
 [ext_resource type="PackedScene" uid="uid://c5n6oyf767usb" path="res://Assets/whetstone/scene.gltf" id="37_0d0sc"]
 [ext_resource type="PackedScene" uid="uid://d0qlgknpqe0aj" path="res://Assets/points/scene.gltf" id="38_4acqy"]
-[ext_resource type="PackedScene" uid="uid://cx6mshw0koy8n" path="res://PauseMenu.tscn" id="39_pause"]
+[ext_resource type="PackedScene" path="res://PauseMenu.tscn" id="39_pause"]
 [ext_resource type="PackedScene" uid="uid://bt8eyq3upovbv" path="res://Assets/newspaper1/scene.gltf" id="41_6tiwl"]
 [ext_resource type="PackedScene" uid="uid://djfu38bbb7pyf" path="res://Assets/drawer/scene.gltf" id="41_131b7"]
 [ext_resource type="PackedScene" uid="uid://dlxje8kejvy3b" path="res://Assets/newspaper2/scene.gltf" id="42_1stwh"]
@@ -435,10 +434,6 @@ transform = Transform3D(0.44068, 0, 0, 0, 0.9397346, -0.34190482, 0, 0.34190482,
 
 [node name="LockS" parent="box/Sketchfab_model/Root/BoiteA" index="2"]
 transform = Transform3D(0.14656, 0, 0, 0, 0.010498764, 0.06660159, 0, -0.0074957297, 0.09328437, -0.00055, -2.02035, 0.05038)
-
-[node name="Node3D" parent="." instance=ExtResource("11_f3tc8")]
-transform = Transform3D(-0.9012579, 0.040870205, 0.43135104, 0.013106489, 0.99765724, -0.06714284, -0.4330846, -0.054859504, -0.8996821, 0.109349936, -0.5071497, -1.5972537)
-visible = false
 
 [node name="candles" parent="." instance=ExtResource("8_bbdvs")]
 transform = Transform3D(0.5819385, 0, 0.14610806, 0, 0.59999996, 0, -0.14610806, 0, 0.5819385, -0.3470999, -0.70473886, -1.7271398)
