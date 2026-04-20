@@ -716,8 +716,8 @@ func _process_chair_interaction():
 
 func _check_proximity_door_interaction():
 	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
-	if not manager or not manager.get("_all_news_removed"):
-		interact_label.visible = false
+	if not manager or not ("_all_news_removed" in manager and manager._all_news_removed):
+		if interact_label: interact_label.visible = false
 		return
 		
 	# Find kapi node manually

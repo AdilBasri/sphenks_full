@@ -72,7 +72,8 @@ func _ready():
 				print("- Sahne genelinde bulunan AP: ", ap.get_path(), " (Animasyonlar: ", ap.get_animation_list(), ")")
 	
 	# --- LOAD GAME DATA ---
-	var save_data = SettingsManager.load_game_data()
+	var sm = get_node_or_null("/root/SettingsManager")
+	var save_data = sm.load_game_data() if sm else {}
 	if not save_data.is_empty():
 		is_tutorial_mode = save_data.get("is_tutorial_mode", true)
 		phase_number = save_data.get("phase_number", 1)
@@ -349,7 +350,8 @@ func restart_new_match():
 	await get_tree().create_timer(0.5).timeout
 	
 	if phase_number != 7:
-		_show_phase_message()
+		if has_method("_show_phase_message"):
+			_show_phase_message()
 	
 	if phase_number == 7:
 		_on_phase_6_start()
