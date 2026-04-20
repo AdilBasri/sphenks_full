@@ -850,11 +850,11 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 	next_turn()
 
 		
-# Taşın materyallerini ayarlama yardımcısı
 func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
+	# Meta verisini güncelle ki GlobalShaderApplier fark etsin (Eğer dinamik değişirse)
+	node.set_meta("render_on_top", x_ray)
+	
 	if node is MeshInstance3D:
-		# Meta verisini güncelle ki GlobalShaderApplier fark etsin (Eğer dinamik değişirse)
-		node.set_meta("render_on_top", x_ray)
 		
 		# Override materyalleri gez
 		for i in range(node.get_surface_override_material_count()):

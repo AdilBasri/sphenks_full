@@ -314,14 +314,14 @@ transform = Transform3D(1, 0, 0, 0, -0.046443958, 0.9989209, 0, -0.9989209, -0.0
 light_color = Color(0.69411767, 0.7254902, 0.5137255, 1)
 
 [node name="CharacterBody3D" type="CharacterBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11820468, -3.558596)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11820468, -3.4805036)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CharacterBody3D"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.7267997, 2.1634905)
 shape = SubResource("CapsuleShape3D_6acwk")
 
 [node name="Camera3D" type="Camera3D" parent="CharacterBody3D"]
-transform = Transform3D(1, 0, 0, 0, 0.95325404, 0.30217025, 0, -0.30217025, 0.95325404, 0, -0.31322035, 2.0847573)
+transform = Transform3D(1, 0, 0, 0, 0.95325404, 0.30217025, 0, -0.30217025, 0.95325404, 0, -0.31322035, 2.0357144)
 fov = 80.0
 script = ExtResource("4_pbwbf")
 
@@ -332,7 +332,7 @@ transform = Transform3D(0.0009979546, 6.0219754e-05, -2.1433632e-05, -5.3363663e
 visible = false
 
 [node name="Camera3D2" type="Camera3D" parent="CharacterBody3D"]
-transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1321964, 1.7357645)
+transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1321964, 1.7109523)
 fov = 80.0
 
 [node name="Masa" type="Node3D" parent="."]

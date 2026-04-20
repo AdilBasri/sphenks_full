@@ -96,19 +96,22 @@ func _is_chess_piece(node: Node) -> bool:
 	if node is SatrancTasi or node.is_in_group("satranc_taslari") or node.has_meta("is_chess_piece"):
 		return true
 		
-	# Traverse up to find if it belongs to a Pawn scene
+	# Traverse up to find if it belongs to a piece scene or has piece metadata
 	var p = node
-	while p:
-		if p is SatrancTasi or p.is_in_group("satranc_taslari"):
+	while p and p != get_tree().root:
+		if p is SatrancTasi or p.is_in_group("satranc_taslari") or p.has_meta("is_chess_piece") or p.has_meta("is_king"):
 			return true
+		
 		var path = p.scene_file_path
-		if path != "" and path.contains("/Pawn/"):
+		if path != "" and (path.contains("/Pawn/") or path.contains("king")):
 			return true
-		# Also check node name for common piece names just in case
+			
 		var lower_name = p.name.to_lower()
-		if "white" in lower_name or "black" in lower_name:
-			if "piyon" in lower_name or "bishop" in lower_name or "horse" in lower_name or "castle" in lower_name or "king" in lower_name or "queen" in lower_name:
-				return true
+		if "piyon" in lower_name or "pawn" in lower_name or "bishop" in lower_name or "horse" in lower_name \
+		or "castle" in lower_name or "king" in lower_name or "queen" in lower_name or "at_" in lower_name \
+		or "kale" in lower_name or "fil" in lower_name:
+			return true
+			
 		p = p.get_parent()
 			
 	return false
@@ -123,13 +126,16 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 			break
 		p = p.get_parent()
 
-	# Skip if we already have a shader, UNLESS we need to switch types
+	# Skip only if we already have the correct shader AND correct priority
 	if mesh.material_override and mesh.material_override is ShaderMaterial:
 		var current_shader = mesh.material_override.shader
-		if render_on_top:
-			if current_shader == BASE_SHADER_NO_DEPTH: return
-		else:
-			if current_shader == BASE_SHADER: return
+		var current_priority = mesh.material_override.render_priority
+		var target_shader = BASE_SHADER_NO_DEPTH if render_on_top else BASE_SHADER
+		var base_priority = 10 if is_piece else 0
+		var target_priority = (100 + base_priority) if render_on_top else base_priority
+		
+		if current_shader == target_shader and current_priority == target_priority:
+			return
 
 	# 1. Extract original material properties
 	var original_material = mesh.get_active_material(0)
@@ -181,7 +187,10 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 	# 4. Create the New Base Material
 	var toon_mat = ShaderMaterial.new()
 	toon_mat.shader = BASE_SHADER_NO_DEPTH if render_on_top else BASE_SHADER
-	toon_mat.render_priority = 100 if render_on_top else 0
+	
+	# Pieces get a slightly higher base priority (10) to ensure they sort correctly against environment
+	var base_priority = 10 if is_piece else 0
+	toon_mat.render_priority = (100 + base_priority) if render_on_top else base_priority
 	
 	toon_mat.set_shader_parameter("albedo_texture", tex)
 	toon_mat.set_shader_parameter("albedo_color", color)
@@ -192,10 +201,10 @@ func _apply_toon_ps1(mesh: MeshInstance3D, is_piece: bool = false):
 	toon_mat.set_shader_parameter("affine_warp", affine)
 	toon_mat.set_shader_parameter("light_intensity", light_int)
 
-	# 5. Create the Outline Material (Next Pass)
+	# 5. Create the New Outline Material
 	var outline_mat = ShaderMaterial.new()
 	outline_mat.shader = OUTLINE_SHADER_NO_DEPTH if render_on_top else OUTLINE_SHADER
-	outline_mat.render_priority = 101 if render_on_top else 0
+	outline_mat.render_priority = toon_mat.render_priority + 1
 	
 	outline_mat.set_shader_parameter("outline_color", Color.BLACK * (0.3 if is_piece else 0.5))
 	outline_mat.set_shader_parameter("outline_width", 0.6 if is_piece else 1.2)

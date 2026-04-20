@@ -1226,11 +1226,11 @@ func _play_puke_sequence():
 	else:
 		print("[Camera3D] ERROR: 'puke' animation not found. List: ", sitting_anim.get_animation_list())
 
-# Taşın materyallerini ayarlama yardımcısı (X-Ray desteği eklendi)
 func set_piece_render_priority(node: Node, priority: int, x_ray: bool = false):
+	# Meta verisini güncelle ki GlobalShaderApplier fark etsin
+	node.set_meta("render_on_top", x_ray)
+	
 	if node is MeshInstance3D:
-		# Meta verisini güncelle ki GlobalShaderApplier fark etsin
-		node.set_meta("render_on_top", x_ray)
 		
 		for i in range(node.get_surface_override_material_count()):
 			var mat = node.get_surface_override_material(i)
