@@ -100,6 +100,43 @@ func _ready():
 	# Setup basement door interaction
 	_setup_basement_door()
 
+func _input(event):
+	if event is InputEventKey and event.pressed:
+		# Ctrl + B: Kill Enemy King (Debug)
+		if event.keycode == KEY_B and event.ctrl_pressed:
+			_debug_kill_enemy_king()
+
+func _debug_kill_enemy_king():
+	if not is_game_active: return
+	
+	var grid = get_tree().root.find_child("OyuncuGrid", true, false)
+	if not grid: return
+	
+	# Find the black king
+	for hucre in grid.hucrelerin_sozlugu.values():
+		if hucre.mevcut_tas and hucre.mevcut_tas.has_meta("is_king"):
+			var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
+			if "black" in path.to_lower():
+				print("[DEBUG] Killing Enemy King via Shortcut!")
+				
+				# Play shatter FX
+				_spawn_shatter_fx(hucre.mevcut_tas.global_position, hucre.mevcut_tas, 1.0, true)
+				
+				# Deselect if necessary
+				if camera and camera.has_method("_clear_selection"):
+					camera._clear_selection()
+				
+				# Remove piece
+				hucre.mevcut_tas.queue_free()
+				hucre.mevcut_tas = null
+				
+				# Trigger win/phase end
+				if is_tutorial_mode and tutorial_manager:
+					tutorial_manager.on_king_died(false)
+				elif camera and camera.has_method("trigger_win"):
+					camera.trigger_win()
+				return
+
 func _start_sitting_loop():
 	# print("[OyunYoneticisi] Starting Sitting Animation Loop...")
 	var sitting_node = get_tree().get_first_node_in_group("sitting_node")
