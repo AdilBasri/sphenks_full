@@ -201,6 +201,9 @@ func _start_sitting_loop():
 		var sitting_anim = sitting_node.find_child("AnimationPlayer", true, false)
 		if sitting_anim:
 			# INJECTION LOGIC: Ensure animations are present
+			# Animation playback REMOVED
+			# if sitting_anim and sitting_anim.has_animation("puke"):
+			# 	sitting_anim.play("puke")
 			if not sitting_anim.has_animation("oturma1") or not sitting_anim.has_animation("puke"):
 				print("[OyunYoneticisi] Injecting missing animations into Sitting AnimationPlayer...")
 				var lib: AnimationLibrary
@@ -250,14 +253,9 @@ func _start_sitting_loop():
 										new_anim.loop_mode = Animation.LOOP_LINEAR
 									lib.add_animation(anim_name, new_anim)
 					
-					# Force correct playback properties and play
-					sitting_anim.root_node = sitting_anim.get_path_to(skel)
-					sitting_anim.active = true
-					sitting_anim.speed_scale = 1.0
-					
-					if sitting_anim.has_animation("oturma1"):
-						sitting_anim.play("oturma1")
-						# print("[OyunYoneticisi] SUCCESS: Sitting loop started with remapped tracks.")
+					# Animation playback REMOVED - Keep skeleton active for head tracking
+					sitting_anim.active = false 
+					# print("[OyunYoneticisi] Boss animations disabled. HeadLook remains active.")
 					
 					# Re-enable head look after a short delay
 					await get_tree().create_timer(1.0).timeout

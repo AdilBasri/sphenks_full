@@ -1248,9 +1248,9 @@ func _play_puke_sequence():
 			var a_puke = load("res://puke.res")
 			if a_puke: lib.add_animation("puke", a_puke)
 	
-	if sitting_anim and sitting_anim.has_animation("puke"):
-# print("[Camera3D] Playing 'puke' animation.")
-		sitting_anim.play("puke")
+	# Animation playback REMOVED
+	# if sitting_anim and sitting_anim.has_animation("puke"):
+	# 	sitting_anim.play("puke")
 		
 		# Create Bone Attachment for neck if it doesn't exist
 		var skel = sitting_node.find_child("Skeleton3D", true, false)
