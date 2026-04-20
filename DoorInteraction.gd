@@ -7,10 +7,11 @@ var target_rotation: Vector3
 var is_escape_ready: bool = false
 
 func _ready():
-	# Store initial rotation
-	original_rotation = get_parent().rotation_degrees
-	# Open door by rotating it inwards/outwards
-	target_rotation = original_rotation + Vector3(0, 85, 0)
+	# Use target_node meta if provided, otherwise fallback to parent
+	var target = get_meta("target_node") if has_meta("target_node") else get_parent()
+	if target:
+		original_rotation = target.rotation_degrees
+		target_rotation = original_rotation + Vector3(0, 85, 0)
 	
 	# print("[DoorLogic] Door initialized at: ", get_parent().get_path())
 
@@ -32,10 +33,11 @@ func interact():
 	if sfx and sfx.has_method("play_place_block"): # Or a door sound if exists
 		sfx.play_place_block()
 	
-	# Rotate Door
-	var tw = get_tree().create_tween()
-	tw.set_parallel(true)
-	tw.tween_property(get_parent(), "rotation_degrees:y", target.y, 2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	# Rotate Target Node
+	var node_to_rotate = get_meta("target_node") if has_meta("target_node") else get_parent()
+	if node_to_rotate:
+		var tw = get_tree().create_tween()
+		tw.tween_property(node_to_rotate, "rotation_degrees:y", target.y, 2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	
 	# Screen Fade Out
 	_trigger_screen_fade()
@@ -54,7 +56,8 @@ func _trigger_screen_fade():
 	mat.set_shader_parameter("progress", 1.0)
 	
 	var tw = get_tree().create_tween()
-	tw.tween_property(mat, "shader_parameter/progress", 0.0, 3.0)
+	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS) # Ensure it runs even if game pauses
+	tw.tween_property(mat, "shader_parameter/progress", 0.0, 1.5)
 	
 	# After fade, maybe show a "To be continued" or just end
 	await tw.finished

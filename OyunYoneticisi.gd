@@ -609,16 +609,28 @@ func _get_enemy_pos() -> Vector3:
 	return Vector3.ZERO
 
 func _setup_basement_door():
-	# Find 'kapi' in the scene
-	var basement = get_tree().root.find_child("Bodrum_Odasi", true, false)
-	if not basement: return
+	# Find 'kapi' in the scene (search globally if needed)
+	var kapi = get_tree().root.find_child("kapi", true, false)
+	if not kapi:
+		var basement = get_tree().root.find_child("Bodrum_Odasi", true, false)
+		if basement:
+			kapi = basement.find_child("kapi", true, false)
 	
-	var kapi = basement.find_child("kapi", true, false)
-	if not kapi: return
+	if not kapi: 
+		# Final fallback
+		var all_nodes = get_tree().root.find_children("*", "Node3D", true, false)
+		for n in all_nodes:
+			if n.name.to_lower() == "kapi":
+				kapi = n
+				break
+	
+	if not kapi: 
+		print("[OyunYoneticisi] ERROR: 'kapi' not found in scene!")
+		return
 	
 	# The user provided a specific path inside the door GLB
 	# Path: door_old_metal/door_2_door old metal_0
-	var door_mesh = kapi.find_child("door_2_door old metal_0", true, false)
+	var door_mesh = kapi.find_child("door_2_door", true, false)
 	
 	if not door_mesh:
 		# Fallback: find any mesh containing 'door' and 'metal'
@@ -629,29 +641,32 @@ func _setup_basement_door():
 				break
 	
 	if door_mesh:
-		# print("[OyunYoneticisi] Setting up basement door: ", door_mesh.name)
+		print("[OyunYoneticisi] Found Basement Door Mesh: ", door_mesh.name)
 		
-		# 1. Create StaticBody3D for raycasting
+		# 1. Create StaticBody3D for raycasting - ATTACH TO KAPI (more stable pivot)
 		var sb = StaticBody3D.new()
 		sb.name = "DoorStaticBody"
-		door_mesh.add_child(sb)
+		kapi.add_child(sb) # Change from door_mesh to kapi
 		sb.set_meta("is_door", true)
+		sb.collision_layer = 1
+		sb.collision_mask = 1
 		
-		# 2. Add CollisionShape3D based on mesh AABB
+		# 2. Add CollisionShape3D (Use a fixed size if AABB is small/weird)
 		var cs = CollisionShape3D.new()
 		var box_shape = BoxShape3D.new()
-		if door_mesh is MeshInstance3D and door_mesh.mesh:
-			box_shape.size = door_mesh.mesh.get_aabb().size
-			cs.position = door_mesh.mesh.get_aabb().get_center()
-		else:
-			box_shape.size = Vector3(0.5, 2.0, 0.05) # Generic door size
+		box_shape.size = Vector3(2.0, 3.0, 1.0) # Even larger block
 		cs.shape = box_shape
 		sb.add_child(cs)
+		# Position it centrally relative to kapi (basement door typically faces +Z or -Z)
+		cs.position = Vector3(0, 1.0, 0) # Center vertically
 		
 		# 3. Attach Logic Script
 		var logic = load("res://DoorInteraction.gd").new()
-		door_mesh.add_child(logic)
-		door_mesh.set_meta("door_logic", logic)
+		logic.set_meta("target_node", door_mesh) # Set BEFORE add_child
+		add_child(logic)
+		sb.set_meta("door_logic", logic)
+		
+		# print("[OyunYoneticisi] Basement door link complete.")
 		
 		# Set as globally accessible for news tracking
 		logic.add_to_group("door_logic")
@@ -660,10 +675,41 @@ var _news_check_timer: Timer = null
 var _all_news_removed: bool = false
 
 func _process(delta):
-	if phase_number == 7 and not _all_news_removed:
-		_check_news_status()
+	# Debug print every 2 seconds
+	if phase_number == 7:
+		if int(Time.get_ticks_msec() / 2000) % 5 == 0:
+			var news_node = get_tree().root.find_child("News", true, false)
+			var c = news_node.get_child_count() if news_node else -1
+			print("[DEBUG] Phase=7, NewsCount=", c, " AllRemoved=", _all_news_removed)
+		
+		if not _all_news_removed:
+			_check_news_status()
 
 var _cached_news_node: Node = null
+var _news_picked_up_count: int = 0
+var _already_picked_up: Dictionary = {}
+
+func notify_news_grabbed(node: Node):
+	if not _already_picked_up.has(node.get_instance_id()):
+		_already_picked_up[node.get_instance_id()] = true
+		_news_picked_up_count += 1
+		print("[OyunYoneticisi] Newspaper PICKUP! Total: ", _news_picked_up_count, "/3")
+		
+		if _news_picked_up_count >= 3:
+			_all_news_removed = true
+			_force_enable_door_escape()
+
+func _force_enable_door_escape():
+	var door_logic = get_tree().get_first_node_in_group("door_logic")
+	if door_logic and door_logic.has_method("enable_escape"):
+		door_logic.enable_escape()
+		print("[OyunYoneticisi] ESCAPE ENABLED SUCCESSFULLY.")
+	else:
+		# Search even harder
+		var nodes = get_tree().get_nodes_in_group("door_logic")
+		if nodes.size() > 0:
+			nodes[0].enable_escape()
+			print("[OyunYoneticisi] ESCAPE ENABLED SUCCESSFULLY (Fallback search).")
 
 func _check_news_status():
 	if not _cached_news_node:
@@ -674,14 +720,10 @@ func _check_news_status():
 	if not _cached_news_node: return
 	
 	var count = _cached_news_node.get_child_count()
-	# print("[OyunYoneticisi] Newspaper count: ", count)
-	
 	if count == 0 and not _all_news_removed:
 		_all_news_removed = true
-		print("[OyunYoneticisi] All newspapers removed from door!")
-		var door_logic = get_tree().get_first_node_in_group("door_logic")
-		if door_logic and door_logic.has_method("enable_escape"):
-			door_logic.enable_escape()
+		print("[OyunYoneticisi] ALL NEWS REMOVED (Child Count Check).")
+		_force_enable_door_escape()
 
 func _ai_place_piece(piece: Node3D, scene_path: String):
 	# Find Grid

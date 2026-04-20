@@ -1,4 +1,4 @@
-[gd_scene load_steps=71 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=67 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" uid="uid://b31cprasupmim" path="res://Assets/Animations/Sitting.fbx" id="1_p6dlx"]
@@ -40,7 +40,6 @@
 [ext_resource type="PackedScene" path="res://PauseMenu.tscn" id="39_pause"]
 [ext_resource type="PackedScene" uid="uid://bt8eyq3upovbv" path="res://Assets/newspaper1/scene.gltf" id="41_6tiwl"]
 [ext_resource type="PackedScene" uid="uid://djfu38bbb7pyf" path="res://Assets/drawer/scene.gltf" id="41_131b7"]
-[ext_resource type="PackedScene" uid="uid://dlxje8kejvy3b" path="res://Assets/newspaper2/scene.gltf" id="42_1stwh"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
 _data = {
@@ -142,15 +141,6 @@ size = Vector3(1, 1, 2.168213)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_usasj"]
 size = Vector3(1, 1, 1.8046875)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_yyko5"]
-size = Vector3(7.3099365, 2.9033203, 6.159607)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_naqmq"]
-size = Vector3(10.696167, 1, 7.4589233)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_xb44a"]
-size = Vector3(8.48584, 2.8009644, 7.2841797)
 
 [node name="GameRoom" type="Node3D"]
 script = ExtResource("1_w2vvk")
@@ -1097,51 +1087,6 @@ transform = Transform3D(1.0000001, -1.7763568e-15, 0, 6.661338e-16, 1.0000001, 0
 transform = Transform3D(0.9999995, 0, 0, 0, 0.9999997, 2.9802322e-08, 0, -2.9802322e-08, 0.9999997, 0, 2.3841858e-07, -0.40234423)
 shape = SubResource("BoxShape3D_usasj")
 
-[node name="new" parent="News" instance=ExtResource("42_1stwh")]
-transform = Transform3D(-0.7197417, 0.04803657, 0.6925781, 0.04803669, 0.99865824, -0.019345265, -0.6925783, 0.019345572, -0.7210834, 2.7660294, -0.07725906, 7.9361935)
-
-[node name="Newspaper01_Newspaper Texture02_0" parent="News/new/Sketchfab_model/47f40639606442f7baedac6b0e6e0d69_fbx/RootNode/Newspaper01" index="0"]
-transform = Transform3D(1.0000001, -3.7252903e-08, 0, 0, 1, 5.9604645e-08, 7.450581e-09, 0, 1.0000001, 9.459557, 37.38385, 48.305847)
-
-[node name="Newspaper02" parent="News/new/Sketchfab_model/47f40639606442f7baedac6b0e6e0d69_fbx/RootNode" index="1"]
-visible = false
-
-[node name="StaticBody3D" type="StaticBody3D" parent="News/new"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="News/new/StaticBody3D"]
-transform = Transform3D(0.9999992, 3.7252903e-09, -6.4392935e-14, -3.72529e-09, 0.9999992, 0, -2.8865799e-15, 7.1054274e-15, 1, -0.111632824, 0.9516678, 1.9308014)
-shape = SubResource("BoxShape3D_yyko5")
-
-[node name="new2" parent="News" instance=ExtResource("42_1stwh")]
-transform = Transform3D(-0.7197417, 0.04803657, 0.6925781, 0.04803669, 0.99865824, -0.019345265, -0.6925783, 0.019345572, -0.7210834, 2.6422462, -0.07380295, -0.71073914)
-
-[node name="Newspaper01_Newspaper Texture02_0" parent="News/new2/Sketchfab_model/47f40639606442f7baedac6b0e6e0d69_fbx/RootNode/Newspaper01" index="0"]
-transform = Transform3D(1.0000001, -3.7252903e-08, 0, 0, 1, 5.9604645e-08, 7.450581e-09, 0, 1.0000001, 9.459557, 37.38385, 48.305847)
-
-[node name="Newspaper02" parent="News/new2/Sketchfab_model/47f40639606442f7baedac6b0e6e0d69_fbx/RootNode" index="1"]
-visible = false
-
-[node name="StaticBody3D" type="StaticBody3D" parent="News/new2"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="News/new2/StaticBody3D"]
-transform = Transform3D(0.9999992, 3.7252903e-09, -2.4424907e-14, -3.72529e-09, 0.9999992, 0, -2.8865799e-15, 7.1054274e-15, 1, 0.20745564, -3.8146973e-06, 2.4735413)
-shape = SubResource("BoxShape3D_naqmq")
-
-[node name="new3" parent="News" instance=ExtResource("42_1stwh")]
-transform = Transform3D(1, 0, 0, 9.313226e-10, 1, 1.8626451e-09, 0, -9.313226e-10, 1, 0, 0, 0)
-
-[node name="Newspaper01_Newspaper Texture02_0" parent="News/new3/Sketchfab_model/47f40639606442f7baedac6b0e6e0d69_fbx/RootNode/Newspaper01" index="0"]
-transform = Transform3D(1.0000001, -3.7252903e-08, 0, 0, 1, 5.9604645e-08, 7.450581e-09, 0, 1.0000001, 9.459557, 37.38385, 48.305847)
-
-[node name="Newspaper02" parent="News/new3/Sketchfab_model/47f40639606442f7baedac6b0e6e0d69_fbx/RootNode" index="1"]
-visible = false
-
-[node name="StaticBody3D" type="StaticBody3D" parent="News/new3"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="News/new3/StaticBody3D"]
-transform = Transform3D(1, 0, 0, 9.313226e-10, 1, 3.9860606e-07, 0, -9.313226e-10, 1, -0.28493118, 0.9004936, 0.90574074)
-shape = SubResource("BoxShape3D_xb44a")
-
 [editable path="Sitting"]
 [editable path="Masa/box"]
 [editable path="Posters/paint2"]
@@ -1159,6 +1104,3 @@ shape = SubResource("BoxShape3D_xb44a")
 [editable path="News/newspaper"]
 [editable path="News/newspaper2"]
 [editable path="News/newspaper3"]
-[editable path="News/new"]
-[editable path="News/new2"]
-[editable path="News/new3"]

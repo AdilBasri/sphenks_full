@@ -351,10 +351,27 @@ func _input(event):
 						if target:
 							if target.has_meta("is_chair"):
 								sit_down()
-							elif target.has_meta("is_door"):
-								var logic = target.get_parent().get_meta("door_logic")
+							elif target.has_meta("is_door") or "kapi" in target.name.to_lower() or "door" in target.name.to_lower():
+								var logic = target.get_meta("door_logic") if target.has_meta("door_logic") else null
+								if not logic:
+									# Fallback search
+									logic = get_tree().get_first_node_in_group("door_logic")
+								
 								if logic and logic.has_method("interact"):
-									logic.interact()
+									var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+									if manager and manager.get("_all_news_removed"):
+										logic.interact()
+							else:
+								# PROXIMITY FALLBACK for Interaction
+								var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+								if manager and manager.get("_all_news_removed"):
+									var kapi = get_tree().root.find_child("kapi", true, false)
+									if kapi and global_position.distance_to(kapi.global_position) < 3.0:
+										var logic = get_tree().get_first_node_in_group("door_logic")
+										if logic and logic.has_method("enable_escape"): 
+											logic.enable_escape() # Just in case
+										if logic and logic.has_method("interact"):
+											logic.interact()
 					else:
 						_hand_reach()
 				else: # Released
@@ -657,18 +674,55 @@ func _process_chair_interaction():
 	
 	if result:
 		var collider = result.collider
+		# DEBUG: Only print hits for certain objects or periodically
+		if int(Time.get_ticks_msec() / 1000) % 2 == 0:
+			print("[CAMERA DEBUG] Raycast hitting: ", collider.name, " (Paths:", collider.get_path(), ")")
+		
 		if collider.has_meta("is_chair"):
 			interact_label.text = "Sit Down (E)"
 			interact_label.visible = true
-		elif collider.has_meta("is_door"):
-			var logic = collider.get_parent().get_meta("door_logic")
-			if logic and logic.is_escape_ready and not logic.is_open:
-				interact_label.text = "Open Door (E)"
-				interact_label.visible = true
-			else:
-				interact_label.visible = false
+		elif collider.has_meta("is_door") or "kapi" in collider.name.to_lower() or "door" in collider.name.to_lower():
+			var logic = collider.get_meta("door_logic") if collider.has_meta("door_logic") else null
+			_update_door_prompt(logic)
 		else:
-			interact_label.visible = false
+			# ULTIMATE FALLBACK: Distance-based check if raycast misses but we are looking at the door
+			_check_proximity_door_interaction()
+	else:
+		_check_proximity_door_interaction()
+
+func _check_proximity_door_interaction():
+	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+	if not manager or not manager.get("_all_news_removed"):
+		interact_label.visible = false
+		return
+		
+	# Find kapi node manually
+	var kapi = get_tree().root.find_child("kapi", true, false)
+	if kapi:
+		var dist = global_position.distance_to(kapi.global_position)
+		if dist < 3.0:
+			# check if looking at it (dot product)
+			var forward = -global_transform.basis.z
+			var to_door = (kapi.global_position - global_position).normalized()
+			if forward.dot(to_door) > 0.7: # Facing general direction
+				interact_label.text = "Open the door (e)"
+				interact_label.visible = true
+				return
+	
+	interact_label.visible = false
+
+func _update_door_prompt(logic):
+	var escape_ready = false
+	if logic:
+		escape_ready = logic.is_escape_ready
+	else:
+		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+		if manager and manager.get("_all_news_removed"):
+			escape_ready = true
+	
+	if escape_ready:
+		interact_label.text = "Open the door (e)"
+		interact_label.visible = true
 	else:
 		interact_label.visible = false
 
@@ -1682,8 +1736,13 @@ func _try_grab_paper():
 			
 			if paper:
 				held_object = paper
+				
+				# Notify game manager if this is part of the escape papers
+				var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+				if manager and manager.has_method("notify_news_grabbed"):
+					manager.notify_news_grabbed(held_object)
+				
 				# Reparent to root so it's no longer inside its original container (e.g. News)
-				# This helps the game manager track when all papers are removed
 				var old_transform = held_object.global_transform
 				held_object.get_parent().remove_child(held_object)
 				get_tree().root.add_child(held_object)
