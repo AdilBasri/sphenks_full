@@ -394,8 +394,8 @@ func _input(event):
 				elif event.keycode == KEY_S and is_zoomed_view:
 					_transition_to_seated_view()
 					
-			if event.keycode == KEY_C and current_state == PlayerState.SEATED and not is_transitioning_view:
-				stand_up()
+			# if event.keycode == KEY_C and current_state == PlayerState.SEATED and not is_transitioning_view:
+			# 	stand_up()
 
 	# Rotation
 	if event is InputEventMouseMotion:
