@@ -446,6 +446,10 @@ func next_turn():
 		round_number += 1
 	
 	start_current_turn_logic()
+	
+	# Clear boss target when turn ends or changes
+	_set_boss_head_target(null)
+	
 	is_processing_turn = false
 
 func start_chest_sequence():
@@ -573,6 +577,8 @@ func _spawn_random_black_piece_for_enemy():
 	if camera and camera.has_method("start_tracking"):
 		camera.start_tracking(piece)
 	
+	_set_boss_head_target(piece) # Boss tracks his new piece
+	
 	piece.global_position = box.global_position
 	piece.scale = Vector3(0.1, 0.1, 0.1)
 	
@@ -605,6 +611,16 @@ func _spawn_random_black_piece_for_enemy():
 	# AI Think and Place
 	await get_tree().create_timer(randf_range(1.5, 3.0)).timeout
 	_ai_place_piece(piece, random_path)
+
+func _set_boss_head_target(node: Node3D):
+	var boss_node = get_tree().get_first_node_in_group("sitting_node")
+	if not boss_node:
+		boss_node = get_node_or_null("Sitting")
+	
+	if boss_node:
+		var skel = boss_node.find_child("Skeleton3D", true, false)
+		if skel and "target_override" in skel:
+			skel.target_override = node
 
 func _get_enemy_pos() -> Vector3:
 	var sitting = get_tree().get_first_node_in_group("sitting_node")
@@ -875,6 +891,8 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 	# Focus camera on the moving piece
 	if camera and camera.has_method("start_tracking"):
 		camera.start_tracking(piece)
+		
+	_set_boss_head_target(piece) # Boss tracks his moving piece
 	
 	# Jump animation (Shared logic with camera_3d but automated)
 	var tw = create_tween()

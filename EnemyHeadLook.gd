@@ -9,6 +9,7 @@ var bone_idx: int = -1
 var camera: Camera3D
 var initial_rotation: Quaternion
 var current_rotation: Quaternion
+var target_override: Node3D = null # If set, boss will look at this instead of cursor
 
 func _ready():
 	bone_idx = find_bone(bone_name)
@@ -27,10 +28,16 @@ func _process(delta):
 	if not camera or bone_idx == -1: return
 	
 	# Get target position in local skeleton space
-	var target_global = camera.get("cursor_3d_pos")
-	if target_global == null: 
-		# If cursor pose is not available, look at player camera
-		target_global = camera.global_position
+	var target_global: Vector3 = global_position # Default fallback
+	
+	if is_instance_valid(target_override):
+		target_global = target_override.global_position
+	elif is_instance_valid(camera):
+		var raw_cursor_pos = camera.get("cursor_3d_pos")
+		if raw_cursor_pos != null:
+			target_global = raw_cursor_pos
+		else:
+			target_global = camera.global_position
 	
 	var target_local = to_local(target_global)
 	
