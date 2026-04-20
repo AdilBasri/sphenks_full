@@ -101,7 +101,11 @@ func show_piece(piece_scene_path: String, from_chest: bool = false, node: Node3D
 		viewport_piece = scene.instantiate()
 		viewport_piece_anchor.add_child(viewport_piece)
 		viewport_piece_anchor.position = Vector3(1.3, -0.507, -1.597)
-		viewport_piece_anchor.rotation_degrees = Vector3(3.8, 154.4, 0.8)
+		var base_rot = Vector3(3.8, 154.4, 0.8)
+		# Rakip taşları (black) 180 derece dönmüş olarak başlasın ki yüzleri bize dönsün
+		if piece_scene_path.to_lower().contains("black"):
+			base_rot.y += 180.0
+		viewport_piece_anchor.rotation_degrees = base_rot
 		viewport_piece.position = Vector3.ZERO
 		viewport_piece.scale = Vector3(15.0, 15.0, 15.0)
 		_apply_ps1_to_viewport_piece(viewport_piece)
