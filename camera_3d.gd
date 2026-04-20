@@ -697,6 +697,12 @@ func _process_chair_interaction():
 		var collider = result.collider
 		
 		if collider.has_meta("is_chair"):
+			# Disable sitting back down during escape phase (Phase 7)
+			var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+			if manager and manager.phase_number == 7:
+				interact_label.visible = false
+				return
+				
 			interact_label.text = "Sit Down (E)"
 			interact_label.visible = true
 		elif collider.has_meta("is_door") or "kapi" in collider.name.to_lower() or "door" in collider.name.to_lower():
