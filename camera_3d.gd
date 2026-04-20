@@ -162,30 +162,39 @@ func setup_chair_interaction():
 	if control:
 		interact_label = Label.new()
 		interact_label.name = "InteractLabel"
-		interact_label.text = "Sit Down (E)"
 		interact_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		interact_label.set_anchors_preset(Control.PRESET_CENTER)
-		interact_label.position.y += 100
+		interact_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+		interact_label.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		interact_label.position.y -= 150 # Move up from bottom
+		
+		var settings = LabelSettings.new()
+		settings.font = load("res://Assets/fonts/Golden Horse.ttf")
+		settings.font_size = 42
+		settings.font_color = Color.WHITE
+		settings.outline_size = 10
+		settings.outline_color = Color.BLACK
+		interact_label.label_settings = settings
+		
 		interact_label.visible = false
 		control.add_child(interact_label)
 		
 		# Create Piece Info Label
 		piece_name_label = Label.new()
 		piece_name_label.name = "PieceInfoLabel"
-		var settings = LabelSettings.new()
-		settings.font = load("res://Assets/fonts/Golden Horse.ttf")
-		settings.font_size = 28
-		settings.font_color = Color.WHITE
-		settings.outline_size = 8
-		settings.outline_color = Color.BLACK
-		piece_name_label.label_settings = settings
+		var piece_settings = LabelSettings.new()
+		piece_settings.font = load("res://Assets/fonts/Golden Horse.ttf")
+		piece_settings.font_size = 28
+		piece_settings.font_color = Color.WHITE
+		piece_settings.outline_size = 8
+		piece_settings.outline_color = Color.BLACK
+		piece_name_label.label_settings = piece_settings
 		piece_name_label.visible = false
 		control.add_child(piece_name_label)
 		
 		# Eldeki taş ismi için aynı stilde ikinci etiket
 		held_piece_name_label = Label.new()
 		held_piece_name_label.name = "HeldPieceLabel"
-		held_piece_name_label.label_settings = settings # Aynı stil
+		held_piece_name_label.label_settings = piece_settings # Aynı stil
 		held_piece_name_label.visible = false
 		control.add_child(held_piece_name_label)
 
@@ -705,7 +714,7 @@ func _check_proximity_door_interaction():
 			var forward = -global_transform.basis.z
 			var to_door = (kapi.global_position - global_position).normalized()
 			if forward.dot(to_door) > 0.7: # Facing general direction
-				interact_label.text = "Open the door (e)"
+				interact_label.text = "Open the door (E)"
 				interact_label.visible = true
 				return
 	
@@ -721,7 +730,7 @@ func _update_door_prompt(logic):
 			escape_ready = true
 	
 	if escape_ready:
-		interact_label.text = "Open the door (e)"
+		interact_label.text = "Open the door (E)"
 		interact_label.visible = true
 	else:
 		interact_label.visible = false
@@ -1775,6 +1784,11 @@ func _release_paper():
 	
 	var paper = held_object
 	held_object = null
+	
+	# Notify manager that a paper was released (for escape trigger)
+	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+	if manager and manager.has_method("notify_news_released"):
+		manager.notify_news_released(paper)
 	
 	# Centralized Physics handling: Add to falling list
 	# Ensure no physics components already exist (clean fallback)

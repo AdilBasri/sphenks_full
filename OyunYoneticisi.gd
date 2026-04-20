@@ -686,18 +686,21 @@ func _process(delta):
 			_check_news_status()
 
 var _cached_news_node: Node = null
-var _news_picked_up_count: int = 0
-var _already_picked_up: Dictionary = {}
+var _news_touched_count: int = 0
+var _already_touched: Dictionary = {}
 
 func notify_news_grabbed(node: Node):
-	if not _already_picked_up.has(node.get_instance_id()):
-		_already_picked_up[node.get_instance_id()] = true
-		_news_picked_up_count += 1
-		print("[OyunYoneticisi] Newspaper PICKUP! Total: ", _news_picked_up_count, "/3")
-		
-		if _news_picked_up_count >= 3:
-			_all_news_removed = true
-			_force_enable_door_escape()
+	if not _already_touched.has(node.get_instance_id()):
+		_already_touched[node.get_instance_id()] = true
+		_news_touched_count += 1
+		print("[OyunYoneticisi] Newspaper TOUCHED! Total: ", _news_touched_count, "/3")
+
+func notify_news_released(node: Node):
+	# Trigger escape readiness only when the 3rd paper is DROPPED
+	if _news_touched_count >= 3 and not _all_news_removed:
+		_all_news_removed = true
+		print("[OyunYoneticisi] RELEASE TRIGGER: Escape ready!")
+		_force_enable_door_escape()
 
 func _force_enable_door_escape():
 	var door_logic = get_tree().get_first_node_in_group("door_logic")

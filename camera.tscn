@@ -1092,7 +1092,7 @@ transform = Transform3D(0.9999995, 0, 0, 0, 0.9999997, 2.9802322e-08, 0, -2.9802
 shape = SubResource("BoxShape3D_usasj")
 
 [node name="DemoSonuCam" type="Camera3D" parent="."]
-transform = Transform3D(-1, 5.1014794e-08, -7.0994595e-08, 0, 0.81208354, 0.5835412, 8.742278e-08, 0.5835412, -0.81208354, 0, -0.1671457, -2.5333838)
+transform = Transform3D(-1, 5.0143647e-08, -7.161255e-08, 0, 0.81915206, 0.57357645, 8.742278e-08, 0.57357645, -0.81915206, 0, -0.29, -2.533)
 
 [editable path="Sitting"]
 [editable path="Masa/box"]
