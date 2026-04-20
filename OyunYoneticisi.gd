@@ -111,6 +111,7 @@ func _input(event):
 		if event.keycode == KEY_N and event.ctrl_pressed:
 			_debug_skip_to_phase_6()
 
+
 func _debug_kill_enemy_king():
 	if not is_game_active: return
 	
@@ -169,12 +170,13 @@ func _show_escape_instruction(text: String):
 	get_tree().root.add_child(canvas)
 	
 	var label = Label.new()
+	label.name = "EscapeInstruction"
 	label.text = text
 	var settings = LabelSettings.new()
 	settings.font = load("res://Assets/fonts/dominica.ttf")
-	settings.font_size = 32 # Smaller
-	settings.font_color = Color.WHITE
-	settings.outline_size = 8
+	settings.font_size = 28 # Slightly smaller
+	settings.font_color = Color(0.9, 0.85, 0.7) # Cream/Yellowish
+	settings.outline_size = 6
 	settings.outline_color = Color.BLACK
 	label.label_settings = settings
 	
@@ -677,11 +679,6 @@ var _all_news_removed: bool = false
 func _process(delta):
 	# Debug print every 2 seconds
 	if phase_number == 7:
-		if int(Time.get_ticks_msec() / 2000) % 5 == 0:
-			var news_node = get_tree().root.find_child("News", true, false)
-			var c = news_node.get_child_count() if news_node else -1
-			print("[DEBUG] Phase=7, NewsCount=", c, " AllRemoved=", _all_news_removed)
-		
 		if not _all_news_removed:
 			_check_news_status()
 

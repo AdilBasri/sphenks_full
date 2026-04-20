@@ -28,10 +28,8 @@ func interact():
 	is_open = true
 	var target = target_rotation
 	
-	# Play opening sound
-	var sfx = get_tree().root.find_child("SesYoneticisi", true, false)
-	if sfx and sfx.has_method("play_place_block"): # Or a door sound if exists
-		sfx.play_place_block()
+	# Hide mouse cursor for cinematic
+	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	
 	# Rotate Target Node
 	var node_to_rotate = get_meta("target_node") if has_meta("target_node") else get_parent()
@@ -45,6 +43,10 @@ func interact():
 		# We can call with empty string or just hide the label if we know its path
 		var label = get_tree().root.find_child("EscapeInstruction", true, false)
 		if label: label.visible = false
+		
+		# Also hide interaction prompt (Open the door E)
+		var int_label = get_tree().root.find_child("InteractLabel", true, false)
+		if int_label: int_label.visible = false
 	
 	# Screen Fade Out
 	_trigger_screen_fade()
@@ -78,6 +80,10 @@ func _start_demo_end_sequence():
 	var poster = get_tree().root.find_child("poster8", true, false)
 	if poster: 
 		poster.visible = true
+		# Ensure poster is drawn on top of EVERYTHING (including pieces/king)
+		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+		if manager and manager.has_method("set_piece_render_priority"):
+			manager.set_piece_render_priority(poster, 127, true)
 	
 	var final_cam = get_tree().root.find_child("DemoSonuCam", true, false)
 	if final_cam:
@@ -91,16 +97,16 @@ func _start_demo_end_sequence():
 	
 	# 4. Start Camera Animation
 	if final_cam:
-		# Rotation sequence (1.5s + 1.5s = 3.0s total)
+		# Rotation sequence (Slower: 2.5s each)
 		var rot_tw = get_tree().create_tween()
-		rot_tw.tween_property(final_cam, "rotation_degrees", Vector3(-63, -170, 0), 1.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		rot_tw.tween_property(final_cam, "rotation_degrees", Vector3(-35.7, -180, 0), 1.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		rot_tw.tween_property(final_cam, "rotation_degrees", Vector3(-63, -170, 0), 2.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		rot_tw.tween_property(final_cam, "rotation_degrees", Vector3(-35.7, -180, 0), 2.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		
 		await rot_tw.finished
 		
 		# Parallel 2: FOV zoom (slowly after rotation is done)
 		var fov_tw = get_tree().create_tween()
-		fov_tw.tween_property(final_cam, "fov", 25.0, 4.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		fov_tw.tween_property(final_cam, "fov", 25.0, 5.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		
 		await fov_tw.finished
 		

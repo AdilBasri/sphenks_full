@@ -165,15 +165,15 @@ func setup_chair_interaction():
 		interact_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		interact_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 		interact_label.grow_vertical = Control.GROW_DIRECTION_BEGIN
-		interact_label.position.y -= 150 # Move up from bottom
-		
 		var settings = LabelSettings.new()
 		settings.font = load("res://Assets/fonts/Golden Horse.ttf")
-		settings.font_size = 42
+		settings.font_size = 18
 		settings.font_color = Color.WHITE
-		settings.outline_size = 10
+		settings.outline_size = 6
 		settings.outline_color = Color.BLACK
 		interact_label.label_settings = settings
+		
+		interact_label.position.y -= 50 # Move up slightly from bottom
 		
 		interact_label.visible = false
 		control.add_child(interact_label)
@@ -677,15 +677,18 @@ func _process_movement(_delta):
 	body.move_and_slide()
 
 func _process_chair_interaction():
+	# If escape is in progress or door is open, stop all interaction processing
+	var active_door = get_tree().get_first_node_in_group("door_logic")
+	if (active_door and active_door.is_open) or is_locked:
+		if interact_label: interact_label.visible = false
+		return
+
 	if not interact_label: return
 	
 	var result = _raycast_from_mouse()
 	
 	if result:
 		var collider = result.collider
-		# DEBUG: Only print hits for certain objects or periodically
-		if int(Time.get_ticks_msec() / 1000) % 2 == 0:
-			print("[CAMERA DEBUG] Raycast hitting: ", collider.name, " (Paths:", collider.get_path(), ")")
 		
 		if collider.has_meta("is_chair"):
 			interact_label.text = "Sit Down (E)"
