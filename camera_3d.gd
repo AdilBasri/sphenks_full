@@ -346,7 +346,15 @@ func _input(event):
 			if current_state == PlayerState.STANDING:
 				if event.pressed:
 					if interact_label.visible:
-						sit_down()
+						# Check what we are interacting with
+						var target = _get_interaction_target()
+						if target:
+							if target.has_meta("is_chair"):
+								sit_down()
+							elif target.has_meta("is_door"):
+								var logic = target.get_parent().get_meta("door_logic")
+								if logic and logic.has_method("interact"):
+									logic.interact()
 					else:
 						_hand_reach()
 				else: # Released
@@ -645,21 +653,29 @@ func _process_movement(_delta):
 func _process_chair_interaction():
 	if not interact_label: return
 	
-	var space_state = get_world_3d().direct_space_state
-	var v_size = get_viewport().get_visible_rect().size
-	var crosshair_pos = get_viewport().get_mouse_position() if current_state == PlayerState.SEATED else v_size / 2.0
-	var origin = project_ray_origin(crosshair_pos)
-	var end = origin + project_ray_normal(crosshair_pos) * 2.0 # Close range interaction
-	var query = PhysicsRayQueryParameters3D.create(origin, end)
-	var result = space_state.intersect_ray(query)
+	var result = _raycast_from_mouse()
 	
 	if result:
-		if result.collider.has_meta("is_chair"):
+		var collider = result.collider
+		if collider.has_meta("is_chair"):
+			interact_label.text = "Sit Down (E)"
 			interact_label.visible = true
+		elif collider.has_meta("is_door"):
+			var logic = collider.get_parent().get_meta("door_logic")
+			if logic and logic.is_escape_ready and not logic.is_open:
+				interact_label.text = "Open Door (E)"
+				interact_label.visible = true
+			else:
+				interact_label.visible = false
 		else:
 			interact_label.visible = false
 	else:
 		interact_label.visible = false
+
+func _get_interaction_target() -> Node:
+	var result = _raycast_from_mouse()
+	if result: return result.collider
+	return null
 
 func interact_with_crosshair():
 	if is_receiving_piece: return
@@ -1093,6 +1109,12 @@ func trigger_win():
 	
 	# Check for Puke Condition (Every 3 sections)
 	var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
+	
+	if manager and manager.phase_number == 6:
+		# Final victory, skip upgrade and trigger escape sequence transition
+		manager.restart_new_match()
+		return
+
 	if manager and manager.phase_number % 3 == 0:
 		await _play_puke_sequence()
 	
@@ -1660,6 +1682,13 @@ func _try_grab_paper():
 			
 			if paper:
 				held_object = paper
+				# Reparent to root so it's no longer inside its original container (e.g. News)
+				# This helps the game manager track when all papers are removed
+				var old_transform = held_object.global_transform
+				held_object.get_parent().remove_child(held_object)
+				get_tree().root.add_child(held_object)
+				held_object.global_transform = old_transform
+				
 				# Disable collisions while holding to prevent pushing the player
 				_set_node_collision_active(held_object, false)
 				# Store offset transform relative to camera

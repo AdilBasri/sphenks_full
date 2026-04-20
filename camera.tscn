@@ -990,26 +990,23 @@ transform = Transform3D(0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0,
 transform = Transform3D(0.9999999, 0, 0, 0, 0.99998736, 0, 0, 0, 0.9999999, 0.2747202, 0.33343387, 0)
 shape = SubResource("BoxShape3D_4acqy")
 
-[node name="Screens" type="Node3D" parent="."]
-transform = Transform3D(0.32000002, 0, 0, 0, 0.31999996, 0, 0, 0, 0.32000002, -2.1315694, 0.050811082, 2.5760672)
+[node name="screen1" parent="." instance=ExtResource("38_4acqy")]
+transform = Transform3D(0.32000005, 0, 0, 0, 0.31999996, 0, 0, 0, 0.32000005, -2.1315694, 0.050811082, 2.5760672)
 
-[node name="screen1" parent="Screens" instance=ExtResource("38_4acqy")]
-transform = Transform3D(1.0000001, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 0, 0)
-
-[node name="Screen_Material_002_0" parent="Screens/screen1/Sketchfab_model/PSX style tv_fbx/RootNode/Screen" index="0"]
+[node name="Screen_Material_002_0" parent="screen1/Sketchfab_model/PSX style tv_fbx/RootNode/Screen" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_tk8v5")
 
-[node name="screen2" parent="Screens" instance=ExtResource("38_4acqy")]
-transform = Transform3D(1.0000001, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 0, -1.8414712)
+[node name="Label3D2" type="Label3D" parent="screen1"]
+transform = Transform3D(0.99999994, 0, 0, 0, 0.9999999, -1.1102231e-14, 0, -1.1102228e-14, 0.99999994, 0.25126648, 0.058872655, 0)
 
-[node name="Screen_Material_002_0" parent="Screens/screen2/Sketchfab_model/PSX style tv_fbx/RootNode/Screen" index="0"]
+[node name="screen2" parent="." instance=ExtResource("38_4acqy")]
+transform = Transform3D(0.32000005, 0, 0, 0, 0.31999996, 0, 0, 0, 0.32000005, -2.1315694, 0.050811082, 1.9867964)
+
+[node name="Screen_Material_002_0" parent="screen2/Sketchfab_model/PSX style tv_fbx/RootNode/Screen" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_tk8v5")
 
-[node name="Label3D" type="Label3D" parent="Screens/screen2"]
+[node name="Label3D" type="Label3D" parent="screen2"]
 transform = Transform3D(1.0000001, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.25126648, 0.058872685, 0)
-
-[node name="Label3D2" type="Label3D" parent="Screens/screen2"]
-transform = Transform3D(1.0000001, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.25126648, 0.058872685, 1.8414712)
 
 [node name="PauseMenu" parent="." instance=ExtResource("39_pause")]
 
@@ -1156,8 +1153,8 @@ shape = SubResource("BoxShape3D_xb44a")
 [editable path="Posters/poster7"]
 [editable path="alchol1"]
 [editable path="alchol1/alchol2"]
-[editable path="Screens/screen1"]
-[editable path="Screens/screen2"]
+[editable path="screen1"]
+[editable path="screen2"]
 [editable path="Drawer/drawer"]
 [editable path="News/newspaper"]
 [editable path="News/newspaper2"]

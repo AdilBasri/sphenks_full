@@ -13,12 +13,22 @@ var evil_laugh_sound = preload("res://Assets/Sounds/evil_laugh.mp3")
 var puke_sound = preload("res://Assets/Sounds/puke.mp3")
 
 var walking_player: AudioStreamPlayer
-var bgm_player: AudioStreamPlayer
+var bgm_player_active: AudioStreamPlayer
+var bgm_player_fade: AudioStreamPlayer
+var bgm_loop_timer: Timer
+var crossfade_duration: float = 4.0
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	setup_audio_buses()
 	setup_walking_player()
+	
+	# Setup Loop Timer
+	bgm_loop_timer = Timer.new()
+	bgm_loop_timer.one_shot = true
+	add_child(bgm_loop_timer)
+	bgm_loop_timer.timeout.connect(_start_loop_crossfade)
+	
 	setup_bgm_player()
 
 func setup_audio_buses():
@@ -80,24 +90,86 @@ func setup_walking_player():
 	walking_player.bus = "Footsteps"
 	add_child(walking_player)
 
-func setup_bgm_player():
+func setup_bgm_player(use_intro: bool = false):
+	if bgm_loop is AudioStreamMP3:
+		bgm_loop.loop = false
 	if bgm_intro is AudioStreamMP3:
 		bgm_intro.loop = false
+		
+	if not bgm_player_active:
+		bgm_player_active = AudioStreamPlayer.new()
+		bgm_player_active.bus = "Music"
+		add_child(bgm_player_active)
 	
-	bgm_player = AudioStreamPlayer.new()
-	bgm_player.stream = bgm_intro
-	bgm_player.bus = "Music"
-	add_child(bgm_player)
+	if not bgm_player_fade:
+		bgm_player_fade = AudioStreamPlayer.new()
+		bgm_player_fade.bus = "Music"
+		add_child(bgm_player_fade)
 	
-	bgm_player.finished.connect(_on_bgm_finished)
-	bgm_player.play()
+	# Stop and reset state
+	bgm_loop_timer.stop()
+	bgm_player_active.stop()
+	bgm_player_fade.stop()
+	bgm_player_active.volume_db = 0
+	bgm_player_fade.volume_db = -80
+	
+	# Clear old connections
+	if bgm_player_active.finished.is_connected(_on_bgm_finished):
+		bgm_player_active.finished.disconnect(_on_bgm_finished)
+	
+	if use_intro:
+		bgm_player_active.stream = bgm_intro
+		bgm_player_active.finished.connect(_on_bgm_finished)
+		bgm_player_active.play()
+	else:
+		bgm_player_active.stream = bgm_loop
+		bgm_player_active.play()
+		_schedule_loop_crossfade()
 
 func _on_bgm_finished():
-	if bgm_player.stream == bgm_intro:
-		if bgm_loop is AudioStreamMP3:
-			bgm_loop.loop = true
-		bgm_player.stream = bgm_loop
-		bgm_player.play()
+	if bgm_player_active.stream == bgm_intro:
+		# Disconnect to avoid loops and transition
+		if bgm_player_active.finished.is_connected(_on_bgm_finished):
+			bgm_player_active.finished.disconnect(_on_bgm_finished)
+			
+		bgm_player_active.stream = bgm_loop
+		bgm_player_active.volume_db = 0
+		bgm_player_active.play()
+		_schedule_loop_crossfade()
+
+func _schedule_loop_crossfade():
+	var length = bgm_loop.get_length()
+	var wait_time = length - crossfade_duration
+	
+	if wait_time > 0:
+		bgm_loop_timer.start(wait_time)
+	else:
+		# Fallback if track is too short for crossfade
+		bgm_player_active.finished.connect(func(): 
+			bgm_player_active.play()
+		, CONNECT_ONE_SHOT)
+
+func _start_loop_crossfade():
+	# Start the second player from the beginning of the loop
+	bgm_player_fade.stream = bgm_loop
+	bgm_player_fade.volume_db = -80
+	bgm_player_fade.play()
+	
+	var tween = create_tween()
+	tween.set_parallel(true)
+	# Fade out current, fade in next
+	tween.tween_property(bgm_player_active, "volume_db", -80, crossfade_duration)
+	tween.tween_property(bgm_player_fade, "volume_db", 0, crossfade_duration)
+	
+	tween.finished.connect(func():
+		bgm_player_active.stop()
+		# Swap references so 'active' is always the one playing the main volume
+		var temp = bgm_player_active
+		bgm_player_active = bgm_player_fade
+		bgm_player_fade = temp
+		# Repeat the cycle
+		_schedule_loop_crossfade()
+	)
 
 # Global SFX player helper
 func play_sfx(stream: AudioStream, pitch_scale: float = 1.0, volume_db: float = 0.0) -> AudioStreamPlayer:

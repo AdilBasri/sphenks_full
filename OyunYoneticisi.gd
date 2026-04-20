@@ -78,6 +78,9 @@ func _ready():
 		if save_data.has("piece_stats"):
 			PieceDatabase.set_raw_stats(save_data["piece_stats"])
 		print("[OyunYoneticisi] Game Loaded. Phase: ", phase_number, " Tutorial Mode: ", is_tutorial_mode)
+	
+	# BGM Setup: Tutorial mode needs intro, otherwise direct loop
+	SesYoneticisi.setup_bgm_player(is_tutorial_mode)
 
 	# Setup Tutorial Manager ONLY if needed
 	if is_tutorial_mode:
@@ -105,6 +108,9 @@ func _input(event):
 		# Ctrl + B: Kill Enemy King (Debug)
 		if event.keycode == KEY_B and event.ctrl_pressed:
 			_debug_kill_enemy_king()
+		# Ctrl + N: Jump to Phase 6 (Debug)
+		if event.keycode == KEY_N and event.ctrl_pressed:
+			_debug_skip_to_phase_6()
 
 func _debug_kill_enemy_king():
 	if not is_game_active: return
@@ -136,6 +142,29 @@ func _debug_kill_enemy_king():
 				elif camera and camera.has_method("trigger_win"):
 					camera.trigger_win()
 				return
+
+func _debug_skip_to_phase_6():
+	print("[DEBUG] Skipping to Phase 7 (Escape Route Testing)...")
+	is_game_active = false
+	cleanup_board()
+	phase_number = 7
+	
+	# Skip directly to escape start
+	_on_phase_6_start()
+
+func _on_phase_6_start():
+	print("[OyunYoneticisi] Entering Escape Sequence (Final Phase). Triggering Stand Up.")
+	if camera and camera.has_method("stand_up"):
+		camera.stand_up()
+	
+	# Show message
+	await get_tree().create_timer(1.5).timeout
+	var dialogue_ui = get_node_or_null("/root/DialogueUI")
+	if dialogue_ui:
+		dialogue_ui.display_text("Find the escape route.")
+	
+	# Ensure door interaction is setup
+	_setup_basement_door()
 
 func _start_sitting_loop():
 	# print("[OyunYoneticisi] Starting Sitting Animation Loop...")
@@ -299,6 +328,10 @@ func restart_new_match():
 	await get_tree().create_timer(0.5).timeout
 	
 	_show_phase_message()
+	
+	if phase_number == 7:
+		_on_phase_6_start()
+		return # End of typical round loop, start escape
 	
 	# Save progress at the start of a new Phase
 	save_game()
@@ -600,6 +633,36 @@ func _setup_basement_door():
 		var logic = load("res://DoorInteraction.gd").new()
 		door_mesh.add_child(logic)
 		door_mesh.set_meta("door_logic", logic)
+		
+		# Set as globally accessible for news tracking
+		logic.add_to_group("door_logic")
+
+var _news_check_timer: Timer = null
+var _all_news_removed: bool = false
+
+func _process(delta):
+	if phase_number == 7 and not _all_news_removed:
+		_check_news_status()
+
+func _check_news_status():
+	var news_node = get_tree().root.find_child("News", true, false)
+	if not news_node: return
+	
+	# Check if any child is still attached to the door (not in falling_papers list)
+	# Actually, since camera_3d reparents them or handles them, we check if they are still children of News node
+	var count = 0
+	for child in news_node.get_children():
+		# If it has a parent and that parent is still 'News', it's not 'torn off' yet
+		# In this setup, once grabbed, camera_3d manages it.
+		# Let's assume being a child of 'News' means it's on the door.
+		count += 1
+	
+	if count == 0 and not _all_news_removed:
+		_all_news_removed = true
+		print("[OyunYoneticisi] All newspapers removed from door!")
+		var door_logic = get_tree().get_first_node_in_group("door_logic")
+		if door_logic and door_logic.has_method("enable_escape"):
+			door_logic.enable_escape()
 
 func _ai_place_piece(piece: Node3D, scene_path: String):
 	# Find Grid
