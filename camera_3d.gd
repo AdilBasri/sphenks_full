@@ -66,7 +66,7 @@ var is_receiving_piece: bool = false
 # Stylish Interaction Params
 var base_fov: float = 80.0
 var focus_fov: float = 72.0
-var interaction_jitter_intensity: float = 0.003 # Subtle jitter for held pieces
+var interaction_jitter_intensity: float = 0.0015 # Reduced by half as requested
 var jitter_speed: float = 55.0 # Speed of the vibration
 var jitter_time: float = 0.0
 
@@ -76,6 +76,12 @@ var is_tracking_enemy: bool = false
 var tracking_fov: float = 75.0
 var tracking_lerp_speed: float = 2.5 # Slower, calmer rotation
 var fov_tween: Tween = null
+
+# Nervous/Scared Proc-Anim Variables
+var nervous_time: float = 0.0
+var nerv_pos_offset: Vector3 = Vector3.ZERO
+var nerv_rot_offset: Vector3 = Vector3.ZERO
+var nervous_strength: float = 1.0
 
 signal piece_placed
 signal piece_moved
@@ -216,8 +222,8 @@ func stand_up():
 	
 	# 2. Aşama: Doğrulma ve Geri Çekilme (Push Back & Rise)
 	tw.set_parallel(true)
-	# Gövdeyi geriye çekelim
-	var target_body_pos = get_parent().global_position + get_parent().global_transform.basis.z * 1.0
+	# Reduce push distance to 0.4m to prevent clipping through back walls
+	var target_body_pos = get_parent().global_position + get_parent().global_transform.basis.z * 0.4
 	tw.tween_property(get_parent(), "global_position", target_body_pos, 0.8).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 	# Kamerayı yukarı kaldırıp düzeltelim
 	tw.tween_property(self, "position:y", seated_position.y + 0.3, 0.8).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
@@ -407,9 +413,13 @@ func _input(event):
 		if current_state != PlayerState.SEATED:
 			yaw -= event.relative.x * sensitivity
 			pitch -= event.relative.y * sensitivity
-			
-			# Limits (RELATIVE TO START ANGLES)
 			pitch = clamp(pitch, -85, 85)
+			
+		# Reactive Nervous Strength: High-gain spike on motion
+		var motion_mag = event.relative.length()
+		# Add a deadzone (threshold) so micro-noise doesn't trigger shaking
+		if motion_mag > 1.5:
+			nervous_strength = clamp(nervous_strength + motion_mag * 0.012, 0.0, 4.0)
 
 func _is_any_ui_active() -> bool:
 	var inspect_ui = get_node_or_null("/root/InspectUI")
@@ -438,14 +448,58 @@ func _process(_delta):
 	else:
 		shake_offset = shake_offset.lerp(Vector3.ZERO, _delta * 10.0)
 
-	# Breathing effect
-	var t = Time.get_ticks_msec() * 0.001
-	var breath_yaw = sin(t * 1.1) * 0.12
-	var breath_pitch = cos(t * 0.8) * 0.15
-	var breath_roll = sin(t * 0.5) * 0.08
+	# Nervous/Scared Proc-Anim Calculation
+	var base_anxiety = 0.0 # Absolute zero when resting as requested
+	
+	# If walking, sustain higher anxiety level
+	if current_state == PlayerState.STANDING and head_bob_time > 0.1: # head_bob_time increments during movement
+		base_anxiety = 0.35
+	
+	# Smoothly decay towards base anxiety (Slower decay for more visible recovery)
+	nervous_strength = lerp(nervous_strength, base_anxiety, _delta * 3.0)
+	
+	nervous_time += _delta
+	var nt = nervous_time * 1.2 # Slightly faster time scale for more frantic feel
+
+	
+	# 1. Slow, irregular 'Anxious Breathing' (Upscaled for visibility)
+	var breath_cycle = sin(nt * 0.7) * 0.5 + cos(nt * 1.8) * 0.2
+	var sway_pos = Vector3(
+		sin(nt * 0.5) * 0.04,  # Left/Right Sway
+		breath_cycle * 0.03,   # Vertical Breath
+		cos(nt * 0.6) * 0.12   # Forward/Back Hesitation (Forward zoom-like push as user 'forces' look)
+	)
+	var sway_rot = Vector3(
+		cos(nt * 0.8) * 1.2, # Pitch
+		sin(nt * 0.6) * 1.5, # Yaw
+		sin(nt * 1.1) * 0.8  # Roll
+	)
+	
+	# 2. High-frequency 'Tremor' (Upscaled jitter)
+	var jitter_freq = 28.0
+	var nervous_jit_pos = Vector3(
+		sin(nt * jitter_freq * 1.1) * 0.004,
+		cos(nt * jitter_freq * 0.9) * 0.004,
+		sin(nt * jitter_freq * 1.4) * 0.004
+	)
+	var nervous_jit_rot = Vector3(
+		randf_range(-0.15, 0.15),
+		randf_range(-0.15, 0.15),
+		randf_range(-0.15, 0.15)
+	)
+	
+	nerv_pos_offset = (sway_pos + nervous_jit_pos) * nervous_strength
+	nerv_rot_offset = (sway_rot + nervous_jit_rot) * nervous_strength
+	
+	# Apply Translation globally (regardless of state)
+	# Capture original position before applying sway to avoid accumulation
+	# Wait, we need to apply to the BASE position
+	# Instead, we add to the final calculation below
+	
 	
 	# Hand Jitter & Animation Apply
 	if hand_node and current_state == PlayerState.STANDING:
+		var t = Time.get_ticks_msec() * 0.001
 		var jitter_time = t * 10.0 # Even lower frequency for stability
 		var jitter_pos = Vector3(
 			randf_range(-0.0003, 0.0003),
@@ -467,8 +521,8 @@ func _process(_delta):
 	if current_state == PlayerState.SEATED:
 		if not is_transitioning_view:
 			if is_zoomed_view and camera2:
-				position = camera2.position
-				rotation_degrees = camera2.rotation_degrees
+				position = camera2.position + nerv_pos_offset
+				rotation_degrees = camera2.rotation_degrees + nerv_rot_offset
 			elif is_tracking_enemy and tracking_target and is_instance_valid(tracking_target):
 				# Smoothly look at the tracking target (enemy piece)
 				var target_pos = tracking_target.global_position
@@ -477,17 +531,21 @@ func _process(_delta):
 				var current_quat = Quaternion(basis)
 				var final_quat = current_quat.slerp(target_quat, _delta * tracking_lerp_speed)
 				basis = Basis(final_quat)
-				# FOV is now handled by Tween in start/stop tracking
+				
+				# Apply nervous tremor to basis
+				var trem_basis = Basis.from_euler(nerv_rot_offset * PI / 180.0)
+				basis = basis * trem_basis
+				position = seated_position + nerv_pos_offset
 			else:
-				rotation_degrees.y = seated_rotation.y
-				rotation_degrees.x = seated_rotation.x
-				rotation_degrees.z = seated_rotation.z
-				# Reset FOV is now handled by Tween or board transitions
-				pass
+				position = seated_position + nerv_pos_offset
+				rotation_degrees = seated_rotation + nerv_rot_offset
 	elif not is_upgrade_mode:
-		rotation_degrees.y = yaw + breath_yaw + (shake_offset.x * 2.0)
-		rotation_degrees.x = pitch + breath_pitch + (shake_offset.y * 2.0)
-		rotation_degrees.z = breath_roll + (shake_offset.z * 5.0)
+		rotation_degrees.y = yaw + nerv_rot_offset.y + (shake_offset.x * 2.0)
+		rotation_degrees.x = pitch + nerv_rot_offset.x + (shake_offset.y * 2.0)
+		rotation_degrees.z = nerv_rot_offset.z + (shake_offset.z * 5.0)
+		# Position refinement: We skip positional nerv_pos_offset in standing mode 
+		# as movement/head-bob already manages the camera's local height.
+	
 	
 	if current_state == PlayerState.STANDING:
 		_process_chair_interaction()
