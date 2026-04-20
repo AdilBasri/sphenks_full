@@ -575,6 +575,12 @@ func _update_held_piece_label():
 func _update_crosshair_position():
 	if not crosshair_ui: return
 	
+	# Guard: Hide crosshair if escape is active
+	var logic = get_tree().get_first_node_in_group("door_logic")
+	if (logic and logic.is_open):
+		crosshair_ui.visible = false
+		return
+	
 	if current_state == PlayerState.SEATED:
 		# Follow mouse
 		crosshair_ui.global_position = get_viewport().get_mouse_position() - (crosshair_ui.size / 2.0)
@@ -1495,7 +1501,9 @@ func return_to_table():
 	
 	# İmleci geri getir
 	if crosshair_ui:
-		crosshair_ui.visible = true
+		var logic = get_tree().get_first_node_in_group("door_logic")
+		if not (logic and logic.is_open):
+			crosshair_ui.visible = true
 	
 	# Oyun Yöneticisini bul ve taze maçı başlat
 	# Eğer tutorial hâlâ aktifse, restart_new_match yerine TutorialManager devralır

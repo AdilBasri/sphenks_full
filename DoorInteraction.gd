@@ -28,8 +28,13 @@ func interact():
 	is_open = true
 	var target = target_rotation
 	
-	# Hide mouse cursor for cinematic
-	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+	# Hide mouse cursor for cinematic (CAPTURED is most reliable for hiding)
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.set_custom_mouse_cursor(null) # Explicitly clear custom cursor
+	
+	# Also hide Crosshair if it exists
+	var crosshair = get_tree().root.find_child("Crosshair", true, false)
+	if crosshair: crosshair.visible = false
 	
 	# Rotate Target Node
 	var node_to_rotate = get_meta("target_node") if has_meta("target_node") else get_parent()
