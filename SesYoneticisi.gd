@@ -12,6 +12,7 @@ var angry_sound = preload("res://Assets/Sounds/angry.mp3")
 var evil_laugh_sound = preload("res://Assets/Sounds/evil_laugh.mp3")
 var puke_sound = preload("res://Assets/Sounds/puke.mp3")
 var menu_music = preload("res://Assets/Ashen Hallway.mp3")
+var click_sound = preload("res://Assets/click.mp3")
 
 var walking_player: AudioStreamPlayer
 var bgm_player_active: AudioStreamPlayer
@@ -256,6 +257,9 @@ func play_fall():
 
 func play_hover():
 	play_sfx(handing_item_sound, 1.2, -10.0) # High pitch, subtle
+
+func play_click():
+	play_sfx(click_sound, randf_range(0.95, 1.05)) # Slight pitch randomization for variety
 
 func play_angry(pos: Vector3):
 	var asp = play_spatial_sfx(angry_sound, pos)

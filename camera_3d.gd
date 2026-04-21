@@ -56,6 +56,8 @@ var held_piece_scene: String = ""
 var last_highlighted_cell: GridHucre = null
 var selected_hucre: GridHucre = null
 var move_highlights: Array[GridHucre] = []
+var hovered_board_piece: Node3D = null
+var hovered_hucre: GridHucre = null
 var is_placing_piece: bool = false
 var is_upgrade_mode: bool = false
 var upgrade_manager: Node = null
@@ -584,10 +586,35 @@ func _update_piece_hover_info():
 		# Check drafted/upgrade pieces (look at collider directly first, then parent)
 		elif collider.has_meta("is_upgrade_choice"):
 			target_piece = collider
+			# Cleanup board hover if we hit an upgrade piece
+			_cleanup_board_hover()
 		elif collider.get_parent() and collider.get_parent().has_meta("is_upgrade_choice"):
 			target_piece = collider.get_parent()
+			# Cleanup board hover if we hit an upgrade piece
+			_cleanup_board_hover()
 			
 		if target_piece:
+			# BOARD PIECE HOVER LOGIC
+			if collider.has_meta("is_grid_cell"):
+				var hucre = collider.get_meta("grid_cell_node")
+				var can_hover = true
+				if hucre and hucre.mevcut_tas:
+					var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
+					if hucre.mevcut_tas.has_meta("is_king") or hucre.mevcut_tas.has_meta("is_immovable") or "black" in path.to_lower():
+						can_hover = false
+				
+				if can_hover and hucre != hovered_hucre:
+					# Clean up old hover
+					_cleanup_board_hover()
+					
+					hovered_hucre = hucre
+					hovered_board_piece = target_piece
+					
+					if hovered_hucre:
+						SesYoneticisi.play_click() # "Tık" sound (New Assets/click.mp3)
+				elif not can_hover:
+					_cleanup_board_hover()
+			
 			# Check piece parent for upgrade choices to ensure we find 'scene_path'
 			var actual_piece = target_piece
 			if not actual_piece.has_meta("scene_path") and actual_piece.get_parent() and actual_piece.get_parent().has_meta("scene_path"):
@@ -605,12 +632,25 @@ func _update_piece_hover_info():
 	# If no piece is hit OR piece has no path, hide the label
 	piece_name_label.visible = false
 	
+	# BOARD HOVER CLEANUP
+	_cleanup_board_hover()
+	
 	# Update cursor_3d_pos even if not over a piece (for head tracking)
 	if result:
 		cursor_3d_pos = result.position
 	else:
 		# Fallback: Look at player's general area
 		cursor_3d_pos = global_position
+
+func _cleanup_board_hover():
+	if hovered_hucre:
+		if is_instance_valid(hovered_hucre.mevcut_tas) and hovered_hucre != selected_hucre:
+			# Smoothly descend instead of teleporting
+			var piece = hovered_hucre.mevcut_tas
+			var tw = create_tween()
+			tw.tween_property(piece, "position:y", 0.0, 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		hovered_hucre = null
+		hovered_board_piece = null
 
 func _update_held_piece_label():
 	if not held_piece_name_label: return
@@ -1105,12 +1145,16 @@ func _process_piece_vibration(_delta):
 		held_piece.position = Vector3(0.75, -0.05, -0.8) + jitter_offset
 		
 	# Mode 2: Selected piece (on board)
-	if selected_hucre and selected_hucre.mevcut_tas:
-		#selected_hucre.mevcut_tas.position = Vector3.ZERO + jitter_offset
-		# Since grid pieces are reparented, we might want to jitter their local transform
-		# But careful not to break the 'lift' interpolation
+	if selected_hucre and is_instance_valid(selected_hucre.mevcut_tas):
 		var lift_y = 0.1 # This matches the value in _select_hucre
 		selected_hucre.mevcut_tas.position = Vector3(0, lift_y, 0) + jitter_offset
+		
+	# Mode 3: Hovered piece (on board, not selected)
+	if hovered_hucre and hovered_hucre != selected_hucre and is_instance_valid(hovered_hucre.mevcut_tas):
+		var hover_lift_y = 0.02 # Lower lift for better feel
+		# Jitter is more subtle for hover
+		var hover_jitter = jitter_offset * 0.4
+		hovered_hucre.mevcut_tas.position = Vector3(0, hover_lift_y, 0) + hover_jitter
 
 func pick_up_piece(piece: Node3D, scene_path: String):
 	held_piece = piece

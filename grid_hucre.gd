@@ -65,6 +65,9 @@ func refresh_visuals() -> void:
 	surface_mesh.position.y = 0.001 
 	add_child(surface_mesh)
 	
+	surface_mesh.position.y = 0.001 
+	add_child(surface_mesh)
+	
 	# Raycast için çarpışma kutusu
 	var static_body = StaticBody3D.new()
 	static_body.set_meta("is_grid_cell", true)

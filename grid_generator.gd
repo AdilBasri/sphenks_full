@@ -163,8 +163,8 @@ func _spawn_king_to_cell(s: int, r: int, scene_path: String) -> void:
 	var scene = load(scene_path)
 	if scene:
 		var king = scene.instantiate()
-		add_child(king) # Add to grid so it stays in the world
-		king.global_position = hucre.global_position
+		hucre.add_child(king) # Add to the cell, not the grid root
+		king.position = Vector3.ZERO # Center locally on the cell
 		king.set_meta("is_immovable", true)
 		king.set_meta("is_king", true)
 		king.set_meta("scene_path", scene_path)

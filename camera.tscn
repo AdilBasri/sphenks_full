@@ -37,7 +37,7 @@
 [ext_resource type="Animation" uid="uid://dp5eolmpu3nkh" path="res://puke.res" id="36_puke"]
 [ext_resource type="PackedScene" uid="uid://c5n6oyf767usb" path="res://Assets/whetstone/scene.gltf" id="37_0d0sc"]
 [ext_resource type="PackedScene" uid="uid://d0qlgknpqe0aj" path="res://Assets/points/scene.gltf" id="38_4acqy"]
-[ext_resource type="PackedScene" path="res://PauseMenu.tscn" id="39_pause"]
+[ext_resource type="PackedScene" uid="uid://cx6mshw0koy8n" path="res://PauseMenu.tscn" id="39_pause"]
 [ext_resource type="PackedScene" uid="uid://bt8eyq3upovbv" path="res://Assets/newspaper1/scene.gltf" id="41_6tiwl"]
 [ext_resource type="PackedScene" uid="uid://djfu38bbb7pyf" path="res://Assets/drawer/scene.gltf" id="41_131b7"]
 
@@ -287,16 +287,6 @@ light_energy = 5.0
 
 [node name="OmniLight3D6" type="OmniLight3D" parent="WorldEnvironment"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.653758, 0.27785105, -2.8270643)
-light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
-light_energy = 5.0
-
-[node name="OmniLight3D9" type="OmniLight3D" parent="WorldEnvironment"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2957531, -0.6153969, -1.9419051)
-light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
-light_energy = 5.0
-
-[node name="OmniLight3D10" type="OmniLight3D" parent="WorldEnvironment"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34398264, -0.6153969, -1.9175128)
 light_color = Color(0.47058824, 0.56078434, 0.12941177, 1)
 light_energy = 5.0
 
