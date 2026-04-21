@@ -1,6 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://c7vok6m6k6u8j"]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="Shader" uid="uid://bk7ok6m6k6u8j" path="res://Shaders/pixel_fade.gdshader" id="1_shader"]
+[ext_resource type="Shader" path="res://Shaders/pixel_fade.gdshader" id="1_shader"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_fade"]
 shader = ExtResource("1_shader")

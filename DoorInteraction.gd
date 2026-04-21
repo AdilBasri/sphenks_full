@@ -5,6 +5,7 @@ var original_rotation: Vector3
 var target_rotation: Vector3
 
 var is_escape_ready: bool = false
+var fade_instance: Node = null
 
 func _ready():
 	# Use target_node meta if provided, otherwise fallback to parent
@@ -58,12 +59,15 @@ func interact():
 
 func _trigger_screen_fade():
 	var fade_scene = load("res://PixelFade.tscn")
-	if not fade_scene: return
+	if not fade_scene:
+		print("[DoorLogic] ERROR: PixelFade.tscn not found!")
+		_start_demo_end_sequence() # Fallback
+		return
 	
-	var fade = fade_scene.instantiate()
-	get_tree().root.add_child(fade)
+	fade_instance = fade_scene.instantiate()
+	get_tree().root.add_child(fade_instance)
 	
-	var rect = fade.get_node("ColorRect")
+	var rect = fade_instance.get_node("ColorRect")
 	var mat = rect.material as ShaderMaterial
 	
 	# Shader logic: progress=1.0 is visible, progress=0.0 is black
@@ -73,32 +77,41 @@ func _trigger_screen_fade():
 	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS) # Ensure it runs even if game pauses
 	tw.tween_property(mat, "shader_parameter/progress", 0.0, 1.5)
 	
-	# After fade, wait 2 seconds then start final sequence
+	# After fade, wait 1 second then start final sequence
 	await tw.finished
 	_start_demo_end_sequence()
 
 func _start_demo_end_sequence():
+	print("[DoorLogic] Starting Demo End Sequence...")
 	# 1. Wait 2 seconds in total darkness
 	await get_tree().create_timer(2.0).timeout
 	
 	# 2. Setup final elements
-	var poster = get_tree().root.find_child("poster8", true, false)
+	var scene_root = get_tree().current_scene
+	var poster = scene_root.find_child("poster8", true, false)
 	if poster: 
 		poster.visible = true
-		# Ensure poster is drawn on top of EVERYTHING (including pieces/king)
+		print("[DoorLogic] Poster8 found and enabled.")
+		# Ensure poster is drawn on top of EVERYTHING
 		var manager = get_tree().get_first_node_in_group("oyun_yoneticisi")
 		if manager and manager.has_method("set_piece_render_priority"):
 			manager.set_piece_render_priority(poster, 127, true)
+	else:
+		print("[DoorLogic] WARNING: Poster8 not found.")
 	
-	var final_cam = get_tree().root.find_child("DemoSonuCam", true, false)
+	var final_cam = scene_root.find_child("DemoSonuCam", true, false)
 	if final_cam:
+		print("[DoorLogic] DemoSonuCam found and activated.")
 		final_cam.rotation_degrees = Vector3(0, -116, 0)
-		final_cam.current = true
+		final_cam.make_current()
+	else:
+		print("[DoorLogic] WARNING: DemoSonuCam not found. Direct cut to black/credits will follow.")
 	
 	# 3. Remove the old fade overlay to show the new camera view
-	var old_fade = get_tree().root.find_child("PixelFade", true, false)
-	if old_fade:
-		old_fade.queue_free()
+	if is_instance_valid(fade_instance):
+		fade_instance.queue_free()
+		fade_instance = null
+		print("[DoorLogic] PixelFade removed.")
 	
 	# 4. Start Camera Animation
 	if final_cam:
@@ -115,9 +128,11 @@ func _start_demo_end_sequence():
 		
 		await fov_tw.finished
 		
-		# 5. Wait 4 more seconds then Cut to Black
+		# Wait 4 more seconds to admire the poster
 		await get_tree().create_timer(4.0).timeout
-		_instant_black_cut()
+	
+	# 5. Final Cut to Credits
+	_instant_black_cut()
 
 func _instant_black_cut():
 	# Transition to Cinematic Credits Screen

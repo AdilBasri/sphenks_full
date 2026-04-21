@@ -1,9 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://dp6h1m2n3n4n"]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://EndCredits.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://bg4jwctahrmxn" path="res://Assets/teamhusk.png" id="2_th"]
-[ext_resource type="Texture2D" uid="uid://x8t774vxgglh" path="res://Assets/interred.png" id="3_int"]
-[ext_resource type="Texture2D" uid="uid://b66afu136wlub" path="res://Assets/whistlist.png" id="4_wl"]
+[ext_resource type="Texture2D" path="res://Assets/teamhusk.png" id="2_th"]
+[ext_resource type="Texture2D" path="res://Assets/interred.png" id="3_int"]
+[ext_resource type="Texture2D" path="res://Assets/whistlist.png" id="4_wl"]
 
 [sub_resource type="Shader" id="Shader_hypnotic"]
 code = "shader_type canvas_item;
