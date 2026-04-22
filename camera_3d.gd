@@ -278,7 +278,9 @@ func sit_down():
 # print("PLAYER SEATED")
 
 func restore_mouse_mode():
-	if current_state == PlayerState.SEATED:
+	if is_upgrade_mode:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif current_state == PlayerState.SEATED:
 		Input.mouse_mode = Input.MOUSE_MODE_CONFINED_HIDDEN
 	else:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
