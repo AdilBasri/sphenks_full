@@ -58,6 +58,7 @@ var selected_hucre: GridHucre = null
 var move_highlights: Array[GridHucre] = []
 var hovered_board_piece: Node3D = null
 var hovered_hucre: GridHucre = null
+var hovered_skull_eye: Node3D = null
 var is_placing_piece: bool = false
 var is_upgrade_mode: bool = false
 var upgrade_manager: Node = null

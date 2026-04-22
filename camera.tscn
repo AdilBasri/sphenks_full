@@ -1,4 +1,4 @@
-[gd_scene load_steps=69 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=70 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" path="res://Sitting.tscn" id="1_p6dlx"]
@@ -66,6 +66,9 @@ volumetric_fog_albedo = Color(0.21230483, 0.21230483, 0.21230483, 1)
 height = 1.9550781
 
 [sub_resource type="SphereMesh" id="SphereMesh_i5qnm"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_skull"]
+size = Vector3(1.2623291, 1.3868408, 1.7418518)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_smoke"]
 transparency = 1
@@ -371,7 +374,14 @@ transform = Transform3D(1, 0, 0, 0, 0.9999998, 0, 0, 0, 1, -0.0068883896, 0, -0.
 mesh = SubResource("SphereMesh_i5qnm")
 script = ExtResource("43_skulleye")
 eye_color_enemy = Color(0.3589883, 3.008172e-07, 9.62615e-08, 1)
-eye_emission_intensity = 0.3
+hover_intensity_multiplier = 4.0
+
+[node name="SkullCollision" type="StaticBody3D" parent="Masa/skullp"]
+metadata/is_skull = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Masa/skullp/SkullCollision"]
+transform = Transform3D(0.8651251, 0, 0.50155604, 0, 0.99998623, 0, -0.50155604, 0, 0.8651251, -0.021184921, -0.056577206, 0.022283554)
+shape = SubResource("BoxShape3D_skull")
 
 [node name="ashtray" parent="Masa" instance=ExtResource("34_tth1g")]
 transform = Transform3D(-0.88941634, 0, -0.45709798, 0, 1, 0, 0.45709798, 0, -0.88941634, 0.31315672, -0.7048744, -2.2486281)
