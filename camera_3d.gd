@@ -679,7 +679,7 @@ func _update_crosshair_position():
 		crosshair_ui.visible = false
 		return
 	
-	if current_state == PlayerState.SEATED:
+	if current_state == PlayerState.SEATED or is_upgrade_mode:
 		# Hide in-game crosshair; global CustomCursor handles free mouse
 		crosshair_ui.visible = false
 	else:
