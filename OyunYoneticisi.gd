@@ -641,30 +641,8 @@ func _update_skull_eye_color():
 	if not goz: goz = find_child("Goz", true, false)
 	if not goz: return
 	
-	var mat = goz.material_override
-	if not mat or not mat is StandardMaterial3D:
-		mat = StandardMaterial3D.new()
-		mat.albedo_color = Color.BLACK
-		mat.emission_enabled = true
-		mat.emission = Color.BLACK
-		mat.emission_energy_multiplier = 0.0
-		goz.material_override = mat
-	
-	# Theme-friendly muted colors
-	var green_theme = Color(0.1, 0.5, 0.1) # Muted Green
-	var red_theme = Color(0.4, 0.0, 0.0)   # Deep Blood Red
-	
-	var target_color = green_theme if current_turn == GameTurn.PLAYER else red_theme
-	var target_emission = 0.5 # Lowered intensity
-	
-	if eye_tween: eye_tween.kill()
-	eye_tween = create_tween()
-	eye_tween.set_parallel(true)
-	eye_tween.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	
-	eye_tween.tween_property(mat, "albedo_color", target_color * 0.4, 1.0)
-	eye_tween.tween_property(mat, "emission", target_color, 1.0)
-	eye_tween.tween_property(mat, "emission_energy_multiplier", target_emission, 1.0)
+	if goz.has_method("update_eye"):
+		goz.update_eye(current_turn == GameTurn.PLAYER)
 
 func _setup_basement_door():
 	# Find 'kapi' in the scene (search globally if needed)

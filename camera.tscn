@@ -1,4 +1,4 @@
-[gd_scene load_steps=68 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=69 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" path="res://Sitting.tscn" id="1_p6dlx"]
@@ -40,6 +40,7 @@
 [ext_resource type="PackedScene" uid="uid://cx6mshw0koy8n" path="res://PauseMenu.tscn" id="39_pause"]
 [ext_resource type="PackedScene" uid="uid://bt8eyq3upovbv" path="res://Assets/newspaper1/scene.gltf" id="41_6tiwl"]
 [ext_resource type="PackedScene" uid="uid://djfu38bbb7pyf" path="res://Assets/drawer/scene.gltf" id="41_131b7"]
+[ext_resource type="Script" uid="uid://b4n0at4kjkrob" path="res://Scripts/SkullEye.gd" id="43_skulleye"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
 _data = {
@@ -368,6 +369,9 @@ transform = Transform3D(0.082806036, 0, -0.056063898, 0, 0.1, 0, 0.056063898, 0,
 [node name="Goz" type="MeshInstance3D" parent="Masa/skullp"]
 transform = Transform3D(1, 0, 0, 0, 0.9999998, 0, 0, 0, 1, -0.0068883896, 0, -0.15471268)
 mesh = SubResource("SphereMesh_i5qnm")
+script = ExtResource("43_skulleye")
+eye_color_enemy = Color(0.3589883, 3.008172e-07, 9.62615e-08, 1)
+eye_emission_intensity = 0.3
 
 [node name="ashtray" parent="Masa" instance=ExtResource("34_tth1g")]
 transform = Transform3D(-0.88941634, 0, -0.45709798, 0, 1, 0, 0.45709798, 0, -0.88941634, 0.31315672, -0.7048744, -2.2486281)
