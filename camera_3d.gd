@@ -1635,8 +1635,16 @@ func trigger_loss():
 	# Wait a moment for dramatic effect
 	await get_tree().create_timer(1.0).timeout
 	
-	# Transition to Cinematic Credits Screen
-	get_tree().change_scene_to_file("res://EndCredits.tscn")
+	# Show Game Over UI
+	var game_over_script = load("res://GameOverUI.gd")
+	if game_over_script:
+		var go_ui = game_over_script.new()
+		get_tree().root.add_child(go_ui)
+		if go_ui.has_method("show_game_over"):
+			go_ui.show_game_over()
+	else:
+		# Fallback: Main Menu
+		get_tree().change_scene_to_file("res://anamenu.tscn")
 
 
 func _transition_to_upgrade_view():
