@@ -23,6 +23,8 @@ func _ready():
 	if stream:
 		background_audio.stream = stream
 		background_audio.pitch_scale = audio_pitch_down
+		background_audio.bus = "Master"
+		background_audio.volume_db = 12.0 # High volume, bypassing SFX bus compressor
 		# Start immediately and pause so it's ready to resume correctly
 		background_audio.play(START_OFFSET)
 		background_audio.stream_paused = true
