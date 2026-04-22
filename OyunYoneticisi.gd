@@ -17,7 +17,10 @@ var black_pieces = [
 ]
 
 enum GameTurn { PLAYER, ENEMY }
-var current_turn: GameTurn = GameTurn.PLAYER
+var current_turn: GameTurn = GameTurn.PLAYER:
+	set(value):
+		current_turn = value
+		_update_skull_eye_color()
 var round_number: int = 1
 var phase_number: int = 1 # Moved here for better visibility
 var is_game_active: bool = false
@@ -30,6 +33,7 @@ var camera: Camera3D
 var box: Node3D
 var anim_player: AnimationPlayer
 var sequence_started: bool = false
+var eye_tween: Tween
 
 const PLAYER_DRAW_POS = Vector3(0.109, -0.50, -1.597)
 const ENEMY_DRAW_POS = Vector3(-0.29, -0.50, -2.06)
@@ -101,6 +105,7 @@ func _ready():
 	
 	# Setup basement door interaction
 	_setup_basement_door()
+	_update_skull_eye_color() # Initial call
 
 
 func _input(event):
@@ -456,6 +461,7 @@ func next_turn():
 	is_processing_turn = false
 
 func start_chest_sequence():
+	_update_skull_eye_color()
 	if camera and camera.is_game_over: return
 	# print("Sandık sekansı başlatılıyor...")
 	if sequence_started: 
@@ -629,6 +635,36 @@ func _get_enemy_pos() -> Vector3:
 	var sitting = get_tree().get_first_node_in_group("sitting_node")
 	if sitting: return sitting.global_position
 	return Vector3.ZERO
+
+func _update_skull_eye_color():
+	var goz = get_node_or_null("Masa/skullp/Goz")
+	if not goz: goz = find_child("Goz", true, false)
+	if not goz: return
+	
+	var mat = goz.material_override
+	if not mat or not mat is StandardMaterial3D:
+		mat = StandardMaterial3D.new()
+		mat.albedo_color = Color.BLACK
+		mat.emission_enabled = true
+		mat.emission = Color.BLACK
+		mat.emission_energy_multiplier = 0.0
+		goz.material_override = mat
+	
+	# Theme-friendly muted colors
+	var green_theme = Color(0.1, 0.5, 0.1) # Muted Green
+	var red_theme = Color(0.4, 0.0, 0.0)   # Deep Blood Red
+	
+	var target_color = green_theme if current_turn == GameTurn.PLAYER else red_theme
+	var target_emission = 0.5 # Lowered intensity
+	
+	if eye_tween: eye_tween.kill()
+	eye_tween = create_tween()
+	eye_tween.set_parallel(true)
+	eye_tween.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	
+	eye_tween.tween_property(mat, "albedo_color", target_color * 0.4, 1.0)
+	eye_tween.tween_property(mat, "emission", target_color, 1.0)
+	eye_tween.tween_property(mat, "emission_energy_multiplier", target_emission, 1.0)
 
 func _setup_basement_door():
 	# Find 'kapi' in the scene (search globally if needed)

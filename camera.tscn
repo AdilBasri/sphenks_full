@@ -1,7 +1,7 @@
-[gd_scene load_steps=67 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=68 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
-[ext_resource type="PackedScene" uid="uid://6vf3j06lmxj4" path="res://Sitting.tscn" id="1_p6dlx"]
+[ext_resource type="PackedScene" path="res://Sitting.tscn" id="1_p6dlx"]
 [ext_resource type="Script" uid="uid://bnwkp11hmc7n" path="res://OyunYoneticisi.gd" id="1_w2vvk"]
 [ext_resource type="Animation" uid="uid://c3w5olixra7ns" path="res://oturma1.res" id="2_eeger"]
 [ext_resource type="Animation" uid="uid://bvdvopdnjdm5w" path="res://enemy_gun.res" id="4_bi1g6"]
@@ -63,6 +63,8 @@ volumetric_fog_albedo = Color(0.21230483, 0.21230483, 0.21230483, 1)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6acwk"]
 height = 1.9550781
+
+[sub_resource type="SphereMesh" id="SphereMesh_i5qnm"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_smoke"]
 transparency = 1
@@ -362,6 +364,10 @@ transform = Transform3D(0.5819385, 0, 0.14610806, 0, 0.59999996, 0, -0.14610806,
 
 [node name="skullp" parent="Masa" instance=ExtResource("32_u270x")]
 transform = Transform3D(0.082806036, 0, -0.056063898, 0, 0.1, 0, 0.056063898, 0, 0.082806036, 0.33372277, -0.6346469, -1.9914403)
+
+[node name="Goz" type="MeshInstance3D" parent="Masa/skullp"]
+transform = Transform3D(1, 0, 0, 0, 0.9999998, 0, 0, 0, 1, -0.0068883896, 0, -0.15471268)
+mesh = SubResource("SphereMesh_i5qnm")
 
 [node name="ashtray" parent="Masa" instance=ExtResource("34_tth1g")]
 transform = Transform3D(-0.88941634, 0, -0.45709798, 0, 1, 0, 0.45709798, 0, -0.88941634, 0.31315672, -0.7048744, -2.2486281)
