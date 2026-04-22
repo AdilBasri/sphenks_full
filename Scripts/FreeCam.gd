@@ -3,14 +3,18 @@ extends Camera3D
 @export var move_speed: float = 0.5
 @export var boost_speed: float = 2.0
 @export var mouse_sensitivity: float = 0.1
+@export var zoom_speed: float = 0.75
+@export var min_fov: float = 30.0
 
 var is_active: bool = false
 var yaw: float = 0.0
 var pitch: float = 0.0
+var default_fov: float = 80.0
 
 func _ready():
 	# Initially disabled
 	process_mode = Node.PROCESS_MODE_ALWAYS # Still allow toggle during pause
+	default_fov = fov
 	set_enabled(false)
 
 func set_enabled(enabled: bool):
@@ -62,3 +66,7 @@ func _process(delta):
 	
 	var motion = (forward * input_dir.z + right * input_dir.x + up * input_dir.y).normalized()
 	global_position += motion * speed * delta
+	
+	# Zoom logic (R key)
+	var target_fov = min_fov if Input.is_key_pressed(KEY_R) else default_fov
+	fov = lerp(fov, target_fov, delta * zoom_speed)
