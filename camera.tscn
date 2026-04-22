@@ -1,4 +1,4 @@
-[gd_scene load_steps=70 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=71 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" path="res://Sitting.tscn" id="1_p6dlx"]
@@ -24,6 +24,7 @@
 [ext_resource type="Script" uid="uid://dsq5ui7ws5gbu" path="res://EnemyHeadLook.gd" id="20_head"]
 [ext_resource type="PackedScene" uid="uid://dvi6tw2xcavov" path="res://Assets/poster/poster_from_soviet_union/scene.gltf" id="23_k3bkl"]
 [ext_resource type="PackedScene" uid="uid://cd1kd4sf1pnl3" path="res://Assets/poster/soviet_posters/scene.gltf" id="24_21nal"]
+[ext_resource type="Texture2D" uid="uid://22lmyy2gi7jr" path="res://Assets/cursor/Right Click.png" id="24_131b7"]
 [ext_resource type="PackedScene" uid="uid://ejxn6qum5b3v" path="res://Assets/poster/the_final_storm_prototype_missing_poster/scene.gltf" id="25_0skcs"]
 [ext_resource type="PackedScene" uid="uid://daeik0psu8u7e" path="res://Assets/vent/scene.gltf" id="26_n8g8v"]
 [ext_resource type="PackedScene" uid="uid://06xyafpsydwi" path="res://Assets/fabrics/fabric1/scene.gltf" id="27_y2xar"]
@@ -434,6 +435,25 @@ grow_horizontal = 2
 grow_vertical = 2
 pivot_offset = Vector2(5, 5)
 texture = ExtResource("11_motcw")
+expand_mode = 1
+
+[node name="RightClick" type="TextureRect" parent="Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -5.0
+offset_top = -5.0
+offset_right = 5.0
+offset_bottom = 5.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -0.34906584
+scale = Vector2(1.624, 1.5)
+pivot_offset = Vector2(5, 5)
+texture = ExtResource("24_131b7")
 expand_mode = 1
 
 [node name="DiscardLabel" type="Label" parent="Control"]

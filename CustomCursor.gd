@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 @onready var sprite = $Sprite2D
+var default_texture = preload("res://Assets/cursor/Cursor.png")
 
 func _ready():
 	# Ensure this layer is above everything else
@@ -10,6 +11,12 @@ func _ready():
 	
 	# Initial position to avoid frame 1 jump
 	sprite.global_position = sprite.get_global_mouse_position()
+
+func set_cursor_texture(tex: Texture2D):
+	if tex:
+		sprite.texture = tex
+	else:
+		sprite.texture = default_texture
 
 func _process(_delta):
 	# Update sprite position to follow mouse (using viewport coordinates for CanvasLayer)
@@ -24,4 +31,9 @@ func _process(_delta):
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		sprite.visible = false
 	else:
-		sprite.visible = true
+		# Check if any other system wants to hide the default cursor
+		var camera = get_viewport().get_camera_3d()
+		if camera and camera.get("right_click_ui") and camera.right_click_ui.visible:
+			sprite.visible = false
+		else:
+			sprite.visible = true

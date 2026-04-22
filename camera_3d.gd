@@ -38,10 +38,12 @@ var hand_anim_rot: Vector3 = Vector3.ZERO
 
 var ray_length: float = 10.0
 @onready var crosshair_ui: TextureRect = get_tree().root.find_child("Crosshair", true, false)
+@onready var right_click_ui: TextureRect = get_tree().root.find_child("RightClick", true, false)
 @onready var camera2: Camera3D = get_parent().get_node("Camera3D2") if get_parent().has_node("Camera3D2") else null
 var piece_name_label: Label = null
 var held_piece_name_label: Label = null
 var cursor_3d_pos: Vector3 = Vector3.ZERO
+var right_click_tutorial_completed: bool = false
 
 var is_zoomed_view: bool = false
 var is_transitioning_view: bool = false
@@ -346,6 +348,12 @@ func _input(event):
 					var path = hucre.mevcut_tas.get_meta("scene_path") if hucre.mevcut_tas.has_meta("scene_path") else ""
 					if path != "" and has_node("/root/InspectUI"):
 						get_node("/root/InspectUI").show_piece(path, false, hucre.mevcut_tas) # Taşın kendisini de gönderiyoruz
+						
+						# Tutorial Progress Check
+						var tm = get_tree().get_first_node_in_group("tutorial_manager")
+						if tm and tm.is_tutorial_active and tm.current_sequence == 5:
+							right_click_tutorial_completed = true
+						
 						return # Prevent deselection if we are inspecting
 		
 		# Default: Deselect on right click
@@ -599,6 +607,22 @@ func _update_piece_hover_info():
 			# Cleanup board hover if we hit an upgrade piece
 			_cleanup_board_hover()
 			
+		# Tutorial Right Click Icon Logic
+		if right_click_ui:
+			var tm = get_tree().get_first_node_in_group("tutorial_manager")
+			var is_right_click_stage = tm and tm.is_tutorial_active and tm.current_sequence == 5 and not right_click_tutorial_completed
+			
+			if is_right_click_stage and target_piece and collider.has_meta("is_grid_cell"):
+				right_click_ui.visible = true
+				if crosshair_ui: crosshair_ui.visible = false
+				# Update position to match crosshair/mouse
+				right_click_ui.global_position = crosshair_pos - (right_click_ui.size / 2.0)
+			else:
+				right_click_ui.visible = false
+				# Restore crosshair if not in other modes that hide it
+				if crosshair_ui and not (current_state == PlayerState.SEATED or is_upgrade_mode):
+					crosshair_ui.visible = true
+			
 		if target_piece:
 			# BOARD PIECE HOVER LOGIC
 			if collider.has_meta("is_grid_cell"):
@@ -637,6 +661,8 @@ func _update_piece_hover_info():
 				
 	# If no piece is hit OR piece has no path, hide the label
 	piece_name_label.visible = false
+	
+	if right_click_ui: right_click_ui.visible = false
 	
 	# BOARD HOVER CLEANUP
 	_cleanup_board_hover()
