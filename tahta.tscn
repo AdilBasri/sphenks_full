@@ -7,14 +7,26 @@
 [node name="Bishop WHITE_0" parent="Sketchfab_model/root/GLTF_SceneRootNode" index="0"]
 transform = Transform3D(-0.99993825, 0, 0.011110768, 0, 1, 0, -0.011110768, 0, -0.99993825, 0.089999996, 0.16478817, 0.21)
 
+[node name="Object_4" parent="Sketchfab_model/root/GLTF_SceneRootNode/Bishop WHITE_0" index="0"]
+transform = Transform3D(1.0000001, 0, -9.313226e-10, 0, 1, 0, 9.313226e-10, 0, 1.0000001, 0, -0.16295981, 0)
+
 [node name="Castle WHITE_1" parent="Sketchfab_model/root/GLTF_SceneRootNode" index="1"]
 transform = Transform3D(-0.99993825, 0, 0.011110768, 0, 1, 0, -0.011110768, 0, -0.99993825, 0.21, 0.17681742, 0.21)
+
+[node name="Object_6" parent="Sketchfab_model/root/GLTF_SceneRootNode/Castle WHITE_1" index="0"]
+transform = Transform3D(1.0000001, 0, -9.313226e-10, 0, 1, 0, 9.313226e-10, 0, 1.0000001, 0, -0.17711852, 0)
 
 [node name="King WHITE_2" parent="Sketchfab_model/root/GLTF_SceneRootNode" index="2"]
 transform = Transform3D(-0.99993825, 0, 0.011110768, 0, 1, 0, -0.011110768, 0, -0.99993825, 0.03, 0.17970684, 0.21)
 
+[node name="Object_8" parent="Sketchfab_model/root/GLTF_SceneRootNode/King WHITE_2" index="0"]
+transform = Transform3D(1.0000001, 0, -9.313226e-10, 0, 1, 0, 9.313226e-10, 0, 1.0000001, 0, -0.17649268, 0)
+
 [node name="Knight WHITE_3" parent="Sketchfab_model/root/GLTF_SceneRootNode" index="3"]
 transform = Transform3D(-0.99993825, 0, 0.011110768, 0, 1, 0, -0.011110768, 0, -0.99993825, 0.14999999, 0.17573182, 0.21)
+
+[node name="Object_10" parent="Sketchfab_model/root/GLTF_SceneRootNode/Knight WHITE_3" index="0"]
+transform = Transform3D(1.0000001, 0, -9.313226e-10, 0, 1, 0, 9.313226e-10, 0, 1.0000001, 0, -0.17609692, 0)
 
 [node name="Object_37" parent="Sketchfab_model/root/GLTF_SceneRootNode/Board_16" index="1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0012020767, 0, 9.7736716e-05)

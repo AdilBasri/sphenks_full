@@ -242,9 +242,9 @@ func _add_collision_to_piece(piece: Node3D):
 	piece.add_child(body)
 	var shape = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(0.3, 0.6, 0.3)
+	box.size = Vector3(0.15, 0.15, 0.15)
 	shape.shape = box
-	shape.position.y = 0.3
+	shape.position.y = 0.05
 	body.add_child(shape)
 
 func _setup_piece_visuals(piece: Node3D):
