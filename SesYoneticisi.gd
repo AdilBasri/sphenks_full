@@ -82,13 +82,13 @@ func setup_audio_buses():
 	# Set base volume for music (lower to not overwhelm)
 	AudioServer.set_bus_volume_db(music_bus_idx, -12.0)
 	
-	# Sidechain Compressor: Dips music when SFX plays
-	var music_duck = AudioEffectCompressor.new()
-	music_duck.threshold = -24.0 # Low threshold to catch SFX
-	music_duck.ratio = 3.0       # Moderate ducking
-	music_duck.release_ms = 500  # Smooth return
-	music_duck.sidechain = "SFX" # LISTEN TO SFX BUS
-	AudioServer.add_bus_effect(music_bus_idx, music_duck)
+	# Sidechain Compressor removed as requested (Don't duck music)
+	# var music_duck = AudioEffectCompressor.new()
+	# music_duck.threshold = -24.0
+	# music_duck.ratio = 3.0
+	# music_duck.release_ms = 500
+	# music_duck.sidechain = "SFX"
+	# AudioServer.add_bus_effect(music_bus_idx, music_duck)
 
 func setup_walking_player():
 	# Ensure the stream loops
@@ -254,6 +254,16 @@ func play_handing():
 
 func play_fall():
 	play_sfx(fall_sound)
+
+func play_piece_hover():
+	play_sfx(click_sound, 1.5, -15.0) # Very subtle high pitch click
+
+func play_piece_pick_up():
+	play_sfx(handing_item_sound, 0.9, -2.0)
+
+func play_piece_remove():
+	play_sfx(fall_sound, 1.4, -8.0) # High pitched "shooch" sound for piece removal
+	play_sfx(place_block_sound, 0.8, -5.0) # Low thud
 
 func play_hover():
 	play_sfx(handing_item_sound, 1.2, -10.0) # High pitch, subtle

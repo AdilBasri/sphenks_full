@@ -613,7 +613,7 @@ func _update_piece_hover_info():
 					hovered_board_piece = target_piece
 					
 					if hovered_hucre:
-						SesYoneticisi.play_click() # "Tık" sound (New Assets/click.mp3)
+						SesYoneticisi.play_piece_hover()
 				elif not can_hover:
 					_cleanup_board_hover()
 			
@@ -1084,6 +1084,7 @@ func _execute_move(from: GridHucre, to: GridHucre):
 			
 			var is_player_piece = "white" in defender_path.to_lower()
 			
+			SesYoneticisi.play_piece_remove()
 			defender.queue_free()
 			to.mevcut_tas = piece
 			piece.reparent(to)
@@ -1159,6 +1160,7 @@ func _process_piece_vibration(_delta):
 		hovered_hucre.mevcut_tas.position = Vector3(0, hover_lift_y, 0) + hover_jitter
 
 func pick_up_piece(piece: Node3D, scene_path: String):
+	SesYoneticisi.play_piece_pick_up()
 	held_piece = piece
 	held_piece_scene = scene_path
 	# Taşı kameraya "bağlayalım"

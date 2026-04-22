@@ -767,6 +767,8 @@ func _ai_place_piece(piece: Node3D, scene_path: String):
 		tw.tween_property(piece, "rotation_degrees", Vector3.ZERO, 0.5)
 		await tw.finished
 		
+		SesYoneticisi.play_place_block()
+		
 		# Finalize placement
 		piece.reparent(get_tree().root)
 		set_piece_render_priority(piece, 0, false)
@@ -964,6 +966,7 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 			
 			var is_player_king = is_king and "white" in defender_path.to_lower()
 			
+			SesYoneticisi.play_piece_remove()
 			defender.queue_free()
 			to.mevcut_tas = piece
 			piece.reparent(to)
