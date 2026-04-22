@@ -30,6 +30,11 @@ func _ready():
 	# Ensure mouse is visible for menu
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	
+	# Reset OyunYoneticisi if it exists (in case we returned from game)
+	var oy = get_tree().get_first_node_in_group("oyun_yoneticisi")
+	if oy:
+		oy.reset_game_state()
+	
 	# Small intro animation
 	$CanvasLayer/Control.modulate.a = 0
 	var tw = create_tween()

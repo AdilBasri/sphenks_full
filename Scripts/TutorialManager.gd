@@ -40,6 +40,12 @@ func _ready():
 	# Start Sequence 1
 	start_sequence_1()
 
+func _exit_tree():
+	if is_instance_valid(dialogue_ui):
+		dialogue_ui.queue_free()
+	if is_instance_valid(pixel_fade):
+		pixel_fade.queue_free()
+
 func _connect_signals():
 	var camera = get_viewport().get_camera_3d()
 	if camera and camera.has_signal("piece_placed"):

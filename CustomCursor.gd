@@ -4,7 +4,7 @@ extends CanvasLayer
 
 func _ready():
 	# Ensure this layer is above everything else
-	layer = 127
+	layer = 2000
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	process_mode = Node.PROCESS_MODE_ALWAYS # Run even during pause
 	

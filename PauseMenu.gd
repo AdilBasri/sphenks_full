@@ -53,6 +53,9 @@ func _on_settings_pressed():
 
 func _on_main_menu_pressed():
 	get_tree().paused = false
+	var oy = get_tree().get_first_node_in_group("oyun_yoneticisi")
+	if oy:
+		oy.reset_game_state()
 	get_tree().change_scene_to_file("res://anamenu.tscn")
 
 func _on_exit_pressed():

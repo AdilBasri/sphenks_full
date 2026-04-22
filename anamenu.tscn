@@ -1,19 +1,8 @@
-[gd_scene load_steps=9 format=3 uid="uid://crvmwq3b5my25"]
+[gd_scene load_steps=8 format=3 uid="uid://crvmwq3b5my25"]
 
 [ext_resource type="PackedScene" uid="uid://uow6rxog5nvv" path="res://camera.tscn" id="1_40i5i"]
-[ext_resource type="Script" path="res://anamenu.gd" id="2_script"]
-[ext_resource type="FontFile" path="res://Assets/fonts/dominica.ttf" id="3_font"]
-[ext_resource type="FontFile" path="res://Assets/fonts/Helvetica Punk.ttf" id="4_font"]
-
-[sub_resource type="LabelSettings" id="LabelSettings_title"]
-font = ExtResource("3_font")
-font_size = 72
-font_color = Color(0.85, 0.1, 0.1, 1)
-outline_size = 12
-outline_color = Color(0, 0, 0, 1)
-shadow_size = 15
-shadow_color = Color(0, 0, 0, 0.5)
-shadow_offset = Vector2(3, 3)
+[ext_resource type="Script" uid="uid://ldqq73880l1e" path="res://anamenu.gd" id="2_script"]
+[ext_resource type="FontFile" uid="uid://de43wtsn5gxto" path="res://Assets/fonts/dominica.ttf" id="3_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
 bg_color = Color(0, 0, 0, 0.1)
@@ -56,13 +45,23 @@ Label/colors/font_outline_color = Color(0, 0, 0, 1)
 Label/constants/outline_size = 4
 Label/fonts/font = ExtResource("3_font")
 
+[sub_resource type="LabelSettings" id="LabelSettings_title"]
+font = ExtResource("3_font")
+font_size = 72
+font_color = Color(0.85, 0.1, 0.1, 1)
+outline_size = 12
+outline_color = Color(0, 0, 0, 1)
+shadow_size = 15
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_offset = Vector2(3, 3)
+
 [node name="anamenu" type="Node3D"]
 script = ExtResource("2_script")
 
 [node name="GameRoom" parent="." instance=ExtResource("1_40i5i")]
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(0.766044, 0.166366, 0.620885, 0, 0.965926, -0.258819, -0.642788, 0.198366, 0.739943, 1.46, 0.31, 2.708)
+transform = Transform3D(0.7071067, 0, 0.7071072, 0, 1.0000198, 0, -0.7071067, 0, 0.7071072, 1.46, 0.31, 2.708)
 current = true
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]

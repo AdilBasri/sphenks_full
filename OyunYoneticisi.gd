@@ -107,6 +107,20 @@ func _ready():
 	_setup_basement_door()
 	_update_skull_eye_color() # Initial call
 
+func reset_game_state():
+	print("[OyunYoneticisi] Resetting game state...")
+	is_game_active = false
+	sequence_started = false
+	is_processing_turn = false
+	
+	if is_instance_valid(tutorial_manager):
+		tutorial_manager.queue_free()
+		tutorial_manager = null
+	
+	# Stop any pending tweens if they exist
+	if eye_tween and eye_tween.is_running():
+		eye_tween.kill()
+
 
 func _input(event):
 	if event is InputEventKey and event.pressed:
