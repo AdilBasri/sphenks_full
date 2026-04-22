@@ -1,7 +1,7 @@
 [gd_scene load_steps=72 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
-[ext_resource type="PackedScene" uid="uid://6vf3j06lmxj4" path="res://Sitting.tscn" id="1_p6dlx"]
+[ext_resource type="PackedScene" path="res://Sitting.tscn" id="1_p6dlx"]
 [ext_resource type="Script" uid="uid://bnwkp11hmc7n" path="res://OyunYoneticisi.gd" id="1_w2vvk"]
 [ext_resource type="Animation" uid="uid://c3w5olixra7ns" path="res://oturma1.res" id="2_eeger"]
 [ext_resource type="Animation" uid="uid://bvdvopdnjdm5w" path="res://enemy_gun.res" id="4_bi1g6"]
@@ -998,7 +998,6 @@ transform = Transform3D(-5.7145515e-09, -6.531758e-08, 1.5, -1.494292, 0.1307337
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(0.08889425, -0.23590052, 0.9677028, 0, 0.9715491, 0.23683815, -0.99604106, -0.021053549, 0.086365126, -1.0616984, -0.086419195, 2.3030035)
-visible = false
 fov = 80.0
 
 [node name="whetstone_def" parent="." instance=ExtResource("37_0d0sc")]
@@ -1097,7 +1096,7 @@ shape = SubResource("BoxShape3D_tolek")
 transform = Transform3D(-0.0016752945, -0.059976604, -5.245366e-09, 0.043248132, -0.0012080306, 0.041570887, -0.04155469, 0.0011607212, 0.043265, 2.1996155, -0.7890328, 2.524956)
 
 [node name="newspaper" parent="News" instance=ExtResource("41_6tiwl")]
-transform = Transform3D(-0.18614386, 6.6360483, -0.61046743, -6.6640677, -0.18536124, 0.017051294, -5.86119e-07, 0.61070657, 6.6386366, 4.723076, 0.8973427, 15.039108)
+transform = Transform3D(-0.18614386, 6.6360483, -0.61046743, -6.6640677, -0.18536124, 0.017051324, -5.83529e-07, 0.6107075, 6.6386366, 4.067562, 0.91565704, 7.293579)
 
 [node name="Plane_Blood_0" parent="News/newspaper/Sketchfab_model/Newspaper_fbx/RootNode/Plane" index="0"]
 transform = Transform3D(1.0000001, -1.7763568e-15, 0, 6.661338e-16, 1.0000001, 0, 0, 0, 1.0000001, 0, -21.66278, 0)
@@ -1111,6 +1110,9 @@ shape = SubResource("BoxShape3D_wh2a0")
 [node name="newspaper2" parent="News" instance=ExtResource("41_6tiwl")]
 transform = Transform3D(-0.18614386, 3.634193, -5.5859156, -6.6640677, -0.10151245, 0.15602809, -5.86119e-07, 5.588095, 3.6356103, 6.1380997, 0.89865494, 9.614431)
 
+[node name="Plane" parent="News/newspaper2/Sketchfab_model/Newspaper_fbx/RootNode" index="0"]
+transform = Transform3D(3.150375e-08, 0.99999994, 3.0350584e-08, -0.4172798, 7.54979e-08, -0.4020057, -0.30458236, 0, 0.5507504, 18.421509, -2.1054459, -8.0841675)
+
 [node name="Plane_Blood_0" parent="News/newspaper2/Sketchfab_model/Newspaper_fbx/RootNode/Plane" index="0"]
 transform = Transform3D(1.0000001, -1.7763568e-15, 0, 6.661338e-16, 1.0000001, 0, 0, 0, 1.0000001, 0, -21.66278, 0)
 
@@ -1121,10 +1123,16 @@ transform = Transform3D(0.99999225, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.1920929e-07, -
 shape = SubResource("BoxShape3D_fawbm")
 
 [node name="newspaper3" parent="News" instance=ExtResource("41_6tiwl")]
-transform = Transform3D(-0.18614385, 6.4570417, -1.6481595, -6.6640673, -0.18036124, 0.04603661, -5.861189e-07, 1.6488035, 6.4595604, 4.880356, 0.9337845, 5.0436764)
+transform = Transform3D(-0.18614386, -6.3382635, 2.0582047, -6.664071, 0.17704356, -0.057490204, -5.813947e-07, -2.0590093, -6.3407397, -1.3681641, 1.108326, 0.37159348)
+
+[node name="Sketchfab_model" parent="News/newspaper3" index="0"]
+transform = Transform3D(0.9999999, -8.7373664e-11, -9.464216e-10, 8.170524e-10, -0.42969188, 0.90297556, -4.855645e-10, -0.9029756, -0.42969182, 0, 0.056428432, -0.44823694)
 
 [node name="Plane_Blood_0" parent="News/newspaper3/Sketchfab_model/Newspaper_fbx/RootNode/Plane" index="0"]
-transform = Transform3D(1.0000001, -1.7763568e-15, 0, 6.661338e-16, 1.0000001, 0, 0, 0, 1.0000001, 0, -21.66278, 0)
+transform = Transform3D(1.0000001, 2.3980817e-14, 2.9802322e-08, 5.551115e-15, 1.0000001, 3.5527137e-15, -7.450581e-09, 0, 1.0000001, 68.04006, -21.66278, 127.91107)
+
+[node name="Plane_001" parent="News/newspaper3/Sketchfab_model/Newspaper_fbx/RootNode" index="1"]
+transform = Transform3D(1.00588984e-07, 0.9999999, 2.220446e-16, -0.5166167, 1.9470718e-07, 0, -2.9802322e-08, -7.1054274e-15, 0.68186116, 0, -53.887756, 86.06792)
 
 [node name="StaticBody3D" type="StaticBody3D" parent="News/newspaper3"]
 
