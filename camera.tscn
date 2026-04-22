@@ -1,4 +1,4 @@
-[gd_scene load_steps=72 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=73 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
 [ext_resource type="PackedScene" path="res://Sitting.tscn" id="1_p6dlx"]
@@ -149,6 +149,10 @@ size = Vector3(1, 1, 2.168213)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_usasj"]
 size = Vector3(1, 1, 1.8046875)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6tiwl"]
+metallic = 1.0
+roughness = 0.0
 
 [node name="GameRoom" type="Node3D"]
 script = ExtResource("1_w2vvk")
@@ -1146,7 +1150,13 @@ transform = Transform3D(-1, 5.0143644e-08, -7.161255e-08, -1.4451492e-08, 0.7130
 [node name="FreeCam" type="Camera3D" parent="."]
 
 [node name="mirror" parent="." instance=ExtResource("43_6tiwl")]
-transform = Transform3D(-0.49990818, 0, 0.009581293, 0.0018997139, 0.49007338, 0.099118404, -0.009391073, 0.09913661, -0.48998338, 0, -0.89633214, -1.1802018)
+transform = Transform3D(-0.49990818, -1.8465633e-10, 0.009581294, 2.6755617e-05, 0.49999806, 0.0013959929, -0.009581256, 0.0013962612, -0.49990624, 0, -0.89633214, -1.0765464)
+
+[node name="Object_3" parent="mirror/Sketchfab_model/924a25e12872469b994c3d3091c26a59_obj_cleaner_materialmerger_gles" index="1"]
+surface_material_override/0 = SubResource("StandardMaterial3D_6tiwl")
+
+[node name="ReflectionProbe" type="ReflectionProbe" parent="mirror/Sketchfab_model/924a25e12872469b994c3d3091c26a59_obj_cleaner_materialmerger_gles/Object_3" index="0"]
+transform = Transform3D(2, -3.7252903e-09, 6.693881e-10, 0, 2, -4.5634806e-08, 2.910383e-11, -1.8626451e-09, 2, 0.0011873618, -0.061950207, 1.4227115)
 
 [editable path="Sitting"]
 [editable path="Masa/box"]
@@ -1166,3 +1176,4 @@ transform = Transform3D(-0.49990818, 0, 0.009581293, 0.0018997139, 0.49007338, 0
 [editable path="News/newspaper"]
 [editable path="News/newspaper2"]
 [editable path="News/newspaper3"]
+[editable path="mirror"]
