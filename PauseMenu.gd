@@ -18,6 +18,11 @@ func _ready():
 
 func _input(event):
 	if event.is_action_pressed("ui_cancel"):
+		# If we are in the Main Menu, the Pause Menu should NOT open.
+		# However, if settings are open, we still want to go back.
+		if get_tree().current_scene.name == "anamenu":
+			return # Let anamenu.gd handle it
+			
 		if settings_panel.visible:
 			_on_back_pressed()
 		else:
@@ -40,6 +45,10 @@ func resume():
 	get_tree().paused = false
 	control.visible = false
 	
+	if get_tree().current_scene.name == "anamenu":
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		return
+		
 	# Inform the camera to re-capture or re-confine the mouse as needed
 	var camera = get_viewport().get_camera_3d()
 	if camera and camera.has_method("restore_mouse_mode"):

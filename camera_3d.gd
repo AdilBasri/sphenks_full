@@ -94,6 +94,9 @@ func _ready():
 	if get_tree().current_scene.name == "anamenu":
 		if crosshair_ui:
 			crosshair_ui.visible = false
+		set_process_input(false)
+		set_process_unhandled_input(false)
+		set_process(false)
 		return
 		
 	# Capture mouse (HIDE)
