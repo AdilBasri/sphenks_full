@@ -100,6 +100,11 @@ func _start_demo_end_sequence():
 			manager.set_piece_render_priority(poster, 127, true)
 	else:
 		print("[DoorLogic] WARNING: Poster8 not found.")
+
+	var mirror = scene_root.find_child("mirror", true, false)
+	if mirror:
+		mirror.visible = true
+		print("[DoorLogic] Mirror found and enabled.")
 	
 	var final_cam = scene_root.find_child("DemoSonuCam", true, false)
 	if final_cam:

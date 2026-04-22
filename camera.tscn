@@ -1150,6 +1150,7 @@ transform = Transform3D(-1, 5.0143644e-08, -7.161255e-08, -1.4451492e-08, 0.7130
 [node name="FreeCam" type="Camera3D" parent="."]
 
 [node name="mirror" parent="." instance=ExtResource("43_6tiwl")]
+visible = false
 transform = Transform3D(-0.49990818, -1.8465633e-10, 0.009581294, 2.6755617e-05, 0.49999806, 0.0013959929, -0.009581256, 0.0013962612, -0.49990624, 0, -0.89633214, -1.0765464)
 
 [node name="Object_3" parent="mirror/Sketchfab_model/924a25e12872469b994c3d3091c26a59_obj_cleaner_materialmerger_gles" index="1"]
