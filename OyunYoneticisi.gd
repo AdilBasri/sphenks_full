@@ -1029,6 +1029,8 @@ func _execute_ai_move(from: GridHucre, to: GridHucre):
 		else:
 			current_def -= attacker_stats["attack"]
 			
+		defender.set_meta("current_defense", current_def)
+			
 		# Premium Damage Feedback (Material Aware)
 		var is_white_defender = "white" in defender_path.to_lower()
 		var hit_intensity = 0.33 if current_def > 0 else 1.0

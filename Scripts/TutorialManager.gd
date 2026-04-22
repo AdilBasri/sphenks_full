@@ -73,6 +73,8 @@ func start_sequence_1():
 	
 	# Initial state: Pixel fade at 0 (Black)
 	var fade_rect = pixel_fade.get_node("ColorRect")
+	# IMPORTANT: Duplicate material to prevent resource sharing
+	fade_rect.material = fade_rect.material.duplicate()
 	fade_rect.material.set_shader_parameter("progress", 0.0)
 	
 	# Camera setup: Slightly tilted down

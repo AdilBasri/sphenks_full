@@ -68,7 +68,9 @@ func _trigger_screen_fade():
 	get_tree().root.add_child(fade_instance)
 	
 	var rect = fade_instance.get_node("ColorRect")
-	var mat = rect.material as ShaderMaterial
+	# IMPORTANT: Duplicate material to avoid affecting other instances (like TutorialManager's fade)
+	var mat = rect.material.duplicate()
+	rect.material = mat
 	
 	# Shader logic: progress=1.0 is visible, progress=0.0 is black
 	mat.set_shader_parameter("progress", 1.0)
@@ -77,7 +79,7 @@ func _trigger_screen_fade():
 	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS) # Ensure it runs even if game pauses
 	tw.tween_property(mat, "shader_parameter/progress", 0.0, 1.5)
 	
-	# After fade, wait 1 second then start final sequence
+	# After fade, wait for it to finish then start final sequence
 	await tw.finished
 	_start_demo_end_sequence()
 
@@ -108,10 +110,16 @@ func _start_demo_end_sequence():
 		print("[DoorLogic] WARNING: DemoSonuCam not found. Direct cut to black/credits will follow.")
 	
 	# 3. Remove the old fade overlay to show the new camera view
+	# ROBUST CLEANUP: Remove ANY PixelFade nodes in root to prevent leaks from covering the screen
+	for child in get_tree().root.get_children():
+		if child.name.begins_with("PixelFade"):
+			print("[DoorLogic] Cleaning up fade instance: ", child.name)
+			child.queue_free()
+	
 	if is_instance_valid(fade_instance):
 		fade_instance.queue_free()
 		fade_instance = null
-		print("[DoorLogic] PixelFade removed.")
+		print("[DoorLogic] Primary PixelFade instance removed.")
 	
 	# 4. Start Camera Animation
 	if final_cam:
@@ -135,6 +143,11 @@ func _start_demo_end_sequence():
 	_instant_black_cut()
 
 func _instant_black_cut():
+	# Final check: Clear any remaining root overlays before scene change
+	for child in get_tree().root.get_children():
+		if child.name.begins_with("PixelFade"):
+			child.queue_free()
+			
 	# Transition to Cinematic Credits Screen
 	get_tree().change_scene_to_file("res://EndCredits.tscn")
 	print("DEMO END - TRANSITIONING TO CREDITS")
