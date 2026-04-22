@@ -773,9 +773,49 @@ func _process_falling_papers(_delta):
 			node.global_rotation_degrees.y += randf_range(-20, 20)
 			
 			to_remove.append(i)
+			_fade_out_and_free(node)
 	
 	for index in to_remove:
 		falling_papers.remove_at(index)
+
+func _fade_out_and_free(node: Node3D):
+	if not is_instance_valid(node): return
+	
+	var tw = create_tween()
+	# Wait a bit before starting fade
+	tw.tween_interval(2.0)
+	
+	# Try to find all meshes to fade them out
+	var meshes = []
+	if node is MeshInstance3D:
+		meshes.append(node)
+	
+	# Recursive search for meshes
+	var stack = [node]
+	while stack.size() > 0:
+		var current = stack.pop_back()
+		for child in current.get_children():
+			if child is MeshInstance3D:
+				meshes.append(child)
+			stack.append(child)
+	
+	# Fade them all
+	tw.set_parallel(true)
+	for m in meshes:
+		# Ensure material is unique for fading
+		for i in range(m.get_surface_override_material_count()):
+			var mat = m.get_surface_override_material(i)
+			if not mat:
+				mat = m.mesh.surface_get_material(i)
+			
+			if mat:
+				var new_mat = mat.duplicate()
+				new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				m.set_surface_override_material(i, new_mat)
+				tw.tween_property(new_mat, "albedo_color:a", 0.0, 1.5)
+	
+	tw.set_parallel(false)
+	tw.tween_callback(node.queue_free)
 
 func _process_movement(_delta):
 	var body = get_parent() as CharacterBody3D

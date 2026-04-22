@@ -34,6 +34,7 @@ var box: Node3D
 var anim_player: AnimationPlayer
 var sequence_started: bool = false
 var eye_tween: Tween
+var escape_instruction_canvas: CanvasLayer = null # Track for cleanup
 
 const PLAYER_DRAW_POS = Vector3(0.109, -0.50, -1.597)
 const ENEMY_DRAW_POS = Vector3(-0.29, -0.50, -2.06)
@@ -120,6 +121,11 @@ func reset_game_state():
 	# Stop any pending tweens if they exist
 	if eye_tween and eye_tween.is_running():
 		eye_tween.kill()
+		
+	# Clear escape instruction UI if it exists
+	if is_instance_valid(escape_instruction_canvas):
+		escape_instruction_canvas.queue_free()
+		escape_instruction_canvas = null
 
 
 func _input(event):
@@ -183,11 +189,13 @@ func _on_phase_6_start():
 	
 	# Ensure door interaction is setup
 	_setup_basement_door()
-
 func _show_escape_instruction(text: String):
-	var canvas = CanvasLayer.new()
-	canvas.layer = 100
-	get_tree().root.add_child(canvas)
+	if is_instance_valid(escape_instruction_canvas):
+		escape_instruction_canvas.queue_free()
+
+	escape_instruction_canvas = CanvasLayer.new()
+	escape_instruction_canvas.layer = 100
+	get_tree().root.add_child(escape_instruction_canvas)
 	
 	var label = Label.new()
 	label.name = "EscapeInstruction"
@@ -203,7 +211,7 @@ func _show_escape_instruction(text: String):
 	label.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	label.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	label.position.y += 40 # Higher (was 50)
-	canvas.add_child(label)
+	escape_instruction_canvas.add_child(label)
 	
 	label.modulate.a = 0
 	var tw = create_tween()
@@ -735,6 +743,16 @@ var _news_touched_count: int = 0
 var _already_touched: Dictionary = {}
 
 func notify_news_grabbed(node: Node):
+	# Door opening condition: ONLY items inside the "News" node count.
+	if not _cached_news_node:
+		_cached_news_node = get_tree().root.find_child("News", true, false)
+		if not _cached_news_node:
+			_cached_news_node = get_tree().current_scene.find_child("News", true, false)
+	
+	if _cached_news_node and not _cached_news_node.is_ancestor_of(node):
+		print("[OyunYoneticisi] Grabbed item is NOT in News node. Ignoring for escape trigger.")
+		return
+
 	if not _already_touched.has(node.get_instance_id()):
 		_already_touched[node.get_instance_id()] = true
 		_news_touched_count += 1
