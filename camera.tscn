@@ -1,7 +1,7 @@
-[gd_scene load_steps=71 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=72 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
-[ext_resource type="PackedScene" path="res://Sitting.tscn" id="1_p6dlx"]
+[ext_resource type="PackedScene" uid="uid://6vf3j06lmxj4" path="res://Sitting.tscn" id="1_p6dlx"]
 [ext_resource type="Script" uid="uid://bnwkp11hmc7n" path="res://OyunYoneticisi.gd" id="1_w2vvk"]
 [ext_resource type="Animation" uid="uid://c3w5olixra7ns" path="res://oturma1.res" id="2_eeger"]
 [ext_resource type="Animation" uid="uid://bvdvopdnjdm5w" path="res://enemy_gun.res" id="4_bi1g6"]
@@ -41,6 +41,7 @@
 [ext_resource type="PackedScene" uid="uid://cx6mshw0koy8n" path="res://PauseMenu.tscn" id="39_pause"]
 [ext_resource type="PackedScene" uid="uid://bt8eyq3upovbv" path="res://Assets/newspaper1/scene.gltf" id="41_6tiwl"]
 [ext_resource type="PackedScene" uid="uid://djfu38bbb7pyf" path="res://Assets/drawer/scene.gltf" id="41_131b7"]
+[ext_resource type="PackedScene" uid="uid://d0q1vef2570dm" path="res://Assets/mirror/scene.gltf" id="43_6tiwl"]
 [ext_resource type="Script" uid="uid://b4n0at4kjkrob" path="res://Scripts/SkullEye.gd" id="43_skulleye"]
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
@@ -1135,6 +1136,9 @@ shape = SubResource("BoxShape3D_usasj")
 transform = Transform3D(-1, 5.0143644e-08, -7.161255e-08, -1.4451492e-08, 0.71306694, 0.701096, 8.622005e-08, 0.701096, -0.71306694, 0.03406398, -0.3246966, -2.44926)
 
 [node name="FreeCam" type="Camera3D" parent="."]
+
+[node name="mirror" parent="." instance=ExtResource("43_6tiwl")]
+transform = Transform3D(-0.49990818, 0, 0.009581293, 0.0018997139, 0.49007338, 0.099118404, -0.009391073, 0.09913661, -0.48998338, 0, -0.89633214, -1.1802018)
 
 [editable path="Sitting"]
 [editable path="Masa/box"]

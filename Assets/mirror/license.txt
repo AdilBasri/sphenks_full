@@ -1,0 +1,11 @@
+Model Information:
+* title:	#6 Infinite Mirror 3December2019
+* source:	https://sketchfab.com/3d-models/6-infinite-mirror-3december2019-aed1aa465fe84ec5ab16d6cdad1ff78c
+* author:	Canary Games (https://sketchfab.com/CapAlatriste)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "#6 Infinite Mirror 3December2019" (https://sketchfab.com/3d-models/6-infinite-mirror-3december2019-aed1aa465fe84ec5ab16d6cdad1ff78c) by Canary Games (https://sketchfab.com/CapAlatriste) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
