@@ -374,7 +374,7 @@ transform = Transform3D(1, 0, 0, 0, 0.9999998, 0, 0, 0, 1, -0.0068883896, 0, -0.
 mesh = SubResource("SphereMesh_i5qnm")
 script = ExtResource("43_skulleye")
 eye_color_enemy = Color(0.3589883, 3.008172e-07, 9.62615e-08, 1)
-hover_intensity_multiplier = 4.0
+hover_intensity_multiplier = 2.3
 
 [node name="SkullCollision" type="StaticBody3D" parent="Masa/skullp"]
 metadata/is_skull = true
