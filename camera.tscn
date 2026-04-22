@@ -1134,6 +1134,8 @@ shape = SubResource("BoxShape3D_usasj")
 [node name="DemoSonuCam" type="Camera3D" parent="."]
 transform = Transform3D(-1, 5.0143644e-08, -7.161255e-08, -1.4451492e-08, 0.71306694, 0.701096, 8.622005e-08, 0.701096, -0.71306694, 0.03406398, -0.3246966, -2.44926)
 
+[node name="FreeCam" type="Camera3D" parent="."]
+
 [editable path="Sitting"]
 [editable path="Masa/box"]
 [editable path="Posters/paint2"]

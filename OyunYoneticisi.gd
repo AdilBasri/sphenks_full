@@ -136,6 +136,10 @@ func _input(event):
 		# Ctrl + N: Jump to Phase 6 (Debug)
 		if event.keycode == KEY_N and event.ctrl_pressed:
 			_debug_skip_to_phase_6()
+		# Ctrl + F: Toggle FreeCam
+		if (event.keycode == KEY_F or event.physical_keycode == KEY_F) and (event.ctrl_pressed or Input.is_key_pressed(KEY_CTRL)):
+			print("[OyunYoneticisi] Ctrl+F detected!")
+			_toggle_freecam()
 
 
 func _debug_kill_enemy_king():
@@ -177,6 +181,46 @@ func _debug_skip_to_phase_6():
 	
 	# Skip directly to escape start
 	_on_phase_6_start()
+
+func _toggle_freecam():
+	print("[OyunYoneticisi] Toggling FreeCam...")
+	var free_cam = get_tree().root.find_child("FreeCam", true, false)
+	
+	if not free_cam:
+		# Try searching for case-insensitive or other names
+		var all_nodes = get_tree().root.find_children("*", "Camera3D", true, false)
+		for node in all_nodes:
+			if "free" in node.name.to_lower():
+				free_cam = node
+				break
+	
+	if not free_cam:
+		# Create it dynamically if it doesn't exist
+		print("[OyunYoneticisi] FreeCam node not found. Creating one...")
+		free_cam = Camera3D.new()
+		free_cam.name = "FreeCam"
+		free_cam.set_script(load("res://Scripts/FreeCam.gd"))
+		# Start at current camera position
+		var current_cam = get_viewport().get_camera_3d()
+		if current_cam:
+			free_cam.global_transform = current_cam.global_transform
+		get_tree().root.add_child(free_cam)
+	
+	if free_cam.has_method("set_enabled"):
+		var new_state = not free_cam.is_active
+		free_cam.set_enabled(new_state)
+		print("[OyunYoneticisi] FreeCam enabled: ", new_state)
+		
+		# If we are disabling freecam, restore the mouse mode of the game
+		if not new_state:
+			var cam = get_viewport().get_camera_3d()
+			if cam and cam.has_method("restore_mouse_mode"):
+				cam.restore_mouse_mode()
+	else:
+		# If the node exists but doesn't have the script, attach it
+		print("[OyunYoneticisi] FreeCam node found but missing script. Attaching...")
+		free_cam.set_script(load("res://Scripts/FreeCam.gd"))
+		free_cam.set_enabled(true)
 
 func _on_phase_6_start():
 	print("[OyunYoneticisi] Entering Escape Sequence (Final Phase). Triggering Stand Up.")

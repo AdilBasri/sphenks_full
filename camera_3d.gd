@@ -451,6 +451,13 @@ func _process(_delta):
 		
 	if is_locked: return
 	
+	# Skip UI and raycast updates if this camera is not the active one (e.g., FreeCam is active)
+	if not is_current():
+		if piece_name_label: piece_name_label.visible = false
+		if held_piece_name_label: held_piece_name_label.visible = false
+		if crosshair_ui: crosshair_ui.visible = false
+		return
+	
 	# Shake logic
 	if shake_duration > 0:
 		shake_duration -= _delta
