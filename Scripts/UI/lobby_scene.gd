@@ -159,7 +159,8 @@ func _style_input(input: LineEdit):
 # ODA SATIRI OLUŞTUR
 # ─────────────────────────────────────────────
 
-func add_lobby_row(room_name: String, host_name: String, players_str: String, is_locked: bool, lobby_id: int):
+func add_lobby_row(room_name: String, host_name: String, players_str: String, is_locked: bool, lobby_id: int, correct_pwd: String = ""):
+
 	var row_container = MarginContainer.new()
 
 	# Arka plan panel
@@ -297,7 +298,8 @@ func add_lobby_row(room_name: String, host_name: String, players_str: String, is
 	click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	click_btn.pressed.connect(func(): 
 		if is_locked:
-			_on_password_required(lobby_id if lobby_id > 0 else 999999, "1234")
+			_on_password_required(lobby_id if lobby_id > 0 else 999999, correct_pwd)
+
 		else:
 			if lobby_id > 0 and lobby_id != 999999:
 				OnlineManager.join_lobby(lobby_id)
@@ -513,8 +515,10 @@ func populate_lobby_list(lobbies: Array):
 			lobby.get("host", ""),
 			str(lobby.get("current_players", 0)) + " / " + str(lobby.get("max_players", 4)),
 			lobby.get("locked", false),
-			lobby.get("id", 0)
+			lobby.get("id", 0),
+			lobby.get("password", "")
 		)
+
 
 # Test satırları (Steam olmadan görmek için)
 func _populate_test_rows():

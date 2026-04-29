@@ -31,7 +31,17 @@ func _ready():
 	if SesYoneticisi.has_method("start_menu_music"):
 		SesYoneticisi.start_menu_music()
 
+func is_local_host() -> bool:
+	if not OnlineManager.is_online:
+		return OnlineManager.is_host
+	if OnlineManager.lobby_id == 0:
+		return false
+	var owner_id = Steam.getLobbyOwner(OnlineManager.lobby_id)
+	return owner_id == OnlineManager.my_steam_id
+
+
 # ─────────────────────────────────────────────
+
 # BAŞLAT
 # ─────────────────────────────────────────────
 
@@ -62,7 +72,8 @@ func _init_room():
 		_set_slot_filled(idx, steam_id, is_rdy)
 
 	# Host değilse start butonu görünmesin
-	start_btn.visible = OnlineManager.is_host
+	start_btn.visible = is_local_host()
+
 
 	_update_waiting_label()
 	_update_start_btn()
@@ -101,19 +112,52 @@ func _set_slot_empty(idx: int):
 	vbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	margin.add_child(vbox)
 
-	var dots = Label.new()
-	dots.text = "○ ○ ○ ○"
-	dots.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	dots.add_theme_color_override("font_color", Color("#2a2015"))
-	dots.add_theme_font_size_override("font_size", 12)
-	vbox.add_child(dots)
+	if is_local_host():
 
-	var awaiting = Label.new()
-	awaiting.text = "awaiting soul..."
-	awaiting.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	awaiting.add_theme_color_override("font_color", Color("#2a2015"))
-	awaiting.add_theme_font_size_override("font_size", 9)
-	vbox.add_child(awaiting)
+		var add_btn = Button.new()
+		add_btn.text = "+ ADD BOT"
+		add_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		add_btn.add_theme_color_override("font_color", C_GOLD_DIM)
+		add_btn.add_theme_font_size_override("font_size", 10)
+		
+		var btn_style = StyleBoxFlat.new()
+		btn_style.bg_color = Color("#141210")
+		btn_style.border_width_left = 1
+		btn_style.border_width_right = 1
+		btn_style.border_width_top = 1
+		btn_style.border_width_bottom = 1
+		btn_style.border_color = Color("#2a2015")
+		btn_style.corner_radius_top_left = 3
+		btn_style.corner_radius_top_right = 3
+		btn_style.corner_radius_bottom_left = 3
+		btn_style.corner_radius_bottom_right = 3
+		
+		var btn_hover = btn_style.duplicate()
+		btn_hover.bg_color = Color("#201c16")
+		btn_hover.border_color = C_GOLD
+		
+		add_btn.add_theme_stylebox_override("normal", btn_style)
+		add_btn.add_theme_stylebox_override("hover", btn_hover)
+		add_btn.add_theme_stylebox_override("pressed", btn_style)
+		add_btn.add_theme_stylebox_override("focus", btn_style)
+		
+		add_btn.pressed.connect(_on_add_bot_pressed)
+		vbox.add_child(add_btn)
+	else:
+		var dots = Label.new()
+		dots.text = "○ ○ ○ ○"
+		dots.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		dots.add_theme_color_override("font_color", Color("#2a2015"))
+		dots.add_theme_font_size_override("font_size", 12)
+		vbox.add_child(dots)
+
+		var awaiting = Label.new()
+		awaiting.text = "awaiting soul..."
+		awaiting.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		awaiting.add_theme_color_override("font_color", Color("#2a2015"))
+		awaiting.add_theme_font_size_override("font_size", 9)
+		vbox.add_child(awaiting)
+
 
 # ─────────────────────────────────────────────
 # SLOT — DOLU
@@ -228,6 +272,41 @@ func _set_slot_filled(idx: int, steam_id: int, is_rdy: bool):
 	badge_lbl.add_theme_font_size_override("font_size", 8)
 	badge_panel.add_child(badge_lbl)
 
+	if steam_id < 0 and is_local_host():
+		var rem_btn = Button.new()
+		rem_btn.text = "X"
+		rem_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		rem_btn.add_theme_color_override("font_color", Color("#cc7878"))
+		rem_btn.add_theme_font_size_override("font_size", 9)
+		
+		var rem_style = StyleBoxFlat.new()
+		rem_style.bg_color = Color("#201010")
+		rem_style.border_width_left = 1
+		rem_style.border_width_right = 1
+		rem_style.border_width_top = 1
+		rem_style.border_width_bottom = 1
+		rem_style.border_color = Color("#3a1a1a")
+		rem_style.corner_radius_top_left = 2
+		rem_style.corner_radius_top_right = 2
+		rem_style.corner_radius_bottom_left = 2
+		rem_style.corner_radius_bottom_right = 2
+		
+		var rem_hover = rem_style.duplicate()
+		rem_hover.bg_color = Color("#3a1515")
+		rem_hover.border_color = Color("#cc7878")
+		
+		rem_btn.add_theme_stylebox_override("normal", rem_style)
+		rem_btn.add_theme_stylebox_override("hover", rem_hover)
+		rem_btn.add_theme_stylebox_override("pressed", rem_style)
+		rem_btn.add_theme_stylebox_override("focus", rem_style)
+		
+		rem_btn.custom_minimum_size = Vector2(20, 20)
+		rem_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		
+		rem_btn.pressed.connect(func(): _on_remove_bot_pressed(steam_id))
+		hbox.add_child(rem_btn)
+
+
 func _clear_slot(panel: Panel):
 	for child in panel.get_children():
 		child.queue_free()
@@ -248,7 +327,8 @@ func _update_waiting_label():
 	waiting_label.text = "Waiting for players...  %d / %d" % [count, OnlineManager.max_players]
 
 func _update_start_btn():
-	if not OnlineManager.is_host:
+	if not is_local_host():
+
 		start_btn.visible = false
 		return
 	start_btn.visible = true
@@ -329,3 +409,25 @@ func _style_button(btn: Button, gold_border: bool):
 	btn.add_theme_stylebox_override("focus", normal.duplicate())
 	btn.add_theme_color_override("font_color", C_GOLD if gold_border else C_TEXT_DIM)
 	btn.add_theme_font_size_override("font_size", 11)
+
+
+func _on_add_bot_pressed():
+	if not is_local_host(): return
+
+	if OnlineManager.players.size() >= OnlineManager.max_players: return
+	
+	var bot_id = -1
+	while OnlineManager.players.has(bot_id):
+		bot_id -= 1
+		
+	var names = ["BOT Kundy", "BOT Gork", "BOT Xor", "BOT Vex", "BOT Zarn", "BOT Qubit", "BOT Nexus", "BOT Orion"]
+	var bname = names[randi() % names.size()]
+	
+	OnlineManager.add_bot(bot_id, bname)
+
+
+func _on_remove_bot_pressed(bot_id: int):
+	if not is_local_host(): return
+	OnlineManager.remove_bot(bot_id)
+
+

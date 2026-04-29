@@ -20,6 +20,8 @@ var is_host: bool = false
 var my_steam_id: int = 0
 var players: Dictionary = {}      # {steam_id: player_index}
 var player_ready: Dictionary = {} # {steam_id: bool}
+var bot_names: Dictionary = {}    # {steam_id: String}
+
 var room_code: String = ""
 var room_name: String = ""
 var room_password: String = ""
@@ -60,7 +62,8 @@ func _connect_steam_signals():
 
 func create_lobby(name: String = "My Room", password: String = ""):
 	room_name = name
-	room_password = password
+	room_password = password.strip_edges()
+
 	if not is_online:
 		# Offline test modu
 		room_code = _generate_unique_room_code()
@@ -132,13 +135,15 @@ func are_all_ready() -> bool:
 	return true
 
 func get_player_display_name(steam_id: int) -> String:
-	# Steam açıksa Steam ismini al, kapalıysa Player N
-	if is_online and steam_id != 0:
+	if bot_names.has(steam_id):
+		return bot_names[steam_id]
+	if is_online and steam_id > 0:
 		var name = Steam.getFriendPersonaName(steam_id)
 		if name and name != "":
 			return name
 	var idx = players.get(steam_id, 0)
 	return "Player " + str(idx + 1)
+
 
 # ─────────────────────────────────────────────
 # KOD ÜRETİMİ
@@ -191,6 +196,31 @@ func _handle_message(from_id: int, data: Dictionary):
 			player_ready_changed.emit(sid, rdy)
 		"start_game":
 			game_started.emit()
+		"add_bot":
+			var bid = int(data.get("bot_id", -1))
+			var bname = data.get("bot_name", "BOT")
+			if not players.has(bid):
+				var idx = players.size()
+				players[bid] = idx
+				player_ready[bid] = true
+				bot_names[bid] = bname
+				player_joined.emit(bid, idx)
+		"remove_bot":
+			var bid = int(data.get("bot_id", -1))
+			if players.has(bid):
+				players.erase(bid)
+				player_ready.erase(bid)
+				bot_names.erase(bid)
+				
+				var new_players = {}
+				var i = 0
+				for sid in players.keys():
+					new_players[sid] = i
+					i += 1
+				players = new_players
+				player_left.emit(bid)
+
+
 		_:
 			data_received.emit(from_id, data)
 
@@ -221,7 +251,8 @@ func _on_lobby_match_list(lobbies: Array):
 			return
 		
 		var target_lobby = lobbies[0]
-		var pwd = Steam.getLobbyData(target_lobby, "password")
+		var pwd = Steam.getLobbyData(target_lobby, "password").strip_edges()
+
 		
 		if pwd != "":
 			password_required.emit(target_lobby, pwd)
@@ -243,8 +274,10 @@ func _on_lobby_match_list(lobbies: Array):
 					"current_players": cur,
 					"max_players": max_p,
 					"locked": locked,
+					"password": Steam.getLobbyData(lob_id, "password").strip_edges(),
 					"id": lob_id
 				})
+
 		lobby_list_updated.emit(results)
 
 
@@ -289,12 +322,24 @@ func _on_lobby_chat_update(changed_lobby_id: int, changed_user_id: int, _making:
 		if players.has(changed_user_id):
 			players.erase(changed_user_id)
 			player_ready.erase(changed_user_id)
+			
+			var new_players = {}
+			var i = 0
+			for sid in players.keys():
+				new_players[sid] = i
+				i += 1
+			players = new_players
+			
+			if Steam.getLobbyOwner(lobby_id) == my_steam_id:
+				is_host = true
+				
 			player_left.emit(changed_user_id)
 
 
+
 func _on_p2p_session_request(remote_steam_id: int):
-	if players.has(remote_steam_id):
-		Steam.acceptP2PSessionWithUser(remote_steam_id)
+	Steam.acceptP2PSessionWithUser(remote_steam_id)
+
 
 func _add_player(steam_id: int):
 	if not players.has(steam_id):
@@ -302,3 +347,33 @@ func _add_player(steam_id: int):
 		players[steam_id] = idx
 		player_ready[steam_id] = false
 		player_joined.emit(steam_id, idx)
+
+
+func add_bot(bot_id: int, bname: String):
+	if not players.has(bot_id):
+		var idx = players.size()
+		players[bot_id] = idx
+		player_ready[bot_id] = true
+		bot_names[bot_id] = bname
+		if is_online:
+			broadcast({"type": "add_bot", "bot_id": bot_id, "bot_name": bname})
+		player_joined.emit(bot_id, idx)
+
+
+func remove_bot(bot_id: int):
+	if players.has(bot_id):
+		players.erase(bot_id)
+		player_ready.erase(bot_id)
+		bot_names.erase(bot_id)
+		
+		var new_players = {}
+		var i = 0
+		for sid in players.keys():
+			new_players[sid] = i
+			i += 1
+		players = new_players
+		
+		if is_online:
+			broadcast({"type": "remove_bot", "bot_id": bot_id})
+		player_left.emit(bot_id)
+
