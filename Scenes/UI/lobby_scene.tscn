@@ -131,10 +131,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 color = Color(0.173, 0.129, 0.078, 1)
 
-[node name="Sep3" type="Control" parent="MarginContainer/RootVBox"]
-custom_minimum_size = Vector2(0, 8)
-layout_mode = 2
-
 [node name="BottomBar" type="HBoxContainer" parent="MarginContainer/RootVBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
@@ -168,13 +164,3 @@ layout_mode = 2
 size_flags_vertical = 4
 text = "CREATE ROOM"
 
-[node name="Sep4" type="Control" parent="MarginContainer/RootVBox"]
-custom_minimum_size = Vector2(0, 6)
-layout_mode = 2
-
-[node name="Footer" type="Label" parent="MarginContainer/RootVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.227, 0.188, 0.125, 1)
-theme_override_font_sizes/font_size = 9
-text = "LOBBY"
-horizontal_alignment = 1

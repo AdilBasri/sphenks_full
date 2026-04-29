@@ -1,28 +1,27 @@
 extends Control
 
 # --- RENKLER ---
-const C_BG         = Color("#0f0d0b")
 const C_GOLD       = Color("#cca653")
 const C_GOLD_DIM   = Color("#5b4a32")
 const C_ROW_BG     = Color("#151210")
 const C_ROW_LINE   = Color("#2a2015")
 const C_TEXT_DIM   = Color("#8c7a62")
 const C_TEXT_MUTED = Color("#3a3020")
-const C_READY      = Color("#3a6b35")
-const C_NOT_READY  = Color("#6b3535")
+const C_READY      = Color("#2a5a26")
+const C_NOT_READY  = Color("#5a2a2a")
 const C_EMPTY_BG   = Color("#0e0c0a")
 
 # --- NODE REFERANSLARI ---
-@onready var room_name_label: Label  = $MarginContainer/RootVBox/Header/RoomNameLabel
-@onready var player_grid: GridContainer = $MarginContainer/RootVBox/PlayerGrid
-@onready var room_code_value: Label  = $MarginContainer/RootVBox/RoomCodeSection/RoomCodeValue
-@onready var waiting_label: Label    = $MarginContainer/RootVBox/WaitingLabel
-@onready var leave_btn: Button       = $MarginContainer/RootVBox/BottomBar/LeaveBtn
-@onready var ready_btn: Button       = $MarginContainer/RootVBox/BottomBar/ReadyBtn
-@onready var start_btn: Button       = $MarginContainer/RootVBox/BottomBar/StartBtn
+@onready var room_name_label: Label      = $MarginContainer/RootVBox/Header/RoomNameLabel
+@onready var player_grid: GridContainer  = $MarginContainer/RootVBox/PlayerGrid
+@onready var room_code_value: Label      = $MarginContainer/RootVBox/RoomCodeSection/RoomCodeValue
+@onready var waiting_label: Label        = $MarginContainer/RootVBox/WaitingLabel
+@onready var leave_btn: Button           = $MarginContainer/RootVBox/BottomBar/LeaveBtn
+@onready var ready_btn: Button           = $MarginContainer/RootVBox/BottomBar/ReadyBtn
+@onready var start_btn: Button           = $MarginContainer/RootVBox/BottomBar/StartBtn
 
 var slot_panels: Array = []
-var is_ready: bool = false
+var is_ready_local: bool = false
 
 func _ready():
 	_apply_styles()
@@ -63,9 +62,10 @@ func _init_room():
 	start_btn.visible = OnlineManager.is_host
 
 	_update_waiting_label()
+	_update_start_btn()
 
 # ─────────────────────────────────────────────
-# SLOT YÖNETİMİ
+# SLOT — BOŞ
 # ─────────────────────────────────────────────
 
 func _set_slot_empty(idx: int):
@@ -89,8 +89,8 @@ func _set_slot_empty(idx: int):
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 12)
 	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_bottom", 10)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_bottom", 8)
 	panel.add_child(margin)
 
 	var vbox = VBoxContainer.new()
@@ -102,7 +102,7 @@ func _set_slot_empty(idx: int):
 	dots.text = "○ ○ ○ ○"
 	dots.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dots.add_theme_color_override("font_color", Color("#2a2015"))
-	dots.add_theme_font_size_override("font_size", 14)
+	dots.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(dots)
 
 	var awaiting = Label.new()
@@ -111,6 +111,10 @@ func _set_slot_empty(idx: int):
 	awaiting.add_theme_color_override("font_color", Color("#2a2015"))
 	awaiting.add_theme_font_size_override("font_size", 9)
 	vbox.add_child(awaiting)
+
+# ─────────────────────────────────────────────
+# SLOT — DOLU
+# ─────────────────────────────────────────────
 
 func _set_slot_filled(idx: int, steam_id: int, is_rdy: bool):
 	if idx >= slot_panels.size(): return
@@ -133,38 +137,38 @@ func _set_slot_filled(idx: int, steam_id: int, is_rdy: bool):
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 10)
 	margin.add_theme_constant_override("margin_right", 10)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_bottom", 8)
+	margin.add_theme_constant_override("margin_top", 6)
+	margin.add_theme_constant_override("margin_bottom", 6)
 	panel.add_child(margin)
 
 	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 10)
+	hbox.add_theme_constant_override("separation", 8)
 	hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	margin.add_child(hbox)
 
 	# Avatar daire
 	var avatar_panel = Panel.new()
-	avatar_panel.custom_minimum_size = Vector2(44, 44)
+	avatar_panel.custom_minimum_size = Vector2(38, 38)
 	var avatar_style = StyleBoxFlat.new()
 	avatar_style.bg_color = _steam_id_to_color(steam_id)
-	avatar_style.corner_radius_top_left = 22
-	avatar_style.corner_radius_top_right = 22
-	avatar_style.corner_radius_bottom_left = 22
-	avatar_style.corner_radius_bottom_right = 22
+	avatar_style.corner_radius_top_left = 19
+	avatar_style.corner_radius_top_right = 19
+	avatar_style.corner_radius_bottom_left = 19
+	avatar_style.corner_radius_bottom_right = 19
 	avatar_panel.add_theme_stylebox_override("panel", avatar_style)
 	hbox.add_child(avatar_panel)
 
 	var initial_label = Label.new()
 	initial_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var persona = Steam.getFriendPersonaName(steam_id) if OnlineManager.is_online else "?"
-	initial_label.text = persona.substr(0, 1).to_upper() if persona != "" else "?"
+	var display_name = OnlineManager.get_player_display_name(steam_id)
+	initial_label.text = display_name.substr(0, 1).to_upper()
 	initial_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	initial_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	initial_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
-	initial_label.add_theme_font_size_override("font_size", 18)
+	initial_label.add_theme_font_size_override("font_size", 15)
 	avatar_panel.add_child(initial_label)
 
-	# Info
+	# Bilgi sütunu
 	var info_vbox = VBoxContainer.new()
 	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_vbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -172,37 +176,52 @@ func _set_slot_filled(idx: int, steam_id: int, is_rdy: bool):
 	hbox.add_child(info_vbox)
 
 	var name_lbl = Label.new()
-	name_lbl.text = persona if persona != "" else str(steam_id)
+	name_lbl.text = display_name
 	name_lbl.add_theme_color_override("font_color", C_GOLD)
-	name_lbl.add_theme_font_size_override("font_size", 13)
-	name_lbl.clip_text = true
+	name_lbl.add_theme_font_size_override("font_size", 11)
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
 	info_vbox.add_child(name_lbl)
 
+	# Player index 0 = Host
 	var role_lbl = Label.new()
-	var host_id = OnlineManager.players.keys().min() # En düşük index = host
-	role_lbl.text = "Host" if OnlineManager.players.get(steam_id, -1) == 0 else "Joined"
+	var player_index = OnlineManager.players.get(steam_id, -1)
+	role_lbl.text = "Host" if player_index == 0 else "Joined"
 	role_lbl.add_theme_color_override("font_color", C_TEXT_DIM)
 	role_lbl.add_theme_font_size_override("font_size", 9)
 	info_vbox.add_child(role_lbl)
 
-	# Hazır rozet
+	# Hazır rozeti
+	var badge_margin = MarginContainer.new()
+	badge_margin.add_theme_constant_override("margin_top", 2)
+	info_vbox.add_child(badge_margin)
+
 	var badge_panel = Panel.new()
 	var badge_style = StyleBoxFlat.new()
-	badge_style.bg_color = C_READY if is_rdy else C_NOT_READY
-	badge_style.corner_radius_top_left = 3
-	badge_style.corner_radius_top_right = 3
-	badge_style.corner_radius_bottom_left = 3
-	badge_style.corner_radius_bottom_right = 3
-	badge_style.content_margin_left = 6
-	badge_style.content_margin_right = 6
-	badge_style.content_margin_top = 2
-	badge_style.content_margin_bottom = 2
+	if is_rdy:
+		badge_style.bg_color = Color("#1e5a1a")  # Koyu yeşil
+		badge_style.border_color = Color("#3a9a34")
+	else:
+		badge_style.bg_color = Color("#3a1a1a")  # Koyu kırmızı
+		badge_style.border_color = Color("#7a3030")
+	badge_style.border_width_left = 1
+	badge_style.border_width_right = 1
+	badge_style.border_width_top = 1
+	badge_style.border_width_bottom = 1
+	badge_style.corner_radius_top_left = 2
+	badge_style.corner_radius_top_right = 2
+	badge_style.corner_radius_bottom_left = 2
+	badge_style.corner_radius_bottom_right = 2
+	badge_style.content_margin_left = 5
+	badge_style.content_margin_right = 5
+	badge_style.content_margin_top = 1
+	badge_style.content_margin_bottom = 1
 	badge_panel.add_theme_stylebox_override("panel", badge_style)
-	info_vbox.add_child(badge_panel)
+	badge_margin.add_child(badge_panel)
 
 	var badge_lbl = Label.new()
 	badge_lbl.text = "READY" if is_rdy else "NOT READY"
-	badge_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 1))
+	badge_lbl.add_theme_color_override("font_color", Color("#7dcc78") if is_rdy else Color("#cc7878"))
 	badge_lbl.add_theme_font_size_override("font_size", 8)
 	badge_panel.add_child(badge_lbl)
 
@@ -218,7 +237,7 @@ func _steam_id_to_color(steam_id: int) -> Color:
 	return colors[steam_id % colors.size()]
 
 # ─────────────────────────────────────────────
-# GÜNCELLEME
+# DURUM GÜNCELLEME
 # ─────────────────────────────────────────────
 
 func _update_waiting_label():
@@ -226,10 +245,11 @@ func _update_waiting_label():
 	waiting_label.text = "Waiting for players...  %d / %d" % [count, OnlineManager.max_players]
 
 func _update_start_btn():
-	if not OnlineManager.is_host: return
-	var all_ready = OnlineManager.are_all_ready()
-	var enough = OnlineManager.players.size() >= 2
-	start_btn.disabled = not (all_ready and enough)
+	if not OnlineManager.is_host:
+		start_btn.visible = false
+		return
+	start_btn.visible = true
+	start_btn.disabled = not OnlineManager.are_all_ready()
 
 # ─────────────────────────────────────────────
 # SİNYALLER
@@ -250,9 +270,9 @@ func _on_leave_pressed():
 	get_tree().change_scene_to_file("res://Scenes/UI/lobby_scene.tscn")
 
 func _on_ready_pressed():
-	is_ready = not is_ready
-	OnlineManager.set_ready(is_ready)
-	ready_btn.text = "CANCEL READY" if is_ready else "READY UP"
+	is_ready_local = not is_ready_local
+	OnlineManager.set_ready(is_ready_local)
+	ready_btn.text = "CANCEL READY" if is_ready_local else "READY UP"
 
 func _on_start_pressed():
 	OnlineManager.start_game()
@@ -277,7 +297,6 @@ func _on_player_ready_changed(steam_id: int, p_is_ready: bool):
 	_update_start_btn()
 
 func _on_game_started():
-	# TODO: oyun sahnesine geçiş
 	print("Oyun Başlıyor!")
 	# get_tree().change_scene_to_file("res://Scenes/Game/game.tscn")
 

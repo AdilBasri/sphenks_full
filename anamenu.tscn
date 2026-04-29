@@ -102,9 +102,7 @@ text = "PLAY"
 alignment = 0
 
 [node name="OnlineButton" type="Button" parent="CanvasLayer/Control/MenuOptions"]
-modulate = Color(1, 1, 1, 0.4)
 layout_mode = 2
-disabled = true
 text = "ONLINE"
 alignment = 0
 
@@ -331,6 +329,8 @@ text = "NO"
 
 [connection signal="mouse_entered" from="CanvasLayer/Control/MenuOptions/PlayButton" to="." method="_on_button_hover"]
 [connection signal="pressed" from="CanvasLayer/Control/MenuOptions/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="mouse_entered" from="CanvasLayer/Control/MenuOptions/OnlineButton" to="." method="_on_button_hover"]
+[connection signal="pressed" from="CanvasLayer/Control/MenuOptions/OnlineButton" to="." method="_on_online_button_pressed"]
 [connection signal="mouse_entered" from="CanvasLayer/Control/MenuOptions/SettingsButton" to="." method="_on_button_hover"]
 [connection signal="pressed" from="CanvasLayer/Control/MenuOptions/SettingsButton" to="." method="_on_settings_button_pressed"]
 [connection signal="mouse_entered" from="CanvasLayer/Control/MenuOptions/ResetButton" to="." method="_on_button_hover"]

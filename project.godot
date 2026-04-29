@@ -53,7 +53,7 @@ textures/default_filters/use_nearest_mipmap_filter=true
 
 [steam]
 
-initialization/app_id=0
+initialization/app_id=480
 initialization/initialize_on_startup=false
 initialization/embed_callbacks=false
 multiplayer_peer/max_channels=4

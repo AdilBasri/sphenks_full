@@ -86,6 +86,10 @@ func _on_exit_button_pressed():
 	_play_click_sound()
 	get_tree().quit()
 
+func _on_online_button_pressed():
+	_play_click_sound()
+	get_tree().change_scene_to_file("res://Scenes/UI/lobby_scene.tscn")
+
 # --- Settings Panel Logic ---
 
 func _on_back_button_pressed():

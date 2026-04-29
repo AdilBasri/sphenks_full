@@ -159,13 +159,3 @@ size_flags_vertical = 4
 disabled = true
 text = "START GAME"
 
-[node name="Sep6" type="Control" parent="MarginContainer/RootVBox"]
-custom_minimum_size = Vector2(0, 4)
-layout_mode = 2
-
-[node name="Footer" type="Label" parent="MarginContainer/RootVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.227, 0.188, 0.125, 1)
-theme_override_font_sizes/font_size = 8
-text = "SCREEN 2 — INSIDE A ROOM"
-horizontal_alignment = 1
