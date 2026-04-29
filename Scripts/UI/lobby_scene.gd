@@ -1,12 +1,12 @@
 extends Control
 
-# Tüm node referansları
-var lobby_list_vbox: VBoxContainer
-var refresh_btn: Button
-var create_btn: Button
-var back_btn: Button
-var room_code_input: LineEdit
-var no_rooms_label: Label
+# Node referansları (.tscn'den)
+@onready var lobby_list_vbox: VBoxContainer = $MarginContainer/RootVBox/ScrollContainer/LobbyListVBox
+@onready var no_rooms_label: Label         = $MarginContainer/RootVBox/NoRoomsLabel
+@onready var refresh_btn: Button           = $MarginContainer/RootVBox/BottomBar/RefreshBtn
+@onready var create_btn: Button            = $MarginContainer/RootVBox/BottomBar/CreateBtn
+@onready var back_btn: Button              = $MarginContainer/RootVBox/BottomBar/BackBtn
+@onready var room_code_input: LineEdit     = $MarginContainer/RootVBox/BottomBar/RoomCodeInput
 
 # --- RENKLER ---
 const C_BG         = Color("#0f0d0b")
@@ -19,208 +19,21 @@ const C_TEXT_DIM   = Color("#8c7a62")
 const C_TEXT_MUTED = Color("#3a3020")
 
 func _ready():
-	_build_ui()
+	_apply_button_styles()
 	_connect_signals()
 	_populate_test_rows()
 
-func _build_ui():
-	# === BACKGROUND ===
-	var bg = ColorRect.new()
-	bg.color = C_BG
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+# ─────────────────────────────────────────────
+# STİL - Sadece buton/input stilleri (renkler .tscn'den ayarlanamıyor kolayca)
+# ─────────────────────────────────────────────
 
-	# Vignette (koyu kenarlı)
-	var vignette = _make_gradient_rect()
-	add_child(vignette)
-
-	# === ROOT MARGIN CONTAINER ===
-	var root_margin = MarginContainer.new()
-	root_margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root_margin.add_theme_constant_override("margin_left", 24)
-	root_margin.add_theme_constant_override("margin_right", 24)
-	root_margin.add_theme_constant_override("margin_top", 12)
-	root_margin.add_theme_constant_override("margin_bottom", 10)
-	add_child(root_margin)
-
-	var root_vbox = VBoxContainer.new()
-	root_vbox.add_theme_constant_override("separation", 0)
-	root_margin.add_child(root_vbox)
-
-	# === HEADER ===
-	var header = VBoxContainer.new()
-	header.add_theme_constant_override("separation", 2)
-	root_vbox.add_child(header)
-
-	var title = Label.new()
-	title.text = "INTERRED"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", C_GOLD)
-	title.add_theme_font_size_override("font_size", 32)
-	header.add_child(title)
-
-	var arrow = Label.new()
-	arrow.text = "▼"
-	arrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	arrow.add_theme_color_override("font_color", C_GOLD_DIM)
-	arrow.add_theme_font_size_override("font_size", 10)
-	header.add_child(arrow)
-
-	var subtitle = Label.new()
-	subtitle.text = "— OPEN ROOMS —"
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_color_override("font_color", C_GOLD_DIM)
-	subtitle.add_theme_font_size_override("font_size", 11)
-	header.add_child(subtitle)
-
-	# Ayırıcı
-	var sep1 = _make_separator(8)
-	root_vbox.add_child(sep1)
-
-	# === TABLO BAŞLIĞI ===
-	var table_header = _make_table_row_header()
-	root_vbox.add_child(table_header)
-
-	var sep2 = _make_separator(4)
-	root_vbox.add_child(sep2)
-
-	# === SCROLL - ODA LİSTESİ ===
-	var scroll = ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	root_vbox.add_child(scroll)
-
-	lobby_list_vbox = VBoxContainer.new()
-	lobby_list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lobby_list_vbox.add_theme_constant_override("separation", 4)
-	scroll.add_child(lobby_list_vbox)
-
-	# "no more rooms found"
-	var sep3 = _make_separator(6)
-	root_vbox.add_child(sep3)
-
-	no_rooms_label = Label.new()
-	no_rooms_label.text = "no more rooms found"
-	no_rooms_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	no_rooms_label.add_theme_color_override("font_color", C_TEXT_MUTED)
-	no_rooms_label.add_theme_font_size_override("font_size", 10)
-	no_rooms_label.visible = false
-	root_vbox.add_child(no_rooms_label)
-
-	# === SPACER ===
-	var spacer = Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root_vbox.add_child(spacer)
-
-	# === ALT BUTON ÇUBUĞU ===
-	var bottom_sep = _make_hsep_line()
-	root_vbox.add_child(bottom_sep)
-
-	var sep4 = _make_separator(8)
-	root_vbox.add_child(sep4)
-
-	var bottom_bar = HBoxContainer.new()
-	bottom_bar.add_theme_constant_override("separation", 10)
-	root_vbox.add_child(bottom_bar)
-
-	back_btn = _make_button("BACK", 90)
-	bottom_bar.add_child(back_btn)
-
-	refresh_btn = _make_button("↻  REFRESH", 120)
-	bottom_bar.add_child(refresh_btn)
-
-	# Genişletici
-	var fill = Control.new()
-	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bottom_bar.add_child(fill)
-
-	room_code_input = LineEdit.new()
-	room_code_input.placeholder_text = "ENTER ROOM CODE"
-	room_code_input.custom_minimum_size = Vector2(160, 34)
-	room_code_input.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+func _apply_button_styles():
+	_style_button(back_btn, false)
+	_style_button(refresh_btn, false)
+	_style_button(create_btn, true)
 	_style_input(room_code_input)
-	bottom_bar.add_child(room_code_input)
 
-	create_btn = _make_button("CREATE ROOM", 130, true)
-	bottom_bar.add_child(create_btn)
-
-	var sep5 = _make_separator(6)
-	root_vbox.add_child(sep5)
-
-	# === FOOTER ===
-	var footer = Label.new()
-	footer.text = "SCREEN 1 — LOBBY BROWSER"
-	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	footer.add_theme_color_override("font_color", C_TEXT_MUTED)
-	footer.add_theme_font_size_override("font_size", 9)
-	root_vbox.add_child(footer)
-
-# ─────────────────────────────────────────────
-# YARDIMCI FONKSIYONLAR
-# ─────────────────────────────────────────────
-
-func _make_gradient_rect() -> Control:
-	# Kenar karartma efekti (simüle)
-	var c = ColorRect.new()
-	c.set_anchors_preset(Control.PRESET_FULL_RECT)
-	c.color = Color(0, 0, 0, 0)
-	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return c
-
-func _make_separator(height: int) -> Control:
-	var s = Control.new()
-	s.custom_minimum_size = Vector2(0, height)
-	return s
-
-func _make_hsep_line() -> ColorRect:
-	var line = ColorRect.new()
-	line.color = C_GOLD_FAINT
-	line.custom_minimum_size = Vector2(0, 1)
-	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return line
-
-func _make_table_row_header() -> HBoxContainer:
-	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 0)
-
-	# Sol boşluk (accent bar ile hizalamak için)
-	var pad = Control.new()
-	pad.custom_minimum_size = Vector2(10, 0)
-	hbox.add_child(pad)
-
-	var h_name = _make_header_label("ROOM NAME")
-	h_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(h_name)
-
-	var h_host = _make_header_label("HOST")
-	h_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(h_host)
-
-	var h_players = _make_header_label("PLAYERS")
-	h_players.custom_minimum_size = Vector2(60, 0)
-	h_players.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hbox.add_child(h_players)
-
-	var h_lock = _make_header_label("LOCK")
-	h_lock.custom_minimum_size = Vector2(40, 0)
-	h_lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hbox.add_child(h_lock)
-
-	return hbox
-
-func _make_header_label(text: String) -> Label:
-	var lbl = Label.new()
-	lbl.text = text
-	lbl.add_theme_color_override("font_color", C_GOLD_DIM)
-	lbl.add_theme_font_size_override("font_size", 10)
-	return lbl
-
-func _make_button(text: String, min_width: int = 100, gold_border: bool = false) -> Button:
-	var btn = Button.new()
-	btn.text = text
-	btn.custom_minimum_size = Vector2(min_width, 34)
-	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-
+func _style_button(btn: Button, gold_border: bool):
 	var normal = StyleBoxFlat.new()
 	normal.bg_color = Color("#141210")
 	normal.border_width_left = 1
@@ -246,7 +59,6 @@ func _make_button(text: String, min_width: int = 100, gold_border: bool = false)
 	btn.add_theme_stylebox_override("focus", normal.duplicate())
 	btn.add_theme_color_override("font_color", C_GOLD if gold_border else C_TEXT_DIM)
 	btn.add_theme_font_size_override("font_size", 11)
-	return btn
 
 func _style_input(input: LineEdit):
 	var style = StyleBoxFlat.new()
@@ -273,12 +85,8 @@ func _style_input(input: LineEdit):
 # ODA SATIRI OLUŞTUR
 # ─────────────────────────────────────────────
 
-func add_lobby_row(room_name: String, sub_text: String, host_name: String, players_str: String, is_locked: bool, lobby_id: int):
+func add_lobby_row(room_name: String, host_name: String, players_str: String, is_locked: bool, lobby_id: int):
 	var row_container = MarginContainer.new()
-	row_container.add_theme_constant_override("margin_left", 0)
-	row_container.add_theme_constant_override("margin_right", 0)
-	row_container.add_theme_constant_override("margin_top", 0)
-	row_container.add_theme_constant_override("margin_bottom", 0)
 
 	# Arka plan panel
 	var row_bg = Panel.new()
@@ -306,24 +114,14 @@ func add_lobby_row(room_name: String, sub_text: String, host_name: String, playe
 	space1.custom_minimum_size = Vector2(8, 0)
 	hbox.add_child(space1)
 
-	# Oda isim + sub text
-	var room_vbox = VBoxContainer.new()
-	room_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	room_vbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	room_vbox.add_theme_constant_override("separation", 1)
-	hbox.add_child(room_vbox)
-
+	# Oda ismi
 	var name_lbl = Label.new()
 	name_lbl.text = room_name
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	name_lbl.add_theme_color_override("font_color", C_GOLD)
 	name_lbl.add_theme_font_size_override("font_size", 13)
-	room_vbox.add_child(name_lbl)
-
-	var sub_lbl = Label.new()
-	sub_lbl.text = sub_text
-	sub_lbl.add_theme_color_override("font_color", C_GOLD_DIM)
-	sub_lbl.add_theme_font_size_override("font_size", 9)
-	room_vbox.add_child(sub_lbl)
+	hbox.add_child(name_lbl)
 
 	# Host
 	var host_lbl = Label.new()
@@ -334,7 +132,7 @@ func add_lobby_row(room_name: String, sub_text: String, host_name: String, playe
 	host_lbl.add_theme_font_size_override("font_size", 11)
 	hbox.add_child(host_lbl)
 
-	# Oyuncu sayısı (çerçeveli rozet)
+	# Oyuncu sayısı rozet
 	var p_margin = MarginContainer.new()
 	p_margin.custom_minimum_size = Vector2(60, 0)
 	p_margin.add_theme_constant_override("margin_left", 4)
@@ -374,17 +172,18 @@ func add_lobby_row(room_name: String, sub_text: String, host_name: String, playe
 
 	# Kilit
 	var lock_lbl = Label.new()
-	lock_lbl.text = "🔒" if is_locked else "—"
-	lock_lbl.custom_minimum_size = Vector2(40, 0)
+	if is_locked:
+		lock_lbl.text = "🔒"
+		lock_lbl.add_theme_color_override("font_color", Color("#cca653")) # Altın, görünür
+		lock_lbl.add_theme_font_size_override("font_size", 14)
+	else:
+		lock_lbl.text = "—"
+		lock_lbl.add_theme_color_override("font_color", C_TEXT_MUTED)
+		lock_lbl.add_theme_font_size_override("font_size", 12)
+	lock_lbl.custom_minimum_size = Vector2(46, 0)
 	lock_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lock_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lock_lbl.add_theme_color_override("font_color", C_GOLD_DIM)
-	lock_lbl.add_theme_font_size_override("font_size", 11)
 	hbox.add_child(lock_lbl)
-
-	var space2 = Control.new()
-	space2.custom_minimum_size = Vector2(6, 0)
-	hbox.add_child(space2)
 
 	# Tıklanabilir görünmez buton
 	var click_btn = Button.new()
@@ -443,6 +242,10 @@ func _on_lobby_full():
 	create_btn.disabled = true
 	room_code_input.editable = false
 
+# ─────────────────────────────────────────────
+# LOBI LİSTESİ - Dışarıdan çağrılır
+# ─────────────────────────────────────────────
+
 func populate_lobby_list(lobbies: Array):
 	for child in lobby_list_vbox.get_children():
 		child.queue_free()
@@ -450,16 +253,18 @@ func populate_lobby_list(lobbies: Array):
 	for lobby in lobbies:
 		add_lobby_row(
 			lobby.get("name", "Unknown Room"),
-			lobby.get("mode", ""),
 			lobby.get("host", ""),
 			str(lobby.get("current_players", 0)) + " / " + str(lobby.get("max_players", 4)),
 			lobby.get("locked", false),
 			lobby.get("id", 0)
 		)
 
-# Test: Görsel referans için örnek satırlar
+# Test satırları (Steam olmadan görmek için)
 func _populate_test_rows():
-	add_lobby_row("The Hollow Keep",  "dungeon · swords only", "Morwen", "3 / 4", true,  1)
-	add_lobby_row("Crypt of Echoes",  "classic · all pieces",  "Dravek", "1 / 4", false, 2)
-	add_lobby_row("Bone Chamber",     "classic · all pieces",  "Vyreth", "2 / 4", false, 3)
+	add_lobby_row("The Hollow Keep",   "Morwen", "3 / 4", true,  1)
+	add_lobby_row("Crypt of Echoes",   "Dravek", "1 / 4", false, 2)
+	add_lobby_row("Bone Chamber",      "Vyreth", "2 / 4", false, 3)
+	add_lobby_row("Iron Sepulchre",    "Aldric", "1 / 4", true,  4)
+	add_lobby_row("The Drowning Vault","Seraph", "4 / 4", false, 5)
+	add_lobby_row("Ashgate Prison",    "Korryn", "2 / 4", false, 6)
 	no_rooms_label.visible = true
