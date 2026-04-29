@@ -212,9 +212,11 @@ func _connect_signals():
 	OnlineManager.player_joined.connect(_on_player_joined)
 	OnlineManager.player_left.connect(_on_player_left)
 	OnlineManager.lobby_full.connect(_on_lobby_full)
+	OnlineManager.entered_room.connect(_on_entered_room)
 
 func _on_create_pressed():
-	OnlineManager.create_lobby()
+	var room_name = "My Room" # İleride isim girişi eklenebilir
+	OnlineManager.create_lobby(room_name)
 
 func _on_refresh_pressed():
 	if OnlineManager.has_method("refresh_lobby_list"):
@@ -228,9 +230,16 @@ func _on_room_code_submitted(text: String):
 	if text.is_valid_int():
 		OnlineManager.join_lobby(text.to_int())
 		room_code_input.text = ""
+	elif text.length() == 6:
+		OnlineManager.join_by_code(text)
+		room_code_input.text = ""
 
 func _on_lobby_created(_id):
 	create_btn.disabled = true
+	# _on_entered_room sinyali tarafından yönetilecek
+
+func _on_entered_room():
+	get_tree().change_scene_to_file("res://Scenes/UI/room_scene.tscn")
 
 func _on_player_joined(_steam_id, _index):
 	pass

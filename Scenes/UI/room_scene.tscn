@@ -1,0 +1,171 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/room_scene.gd" id="1_room"]
+
+[node name="RoomScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_room")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0588235, 0.0509804, 0.043098, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 8
+
+[node name="RootVBox" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Header" type="VBoxContainer" parent="MarginContainer/RootVBox"]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/RootVBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.651, 0.325, 1)
+theme_override_font_sizes/font_size = 28
+text = "INTERRED"
+horizontal_alignment = 1
+
+[node name="RoomNameLabel" type="Label" parent="MarginContainer/RootVBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.357, 0.29, 0.196, 1)
+theme_override_font_sizes/font_size = 10
+text = "— ROOM NAME —"
+horizontal_alignment = 1
+
+[node name="Sep1" type="Control" parent="MarginContainer/RootVBox"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="PlayerGrid" type="GridContainer" parent="MarginContainer/RootVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+
+[node name="Slot0" type="Panel" parent="MarginContainer/RootVBox/PlayerGrid"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Slot1" type="Panel" parent="MarginContainer/RootVBox/PlayerGrid"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Slot2" type="Panel" parent="MarginContainer/RootVBox/PlayerGrid"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Slot3" type="Panel" parent="MarginContainer/RootVBox/PlayerGrid"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Sep2" type="Control" parent="MarginContainer/RootVBox"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="RoomCodeSection" type="VBoxContainer" parent="MarginContainer/RootVBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="RoomCodeLabel" type="Label" parent="MarginContainer/RootVBox/RoomCodeSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.357, 0.29, 0.196, 1)
+theme_override_font_sizes/font_size = 9
+text = "ROOM CODE"
+horizontal_alignment = 1
+
+[node name="RoomCodeValue" type="Label" parent="MarginContainer/RootVBox/RoomCodeSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.651, 0.325, 1)
+theme_override_font_sizes/font_size = 20
+text = "000000"
+horizontal_alignment = 1
+
+[node name="Sep3" type="Control" parent="MarginContainer/RootVBox"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+
+[node name="WaitingLabel" type="Label" parent="MarginContainer/RootVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.549, 0.478, 0.384, 1)
+theme_override_font_sizes/font_size = 10
+text = "Waiting for players...  0 / 4"
+horizontal_alignment = 1
+
+[node name="Sep4" type="Control" parent="MarginContainer/RootVBox"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+
+[node name="HSepLine" type="ColorRect" parent="MarginContainer/RootVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 1)
+color = Color(0.173, 0.129, 0.078, 1)
+
+[node name="Sep5" type="Control" parent="MarginContainer/RootVBox"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+
+[node name="BottomBar" type="HBoxContainer" parent="MarginContainer/RootVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="LeaveBtn" type="Button" parent="MarginContainer/RootVBox/BottomBar"]
+custom_minimum_size = Vector2(90, 32)
+layout_mode = 2
+size_flags_vertical = 4
+text = "LEAVE"
+
+[node name="BottomFill" type="Control" parent="MarginContainer/RootVBox/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ReadyBtn" type="Button" parent="MarginContainer/RootVBox/BottomBar"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+size_flags_vertical = 4
+text = "READY UP"
+
+[node name="StartBtn" type="Button" parent="MarginContainer/RootVBox/BottomBar"]
+custom_minimum_size = Vector2(140, 32)
+layout_mode = 2
+size_flags_vertical = 4
+disabled = true
+text = "START GAME"
+
+[node name="Sep6" type="Control" parent="MarginContainer/RootVBox"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+
+[node name="Footer" type="Label" parent="MarginContainer/RootVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.227, 0.188, 0.125, 1)
+theme_override_font_sizes/font_size = 8
+text = "SCREEN 2 — INSIDE A ROOM"
+horizontal_alignment = 1
