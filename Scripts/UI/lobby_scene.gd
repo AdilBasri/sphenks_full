@@ -2,11 +2,17 @@ extends Control
 
 # Node referansları (.tscn'den)
 @onready var lobby_list_vbox: VBoxContainer = $MarginContainer/RootVBox/ScrollContainer/LobbyListVBox
-@onready var no_rooms_label: Label         = $MarginContainer/RootVBox/NoRoomsLabel
 @onready var refresh_btn: Button           = $MarginContainer/RootVBox/BottomBar/RefreshBtn
 @onready var create_btn: Button            = $MarginContainer/RootVBox/BottomBar/CreateBtn
 @onready var back_btn: Button              = $MarginContainer/RootVBox/BottomBar/BackBtn
 @onready var room_code_input: LineEdit     = $MarginContainer/RootVBox/BottomBar/RoomCodeInput
+
+# Popup
+@onready var popup_overlay: ColorRect  = $PopupOverlay
+@onready var create_popup: Panel       = $CreateRoomPopup
+@onready var room_name_input: LineEdit = $CreateRoomPopup/MarginContainer/VBox/RoomNameInput
+@onready var popup_cancel: Button      = $CreateRoomPopup/MarginContainer/VBox/Buttons/CancelBtn
+@onready var popup_confirm: Button     = $CreateRoomPopup/MarginContainer/VBox/Buttons/ConfirmBtn
 
 # --- RENKLER ---
 const C_BG         = Color("#0f0d0b")
@@ -22,6 +28,9 @@ func _ready():
 	_apply_button_styles()
 	_connect_signals()
 	_populate_test_rows()
+	
+	if SesYoneticisi.has_method("start_menu_music"):
+		SesYoneticisi.start_menu_music()
 
 # ─────────────────────────────────────────────
 # STİL - Sadece buton/input stilleri (renkler .tscn'den ayarlanamıyor kolayca)
@@ -32,6 +41,26 @@ func _apply_button_styles():
 	_style_button(refresh_btn, false)
 	_style_button(create_btn, true)
 	_style_input(room_code_input)
+	_style_popup()
+
+func _style_popup():
+	# Popup Panel arka planı
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color("#0f0d0b")
+	panel_style.border_width_left = 1
+	panel_style.border_width_right = 1
+	panel_style.border_width_top = 1
+	panel_style.border_width_bottom = 1
+	panel_style.border_color = Color("#5b4a32")
+	panel_style.corner_radius_top_left = 4
+	panel_style.corner_radius_top_right = 4
+	panel_style.corner_radius_bottom_left = 4
+	panel_style.corner_radius_bottom_right = 4
+	create_popup.add_theme_stylebox_override("panel", panel_style)
+
+	_style_input(room_name_input)
+	_style_button(popup_cancel, false)
+	_style_button(popup_confirm, true)
 
 func _style_button(btn: Button, gold_border: bool):
 	var normal = StyleBoxFlat.new()
@@ -192,6 +221,15 @@ func add_lobby_row(room_name: String, host_name: String, players_str: String, is
 	var flat_style = StyleBoxEmpty.new()
 	for s in ["normal", "hover", "pressed", "focus"]:
 		click_btn.add_theme_stylebox_override(s, flat_style)
+	# Hover efekti
+	click_btn.mouse_entered.connect(func():
+		bg_style.bg_color = Color("#201c16")
+		bg_style.border_color = C_GOLD_DIM
+	)
+	click_btn.mouse_exited.connect(func():
+		bg_style.bg_color = C_ROW_BG
+		bg_style.border_color = C_ROW_LINE
+	)
 	click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	click_btn.pressed.connect(func(): OnlineManager.join_lobby(lobby_id))
 	row_container.add_child(click_btn)
@@ -214,16 +252,45 @@ func _connect_signals():
 	OnlineManager.lobby_full.connect(_on_lobby_full)
 	OnlineManager.entered_room.connect(_on_entered_room)
 
+	# Popup sinyalleri
+	popup_cancel.pressed.connect(_on_popup_cancel)
+	popup_confirm.pressed.connect(_on_popup_confirm)
+	room_name_input.text_submitted.connect(func(_t): _on_popup_confirm())
+	popup_overlay.gui_input.connect(func(ev):
+		if ev is InputEventMouseButton and ev.pressed:
+			_close_popup()
+	)
+
 func _on_create_pressed():
-	var room_name = "My Room" # İleride isim girişi eklenebilir
-	OnlineManager.create_lobby(room_name)
+	_show_create_popup()
+
+func _show_create_popup():
+	room_name_input.text = ""
+	popup_overlay.visible = true
+	create_popup.visible = true
+	room_name_input.call_deferred("grab_focus")
+
+func _close_popup():
+	popup_overlay.visible = false
+	create_popup.visible = false
+	room_name_input.text = ""
+
+func _on_popup_cancel():
+	_close_popup()
+
+func _on_popup_confirm():
+	var name = room_name_input.text.strip_edges()
+	if name == "":
+		name = "My Room"
+	_close_popup()
+	OnlineManager.create_lobby(name)
 
 func _on_refresh_pressed():
 	if OnlineManager.has_method("refresh_lobby_list"):
 		OnlineManager.refresh_lobby_list()
 
 func _on_back_pressed():
-	pass
+	get_tree().change_scene_to_file("res://anamenu.tscn")
 
 func _on_room_code_submitted(text: String):
 	text = text.strip_edges()
@@ -258,7 +325,6 @@ func _on_lobby_full():
 func populate_lobby_list(lobbies: Array):
 	for child in lobby_list_vbox.get_children():
 		child.queue_free()
-	no_rooms_label.visible = lobbies.is_empty()
 	for lobby in lobbies:
 		add_lobby_row(
 			lobby.get("name", "Unknown Room"),
@@ -276,4 +342,3 @@ func _populate_test_rows():
 	add_lobby_row("Iron Sepulchre",    "Aldric", "1 / 4", true,  4)
 	add_lobby_row("The Drowning Vault","Seraph", "4 / 4", false, 5)
 	add_lobby_row("Ashgate Prison",    "Korryn", "2 / 4", false, 6)
-	no_rooms_label.visible = true

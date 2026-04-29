@@ -117,14 +117,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="NoRoomsLabel" type="Label" parent="MarginContainer/RootVBox"]
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(0.227, 0.188, 0.125, 1)
-theme_override_font_sizes/font_size = 10
-text = "no more rooms found"
-horizontal_alignment = 1
-
 [node name="HSepLine" type="ColorRect" parent="MarginContainer/RootVBox"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
@@ -163,4 +155,81 @@ custom_minimum_size = Vector2(130, 34)
 layout_mode = 2
 size_flags_vertical = 4
 text = "CREATE ROOM"
+
+[node name="PopupOverlay" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.72)
+mouse_filter = 0
+
+[node name="CreateRoomPopup" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -85.0
+offset_right = 150.0
+offset_bottom = 85.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CreateRoomPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="CreateRoomPopup/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="CreateRoomPopup/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.651, 0.325, 1)
+theme_override_font_sizes/font_size = 16
+text = "CREATE ROOM"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="CreateRoomPopup/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.357, 0.29, 0.196, 1)
+theme_override_font_sizes/font_size = 9
+text = "Enter a name for your dungeon"
+horizontal_alignment = 1
+
+[node name="RoomNameInput" type="LineEdit" parent="CreateRoomPopup/MarginContainer/VBox"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+placeholder_text = "e.g. The Hollow Keep"
+max_length = 24
+alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="CreateRoomPopup/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CancelBtn" type="Button" parent="CreateRoomPopup/MarginContainer/VBox/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CANCEL"
+
+[node name="ConfirmBtn" type="Button" parent="CreateRoomPopup/MarginContainer/VBox/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CREATE"
 

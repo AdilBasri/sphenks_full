@@ -27,6 +27,9 @@ func _ready():
 	_apply_styles()
 	_connect_signals()
 	_init_room()
+	
+	if SesYoneticisi.has_method("start_menu_music"):
+		SesYoneticisi.start_menu_music()
 
 # ─────────────────────────────────────────────
 # BAŞLAT
