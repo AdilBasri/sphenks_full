@@ -17,15 +17,18 @@ extends Control
 
 # Join Password Popup
 @onready var join_password_popup: Panel     = $JoinPasswordPopup
+@onready var join_password_title: Label     = $JoinPasswordPopup/MarginContainer/VBox/Title
 @onready var join_password_input: LineEdit  = $JoinPasswordPopup/MarginContainer/VBox/JoinPasswordInput
 @onready var join_password_cancel: Button   = $JoinPasswordPopup/MarginContainer/VBox/Buttons/CancelBtn
 @onready var join_password_confirm: Button  = $JoinPasswordPopup/MarginContainer/VBox/Buttons/ConfirmBtn
 
 # Join By Code Popup
 @onready var join_by_code_popup: Panel     = $JoinByCodePopup
+@onready var join_by_code_title: Label     = $JoinByCodePopup/MarginContainer/VBox/Title
 @onready var code_popup_input: LineEdit     = $JoinByCodePopup/MarginContainer/VBox/CodeInput
 @onready var code_popup_cancel: Button     = $JoinByCodePopup/MarginContainer/VBox/Buttons/CancelBtn
 @onready var code_popup_confirm: Button    = $JoinByCodePopup/MarginContainer/VBox/Buttons/ConfirmBtn
+
 
 var temp_joining_lobby_id: int = 0
 var temp_joining_lobby_pwd: String = ""
@@ -61,9 +64,10 @@ func _ready():
 
 func _apply_button_styles():
 	_style_button(back_btn, false)
-	_style_button(refresh_btn, false)
+	_style_button(refresh_btn, true)
 	_style_button(create_btn, true)
 	_style_button(join_by_code_btn, false)
+
 	_style_popup()
 
 
@@ -324,6 +328,9 @@ func _connect_signals():
 		OnlineManager.password_required.connect(_on_password_required)
 	if OnlineManager.has_signal("lobby_list_updated"):
 		OnlineManager.lobby_list_updated.connect(populate_lobby_list)
+	if OnlineManager.has_signal("join_failed"):
+		OnlineManager.join_failed.connect(_on_join_failed)
+
 
 	# Popup sinyalleri
 	popup_cancel.pressed.connect(_on_popup_cancel)
@@ -375,6 +382,25 @@ func _on_enter_code_pressed():
 
 func _on_code_popup_cancel():
 	_close_popup()
+
+func _on_join_failed(reason: String):
+	if not join_by_code_popup.visible and not join_password_popup.visible:
+		popup_overlay.visible = true
+		join_by_code_popup.visible = true
+	
+	if join_by_code_popup.visible:
+		join_by_code_title.text = reason.to_upper()
+		join_by_code_title.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
+		await (Engine.get_main_loop() as SceneTree).create_timer(2.0).timeout
+		join_by_code_title.text = "ENTER ROOM CODE"
+		join_by_code_title.add_theme_color_override("font_color", Color(0.8, 0.651, 0.325))
+	elif join_password_popup.visible:
+		join_password_title.text = reason.to_upper()
+		join_password_title.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
+		await (Engine.get_main_loop() as SceneTree).create_timer(2.0).timeout
+		join_password_title.text = "PASSWORD REQUIRED"
+		join_password_title.add_theme_color_override("font_color", Color(0.8, 0.651, 0.325))
+
 
 func _on_code_popup_confirm():
 	var code = code_popup_input.text.strip_edges()
@@ -429,9 +455,14 @@ func _on_join_password_confirm():
 			else:
 				OnlineManager.join_lobby(id)
 	else:
+		join_password_title.text = "WRONG PASSWORD!"
+		join_password_title.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
 		join_password_input.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
-		await (Engine.get_main_loop() as SceneTree).create_timer(0.5).timeout
+		await (Engine.get_main_loop() as SceneTree).create_timer(2.0).timeout
+		join_password_title.text = "PASSWORD REQUIRED"
+		join_password_title.add_theme_color_override("font_color", Color(0.8, 0.651, 0.325))
 		join_password_input.add_theme_color_override("font_color", C_GOLD_DIM)
+
 
 func _on_refresh_pressed():
 	if refresh_btn.disabled: return

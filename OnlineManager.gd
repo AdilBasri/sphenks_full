@@ -268,7 +268,15 @@ func _on_lobby_joined(joined_lobby_id: int, _permissions: int, _locked: bool, re
 			lobby_full.emit()
 		entered_room.emit()
 	else:
-		print("Lobiye katılamadı. Kod: ", response)
+		if response == 4:
+			join_failed.emit("Room is full!")
+		elif response == 2:
+			join_failed.emit("Room not found!")
+		elif response == 3:
+			join_failed.emit("Not allowed to join.")
+		else:
+			join_failed.emit("Failed to join.")
+
 
 func _on_lobby_chat_update(changed_lobby_id: int, changed_user_id: int, _making: int, chat_state: int):
 	if changed_lobby_id != lobby_id: return
