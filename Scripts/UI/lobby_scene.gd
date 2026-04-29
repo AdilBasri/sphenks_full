@@ -297,7 +297,13 @@ func add_lobby_row(room_name: String, host_name: String, players_str: String, is
 	)
 	click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	click_btn.pressed.connect(func(): 
+		var counts = players_str.split(" / ")
+		if counts.size() == 2 and int(counts[0]) >= int(counts[1]):
+			_on_join_failed("Room is full!")
+			return
+
 		if is_locked:
+
 			_on_password_required(lobby_id if lobby_id > 0 else 999999, correct_pwd)
 
 		else:
@@ -347,6 +353,17 @@ func _connect_signals():
 	code_popup_cancel.pressed.connect(_on_code_popup_cancel)
 	code_popup_confirm.pressed.connect(_on_code_popup_confirm)
 	code_popup_input.text_submitted.connect(func(_t): _on_code_popup_confirm())
+	code_popup_input.text_changed.connect(func(new_text):
+		var filtered = ""
+		for i in new_text.length():
+			if new_text[i] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+				filtered += new_text[i]
+		if filtered != new_text:
+			var caret = code_popup_input.caret_column
+			code_popup_input.text = filtered
+			code_popup_input.caret_column = caret - 1
+	)
+
 
 	
 	popup_overlay.gui_input.connect(func(ev):

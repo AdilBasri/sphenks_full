@@ -303,8 +303,13 @@ func _set_slot_filled(idx: int, steam_id: int, is_rdy: bool):
 		rem_btn.custom_minimum_size = Vector2(20, 20)
 		rem_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		
+		var spacer = Control.new()
+		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hbox.add_child(spacer)
+		
 		rem_btn.pressed.connect(func(): _on_remove_bot_pressed(steam_id))
 		hbox.add_child(rem_btn)
+
 
 
 func _clear_slot(panel: Panel):
@@ -332,7 +337,8 @@ func _update_start_btn():
 		start_btn.visible = false
 		return
 	start_btn.visible = true
-	start_btn.disabled = not OnlineManager.are_all_ready()
+	start_btn.disabled = not (OnlineManager.players.size() == OnlineManager.max_players and OnlineManager.are_all_ready())
+
 
 # ─────────────────────────────────────────────
 # SİNYALLER
@@ -421,7 +427,14 @@ func _on_add_bot_pressed():
 		bot_id -= 1
 		
 	var names = ["BOT Kundy", "BOT Gork", "BOT Xor", "BOT Vex", "BOT Zarn", "BOT Qubit", "BOT Nexus", "BOT Orion"]
-	var bname = names[randi() % names.size()]
+	var available = []
+	for n in names:
+		var used = false
+		for b in OnlineManager.bot_names.values():
+			if b == n: used = true
+		if not used: available.append(n)
+	var bname = available[randi() % available.size()] if available.size() > 0 else names[randi() % names.size()]
+
 	
 	OnlineManager.add_bot(bot_id, bname)
 

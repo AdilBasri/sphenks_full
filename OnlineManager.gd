@@ -172,8 +172,9 @@ func send_data(target_id: int, data: Dictionary):
 func broadcast(data: Dictionary):
 	if not is_online: return
 	for sid in players.keys():
-		if sid != my_steam_id:
+		if sid != my_steam_id and sid > 0:
 			send_data(sid, data)
+
 
 func _read_packets():
 	var packet_size = Steam.getAvailableP2PPacketSize(0)
@@ -190,10 +191,11 @@ func _read_packets():
 func _handle_message(from_id: int, data: Dictionary):
 	match data.get("type", ""):
 		"ready":
-			var sid = data.get("steam_id", from_id)
+			var sid = int(data.get("steam_id", from_id))
 			var rdy = data.get("is_ready", false)
 			player_ready[sid] = rdy
 			player_ready_changed.emit(sid, rdy)
+
 		"start_game":
 			game_started.emit()
 		"add_bot":
@@ -237,6 +239,8 @@ func _on_lobby_created(connect_flag: int, new_lobby_id: int):
 		Steam.setLobbyData(lobby_id, "room_code", room_code)
 		Steam.setLobbyData(lobby_id, "room_name", room_name)
 		Steam.setLobbyData(lobby_id, "password", room_password)
+		Steam.setLobbyData(lobby_id, "bot_count", "0")
+
 
 		_add_player(my_steam_id)
 		lobby_created.emit(lobby_id)
@@ -266,12 +270,15 @@ func _on_lobby_match_list(lobbies: Array):
 				var name = Steam.getLobbyData(lob_id, "room_name")
 				if name == "": name = "Steam Room"
 				var cur = Steam.getNumLobbyMembers(lob_id)
+				var b_count = int(Steam.getLobbyData(lob_id, "bot_count"))
+				cur += b_count
 				var max_p = max_players
 				var locked = Steam.getLobbyData(lob_id, "password") != ""
 				results.append({
 					"name": name,
 					"host": "Online Host",
 					"current_players": cur,
+
 					"max_players": max_p,
 					"locked": locked,
 					"password": Steam.getLobbyData(lob_id, "password").strip_edges(),
@@ -318,6 +325,10 @@ func _on_lobby_chat_update(changed_lobby_id: int, changed_user_id: int, _making:
 			_add_player(changed_user_id)
 			if players.size() >= max_players:
 				lobby_full.emit()
+			
+			if Steam.getLobbyOwner(lobby_id) == my_steam_id:
+				_sync_state_to(changed_user_id)
+
 	elif chat_state != 1:
 		if players.has(changed_user_id):
 			players.erase(changed_user_id)
@@ -356,8 +367,11 @@ func add_bot(bot_id: int, bname: String):
 		player_ready[bot_id] = true
 		bot_names[bot_id] = bname
 		if is_online:
+			if Steam.getLobbyOwner(lobby_id) == my_steam_id:
+				Steam.setLobbyData(lobby_id, "bot_count", str(bot_names.size()))
 			broadcast({"type": "add_bot", "bot_id": bot_id, "bot_name": bname})
 		player_joined.emit(bot_id, idx)
+
 
 
 func remove_bot(bot_id: int):
@@ -374,6 +388,18 @@ func remove_bot(bot_id: int):
 		players = new_players
 		
 		if is_online:
+			if Steam.getLobbyOwner(lobby_id) == my_steam_id:
+				Steam.setLobbyData(lobby_id, "bot_count", str(bot_names.size()))
 			broadcast({"type": "remove_bot", "bot_id": bot_id})
 		player_left.emit(bot_id)
+
+
+
+func _sync_state_to(target_id: int):
+	for bot_id in bot_names.keys():
+		var bname = bot_names[bot_id]
+		send_data(target_id, {"type": "add_bot", "bot_id": bot_id, "bot_name": bname})
+	for sid in player_ready.keys():
+		var rdy = player_ready[sid]
+		send_data(target_id, {"type": "ready", "steam_id": sid, "is_ready": rdy})
 
