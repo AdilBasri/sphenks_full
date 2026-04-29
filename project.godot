@@ -13,6 +13,8 @@ config_version=5
 config/name="Sphenks_Full"
 run/main_scene="res://Splash.tscn"
 config/features=PackedStringArray("4.5", "Forward Plus")
+boot_splash/bg_color=Color(0, 0, 0, 1)
+boot_splash/show_image=false
 
 [autoload]
 
@@ -35,7 +37,22 @@ window/stretch/mode="canvas_items"
 
 project/assembly_name="Sphenks_Full"
 
+[editor]
+
+version_control/godotsteam=false
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godotsteam/plugin.cfg")
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
 textures/default_filters/use_nearest_mipmap_filter=true
+
+[steam]
+
+initialization/app_id=0
+initialization/initialize_on_startup=false
+initialization/embed_callbacks=false
+multiplayer_peer/max_channels=4

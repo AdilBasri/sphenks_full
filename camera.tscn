@@ -1,8 +1,9 @@
-[gd_scene load_steps=73 format=3 uid="uid://uow6rxog5nvv"]
+[gd_scene load_steps=74 format=3 uid="uid://uow6rxog5nvv"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_6acwk"]
-[ext_resource type="PackedScene" path="res://Sitting.tscn" id="1_p6dlx"]
+[ext_resource type="PackedScene" uid="uid://6vf3j06lmxj4" path="res://Sitting.tscn" id="1_p6dlx"]
 [ext_resource type="Script" uid="uid://bnwkp11hmc7n" path="res://OyunYoneticisi.gd" id="1_w2vvk"]
+[ext_resource type="Script" uid="uid://beplcuekm582o" path="res://dıs_duvar.gd" id="2_1stwh"]
 [ext_resource type="Animation" uid="uid://c3w5olixra7ns" path="res://oturma1.res" id="2_eeger"]
 [ext_resource type="Animation" uid="uid://bvdvopdnjdm5w" path="res://enemy_gun.res" id="4_bi1g6"]
 [ext_resource type="Script" uid="uid://wuvldqmhm6c6" path="res://camera_3d.gd" id="4_pbwbf"]
@@ -162,6 +163,7 @@ use_collision = true
 collision_layer = 255
 collision_mask = 255
 size = Vector3(5, 3, 7)
+script = ExtResource("2_1stwh")
 
 [node name="IcDuvar" type="CSGBox3D" parent="DısDuvar"]
 operation = 2
@@ -1150,8 +1152,8 @@ transform = Transform3D(-1, 5.0143644e-08, -7.161255e-08, -1.4451492e-08, 0.7130
 [node name="FreeCam" type="Camera3D" parent="."]
 
 [node name="mirror" parent="." instance=ExtResource("43_6tiwl")]
-visible = false
 transform = Transform3D(-0.49990818, -1.8465633e-10, 0.009581294, 2.6755617e-05, 0.49999806, 0.0013959929, -0.009581256, 0.0013962612, -0.49990624, 0, -0.89633214, -1.0765464)
+visible = false
 
 [node name="Object_3" parent="mirror/Sketchfab_model/924a25e12872469b994c3d3091c26a59_obj_cleaner_materialmerger_gles" index="1"]
 surface_material_override/0 = SubResource("StandardMaterial3D_6tiwl")
