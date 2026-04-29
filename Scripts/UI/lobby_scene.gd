@@ -388,8 +388,17 @@ func _on_join_password_confirm():
 		join_password_input.add_theme_color_override("font_color", C_GOLD_DIM)
 
 func _on_refresh_pressed():
+	if refresh_btn.disabled: return
+	refresh_btn.disabled = true
+	refresh_btn.text = "REFRESHING..."
+	
 	if OnlineManager.has_method("refresh_lobby_list"):
 		OnlineManager.refresh_lobby_list()
+		
+	await (Engine.get_main_loop() as SceneTree).create_timer(1.5).timeout
+	refresh_btn.disabled = false
+	refresh_btn.text = "↻  REFRESH"
+
 
 func _on_back_pressed():
 	(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://anamenu.tscn")
@@ -440,4 +449,3 @@ func populate_lobby_list(lobbies: Array):
 # Test satırları (Steam olmadan görmek için)
 func _populate_test_rows():
 	pass
-
