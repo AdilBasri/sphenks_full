@@ -191,7 +191,9 @@ func _set_slot_filled(idx: int, steam_id: int, is_rdy: bool):
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 8)
 	hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.add_child(hbox)
+
 
 	# Avatar daire
 	var avatar_panel = Panel.new()
@@ -272,8 +274,9 @@ func _set_slot_filled(idx: int, steam_id: int, is_rdy: bool):
 	badge_lbl.add_theme_font_size_override("font_size", 8)
 	badge_panel.add_child(badge_lbl)
 
-	if steam_id < 0 and is_local_host():
+	if steam_id != OnlineManager.my_steam_id and is_local_host():
 		var rem_btn = Button.new()
+
 		rem_btn.text = "X"
 		rem_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		rem_btn.add_theme_color_override("font_color", Color("#cc7878"))
@@ -303,12 +306,9 @@ func _set_slot_filled(idx: int, steam_id: int, is_rdy: bool):
 		rem_btn.custom_minimum_size = Vector2(20, 20)
 		rem_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		
-		var spacer = Control.new()
-		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		hbox.add_child(spacer)
-		
 		rem_btn.pressed.connect(func(): _on_remove_bot_pressed(steam_id))
 		hbox.add_child(rem_btn)
+
 
 
 
@@ -439,8 +439,12 @@ func _on_add_bot_pressed():
 	OnlineManager.add_bot(bot_id, bname)
 
 
-func _on_remove_bot_pressed(bot_id: int):
+func _on_remove_bot_pressed(target_id: int):
 	if not is_local_host(): return
-	OnlineManager.remove_bot(bot_id)
+	if target_id < 0:
+		OnlineManager.remove_bot(target_id)
+	else:
+		OnlineManager.kick_player(target_id)
+
 
 

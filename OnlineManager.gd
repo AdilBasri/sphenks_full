@@ -221,6 +221,13 @@ func _handle_message(from_id: int, data: Dictionary):
 					i += 1
 				players = new_players
 				player_left.emit(bid)
+		"kick":
+			var target = int(data.get("steam_id", -1))
+			if target == my_steam_id:
+				leave_lobby()
+				join_failed.emit("You were kicked from the lobby.")
+				(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://Scenes/UI/lobby_scene.tscn")
+
 
 
 		_:
@@ -357,7 +364,11 @@ func _add_player(steam_id: int):
 		var idx = players.size()
 		players[steam_id] = idx
 		player_ready[steam_id] = false
+		if is_online and steam_id != my_steam_id and steam_id > 0:
+			Steam.acceptP2PSessionWithUser(steam_id)
+			send_data(steam_id, {"type": "ping"})
 		player_joined.emit(steam_id, idx)
+
 
 
 func add_bot(bot_id: int, bname: String):
@@ -403,3 +414,7 @@ func _sync_state_to(target_id: int):
 		var rdy = player_ready[sid]
 		send_data(target_id, {"type": "ready", "steam_id": sid, "is_ready": rdy})
 
+
+func kick_player(target_id: int):
+	if is_online and target_id > 0:
+		send_data(target_id, {"type": "kick", "steam_id": target_id})
