@@ -11,8 +11,19 @@ extends Control
 @onready var popup_overlay: ColorRect  = $PopupOverlay
 @onready var create_popup: Panel       = $CreateRoomPopup
 @onready var room_name_input: LineEdit = $CreateRoomPopup/MarginContainer/VBox/RoomNameInput
+@onready var room_password_input: LineEdit = $CreateRoomPopup/MarginContainer/VBox/RoomPasswordInput
 @onready var popup_cancel: Button      = $CreateRoomPopup/MarginContainer/VBox/Buttons/CancelBtn
 @onready var popup_confirm: Button     = $CreateRoomPopup/MarginContainer/VBox/Buttons/ConfirmBtn
+
+# Join Password Popup
+@onready var join_password_popup: Panel = $JoinPasswordPopup
+@onready var join_password_input: LineEdit = $JoinPasswordPopup/MarginContainer/VBox/JoinPasswordInput
+@onready var join_password_cancel: Button = $JoinPasswordPopup/MarginContainer/VBox/Buttons/CancelBtn
+@onready var join_password_confirm: Button = $JoinPasswordPopup/MarginContainer/VBox/Buttons/ConfirmBtn
+
+var temp_joining_lobby_id: int = 0
+var temp_joining_lobby_pwd: String = ""
+
 
 # --- RENKLER ---
 const C_BG         = Color("#0f0d0b")
@@ -57,10 +68,16 @@ func _style_popup():
 	panel_style.corner_radius_bottom_left = 4
 	panel_style.corner_radius_bottom_right = 4
 	create_popup.add_theme_stylebox_override("panel", panel_style)
+	join_password_popup.add_theme_stylebox_override("panel", panel_style)
 
 	_style_input(room_name_input)
+	_style_input(room_password_input)
+	_style_input(join_password_input)
+	
 	_style_button(popup_cancel, false)
 	_style_button(popup_confirm, true)
+	_style_button(join_password_cancel, false)
+	_style_button(join_password_confirm, true)
 
 func _style_button(btn: Button, gold_border: bool):
 	var normal = StyleBoxFlat.new()
@@ -231,7 +248,15 @@ func add_lobby_row(room_name: String, host_name: String, players_str: String, is
 		bg_style.border_color = C_ROW_LINE
 	)
 	click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	click_btn.pressed.connect(func(): OnlineManager.join_lobby(lobby_id))
+	click_btn.pressed.connect(func(): 
+		if is_locked:
+			_on_password_required(lobby_id if lobby_id > 0 else 999999, "1234")
+		else:
+			if lobby_id > 0 and lobby_id != 999999:
+				OnlineManager.join_lobby(lobby_id)
+			else:
+				(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://Scenes/UI/room_scene.tscn")
+	)
 	row_container.add_child(click_btn)
 
 	lobby_list_vbox.add_child(row_container)
@@ -251,15 +276,24 @@ func _connect_signals():
 	OnlineManager.player_left.connect(_on_player_left)
 	OnlineManager.lobby_full.connect(_on_lobby_full)
 	OnlineManager.entered_room.connect(_on_entered_room)
+	if OnlineManager.has_signal("password_required"):
+		OnlineManager.password_required.connect(_on_password_required)
 
 	# Popup sinyalleri
 	popup_cancel.pressed.connect(_on_popup_cancel)
 	popup_confirm.pressed.connect(_on_popup_confirm)
 	room_name_input.text_submitted.connect(func(_t): _on_popup_confirm())
+	room_password_input.text_submitted.connect(func(_t): _on_popup_confirm())
+	
+	join_password_cancel.pressed.connect(_on_join_password_cancel)
+	join_password_confirm.pressed.connect(_on_join_password_confirm)
+	join_password_input.text_submitted.connect(func(_t): _on_join_password_confirm())
+	
 	popup_overlay.gui_input.connect(func(ev):
 		if ev is InputEventMouseButton and ev.pressed:
 			_close_popup()
 	)
+
 
 func _on_create_pressed():
 	_show_create_popup()
@@ -280,17 +314,57 @@ func _on_popup_cancel():
 
 func _on_popup_confirm():
 	var name = room_name_input.text.strip_edges()
+	var pwd = room_password_input.text.strip_edges()
 	if name == "":
 		name = "My Room"
 	_close_popup()
-	OnlineManager.create_lobby(name)
+	room_password_input.text = ""
+	OnlineManager.create_lobby(name, pwd)
+
+func _on_password_required(target_id: int, correct_password: String):
+	temp_joining_lobby_id = target_id
+	temp_joining_lobby_pwd = correct_password
+	_show_join_password_popup()
+
+func _show_join_password_popup():
+	join_password_input.text = ""
+	popup_overlay.visible = true
+	join_password_popup.visible = true
+	join_password_input.call_deferred("grab_focus")
+
+func _close_join_popup():
+	popup_overlay.visible = false
+	join_password_popup.visible = false
+	join_password_input.text = ""
+
+func _on_join_password_cancel():
+	_close_join_popup()
+	temp_joining_lobby_id = 0
+	temp_joining_lobby_pwd = ""
+
+func _on_join_password_confirm():
+	var entered = join_password_input.text.strip_edges()
+	if entered == temp_joining_lobby_pwd or temp_joining_lobby_pwd == "":
+		var id = temp_joining_lobby_id
+		_close_join_popup()
+		temp_joining_lobby_id = 0
+		temp_joining_lobby_pwd = ""
+		if id > 0:
+			if id == 999999:
+				(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://Scenes/UI/room_scene.tscn")
+			else:
+				OnlineManager.join_lobby(id)
+	else:
+		join_password_input.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
+		await (Engine.get_main_loop() as SceneTree).create_timer(0.5).timeout
+		join_password_input.add_theme_color_override("font_color", C_GOLD_DIM)
 
 func _on_refresh_pressed():
 	if OnlineManager.has_method("refresh_lobby_list"):
 		OnlineManager.refresh_lobby_list()
 
 func _on_back_pressed():
-	get_tree().change_scene_to_file("res://anamenu.tscn")
+	(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://anamenu.tscn")
 
 func _on_room_code_submitted(text: String):
 	text = text.strip_edges()
@@ -306,7 +380,7 @@ func _on_lobby_created(_id):
 	# _on_entered_room sinyali tarafından yönetilecek
 
 func _on_entered_room():
-	get_tree().change_scene_to_file("res://Scenes/UI/room_scene.tscn")
+	(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://Scenes/UI/room_scene.tscn")
 
 func _on_player_joined(_steam_id, _index):
 	pass

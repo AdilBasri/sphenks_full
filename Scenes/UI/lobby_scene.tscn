@@ -176,9 +176,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -150.0
-offset_top = -85.0
+offset_top = -110.0
 offset_right = 150.0
-offset_bottom = 85.0
+offset_bottom = 110.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -196,7 +196,7 @@ theme_override_constants/margin_bottom = 14
 
 [node name="VBox" type="VBoxContainer" parent="CreateRoomPopup/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="Title" type="Label" parent="CreateRoomPopup/MarginContainer/VBox"]
 layout_mode = 2
@@ -209,27 +209,104 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.357, 0.29, 0.196, 1)
 theme_override_font_sizes/font_size = 9
-text = "Enter a name for your dungeon"
+text = "Name and Optional Password"
 horizontal_alignment = 1
 
 [node name="RoomNameInput" type="LineEdit" parent="CreateRoomPopup/MarginContainer/VBox"]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-placeholder_text = "e.g. The Hollow Keep"
+placeholder_text = "Dungeon Name"
 max_length = 24
 alignment = 1
+
+[node name="RoomPasswordInput" type="LineEdit" parent="CreateRoomPopup/MarginContainer/VBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+placeholder_text = "Password (optional)"
+max_length = 16
+alignment = 1
+secret = true
+
+[node name="Sep" type="Control" parent="CreateRoomPopup/MarginContainer/VBox"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
 
 [node name="Buttons" type="HBoxContainer" parent="CreateRoomPopup/MarginContainer/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="CancelBtn" type="Button" parent="CreateRoomPopup/MarginContainer/VBox/Buttons"]
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "CANCEL"
 
 [node name="ConfirmBtn" type="Button" parent="CreateRoomPopup/MarginContainer/VBox/Buttons"]
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "CREATE"
+
+[node name="JoinPasswordPopup" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -140.0
+offset_top = -70.0
+offset_right = 140.0
+offset_bottom = 70.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="JoinPasswordPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="JoinPasswordPopup/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="JoinPasswordPopup/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.651, 0.325, 1)
+theme_override_font_sizes/font_size = 14
+text = "PASSWORD REQUIRED"
+horizontal_alignment = 1
+
+[node name="JoinPasswordInput" type="LineEdit" parent="JoinPasswordPopup/MarginContainer/VBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+placeholder_text = "Enter Password"
+max_length = 16
+alignment = 1
+secret = true
+
+[node name="Buttons" type="HBoxContainer" parent="JoinPasswordPopup/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CancelBtn" type="Button" parent="JoinPasswordPopup/MarginContainer/VBox/Buttons"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CANCEL"
+
+[node name="ConfirmBtn" type="Button" parent="JoinPasswordPopup/MarginContainer/VBox/Buttons"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "JOIN"
+
 

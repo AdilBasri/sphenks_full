@@ -1,6 +1,7 @@
 extends Node
 
 # --- SİNYALLER ---
+# --- SİNYALLER ---
 signal lobby_created(lobby_id)
 signal player_joined(steam_id, player_index)
 signal player_left(steam_id)
@@ -9,6 +10,8 @@ signal data_received(from_id, data)
 signal player_ready_changed(steam_id, is_ready)
 signal game_started()
 signal entered_room()
+signal password_required(lobby_id, correct_password)
+signal join_failed(reason)
 
 # --- DEĞİŞKENLER ---
 var lobby_id: int = 0
@@ -18,6 +21,8 @@ var players: Dictionary = {}      # {steam_id: player_index}
 var player_ready: Dictionary = {} # {steam_id: bool}
 var room_code: String = ""
 var room_name: String = ""
+var room_password: String = ""
+var temp_joining_lobby_id: int = 0
 
 var is_online: bool = false
 var max_players: int = 4
@@ -45,13 +50,15 @@ func _connect_steam_signals():
 	Steam.lobby_joined.connect(_on_lobby_joined)
 	Steam.lobby_chat_update.connect(_on_lobby_chat_update)
 	Steam.p2p_session_request.connect(_on_p2p_session_request)
+	Steam.lobby_match_list.connect(_on_lobby_match_list)
 
 # ─────────────────────────────────────────────
 # LOBİ
 # ─────────────────────────────────────────────
 
-func create_lobby(name: String = "My Room"):
+func create_lobby(name: String = "My Room", password: String = ""):
 	room_name = name
+	room_password = password
 	if not is_online:
 		# Offline test modu
 		room_code = _generate_unique_room_code()
@@ -184,11 +191,25 @@ func _on_lobby_created(connect_flag: int, new_lobby_id: int):
 		room_code = _generate_unique_room_code()
 		Steam.setLobbyData(lobby_id, "room_code", room_code)
 		Steam.setLobbyData(lobby_id, "room_name", room_name)
+		Steam.setLobbyData(lobby_id, "password", room_password)
 		_add_player(my_steam_id)
 		lobby_created.emit(lobby_id)
 		entered_room.emit()
 	else:
 		print("Lobi oluşturulamadı.")
+
+func _on_lobby_match_list(lobbies: Array):
+	if lobbies.is_empty():
+		join_failed.emit("No room found with that code.")
+		return
+	
+	var target_lobby = lobbies[0]
+	var pwd = Steam.getLobbyData(target_lobby, "password")
+	
+	if pwd != "":
+		password_required.emit(target_lobby, pwd)
+	else:
+		Steam.joinLobby(target_lobby)
 
 func _on_lobby_joined(joined_lobby_id: int, _permissions: int, _locked: bool, response: int):
 	if response == 1:

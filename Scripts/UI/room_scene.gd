@@ -270,7 +270,7 @@ func _connect_signals():
 
 func _on_leave_pressed():
 	OnlineManager.leave_lobby()
-	get_tree().change_scene_to_file("res://Scenes/UI/lobby_scene.tscn")
+	(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://Scenes/UI/lobby_scene.tscn")
 
 func _on_ready_pressed():
 	is_ready_local = not is_ready_local
