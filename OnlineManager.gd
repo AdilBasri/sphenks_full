@@ -81,8 +81,19 @@ func join_lobby(id: int):
 
 func join_by_code(code: String):
 	if not is_online: return
+	is_searching_by_code = true
+	# Worldwide filter for distance
+	Steam.addRequestLobbyListDistanceFilter(3)
 	Steam.addRequestLobbyListStringFilter("room_code", code, 0)
 	Steam.requestLobbyList()
+
+func refresh_lobby_list():
+	if not is_online: return
+	is_searching_by_code = false
+	# Worldwide filter for distance
+	Steam.addRequestLobbyListDistanceFilter(3)
+	Steam.requestLobbyList()
+
 
 func leave_lobby():
 	if lobby_id != 0 and is_online:
@@ -201,17 +212,38 @@ func _on_lobby_created(connect_flag: int, new_lobby_id: int):
 		print("Lobi oluşturulamadı.")
 
 func _on_lobby_match_list(lobbies: Array):
-	if lobbies.is_empty():
-		join_failed.emit("No room found with that code.")
-		return
-	
-	var target_lobby = lobbies[0]
-	var pwd = Steam.getLobbyData(target_lobby, "password")
-	
-	if pwd != "":
-		password_required.emit(target_lobby, pwd)
+	if is_searching_by_code:
+		if lobbies.is_empty():
+			join_failed.emit("No room found with that code.")
+			return
+		
+		var target_lobby = lobbies[0]
+		var pwd = Steam.getLobbyData(target_lobby, "password")
+		
+		if pwd != "":
+			password_required.emit(target_lobby, pwd)
+		else:
+			Steam.joinLobby(target_lobby)
 	else:
-		Steam.joinLobby(target_lobby)
+		var results: Array = []
+		for lob_id in lobbies:
+			var code = Steam.getLobbyData(lob_id, "room_code")
+			if code != "":
+				var name = Steam.getLobbyData(lob_id, "room_name")
+				if name == "": name = "Steam Room"
+				var cur = Steam.getNumLobbyMembers(lob_id)
+				var max_p = Steam.getLobbyMaxMembers(lob_id)
+				var locked = Steam.getLobbyData(lob_id, "password") != ""
+				results.append({
+					"name": name,
+					"host": "Online Host",
+					"current_players": cur,
+					"max_players": max_p,
+					"locked": locked,
+					"id": lob_id
+				})
+		lobby_list_updated.emit(results)
+
 
 func _on_lobby_joined(joined_lobby_id: int, _permissions: int, _locked: bool, response: int):
 	if response == 1:

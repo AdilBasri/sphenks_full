@@ -43,6 +43,11 @@ func _ready():
 	if SesYoneticisi.has_method("start_menu_music"):
 		SesYoneticisi.start_menu_music()
 
+	# Gerçek lobileri anında çek
+	if OnlineManager.is_online:
+		OnlineManager.refresh_lobby_list()
+
+
 # ─────────────────────────────────────────────
 # STİL - Sadece buton/input stilleri (renkler .tscn'den ayarlanamıyor kolayca)
 # ─────────────────────────────────────────────
@@ -276,8 +281,12 @@ func _connect_signals():
 	OnlineManager.player_left.connect(_on_player_left)
 	OnlineManager.lobby_full.connect(_on_lobby_full)
 	OnlineManager.entered_room.connect(_on_entered_room)
+	
 	if OnlineManager.has_signal("password_required"):
 		OnlineManager.password_required.connect(_on_password_required)
+	if OnlineManager.has_signal("lobby_list_updated"):
+		OnlineManager.lobby_list_updated.connect(populate_lobby_list)
+
 
 	# Popup sinyalleri
 	popup_cancel.pressed.connect(_on_popup_cancel)
