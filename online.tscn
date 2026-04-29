@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://b6n4x214s2u3d"]
+[gd_scene load_steps=21 format=3 uid="uid://b6n4x214s2u3d"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_ixjfh"]
 [ext_resource type="PackedScene" uid="uid://wouv23y55lsa" path="res://Assets/light/scene.gltf" id="2_m35gp"]
@@ -10,6 +10,9 @@
 [ext_resource type="Script" uid="uid://b4n0at4kjkrob" path="res://Scripts/SkullEye.gd" id="8_rj10o"]
 [ext_resource type="PackedScene" uid="uid://c5fd2o1npa5c0" path="res://Assets/ashtray/scene.gltf" id="9_6yv3q"]
 [ext_resource type="PackedScene" uid="uid://berst0pur28ff" path="res://Assets/chair/scene.gltf" id="10_nggyx"]
+[ext_resource type="Script" uid="uid://wuvldqmhm6c6" path="res://camera_3d.gd" id="11_kcevw"]
+[ext_resource type="PackedScene" uid="uid://c5e7b2v7x8y1" path="res://InspectUI.tscn" id="12_87usy"]
+[ext_resource type="PackedScene" uid="uid://dxykbh2n17nqv" path="res://hand.tscn" id="13_rj10o"]
 
 [sub_resource type="Environment" id="Environment_14b8j"]
 background_mode = 1
@@ -41,6 +44,9 @@ size = Vector2(0.04, 0.04)
 [sub_resource type="Curve" id="Curve_r3rnl"]
 _data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.25, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
 point_count = 3
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6yv3q"]
+height = 1.9550781
 
 [node name="Node3D" type="Node3D"]
 
@@ -196,5 +202,95 @@ transform = Transform3D(-3.4969108e-09, 0, 0.08, 0, 0.08, 0, -0.08, 0, -3.496910
 
 [node name="chair4" parent="chairs" instance=ExtResource("10_nggyx")]
 transform = Transform3D(1.869189e-08, 0, -0.096, 0, 0.096, 0, 0.096, 0, 1.869189e-08, -1.0054157, -0.46710798, -0.0064430833)
+
+[node name="Players" type="Node3D" parent="."]
+
+[node name="Player1" type="CharacterBody3D" parent="Players"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11820468, 0.62548625)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player1"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.727, 0)
+shape = SubResource("CapsuleShape3D_6yv3q")
+
+[node name="Camera3D" type="Camera3D" parent="Players/Player1"]
+transform = Transform3D(1, 0, 0, 0, 0.8522934, 0.5230639, 0, -0.5230639, 0.8522934, 0, -0.10607523, -0.013993621)
+fov = 80.0
+script = ExtResource("11_kcevw")
+
+[node name="InspectUI" parent="Players/Player1/Camera3D" instance=ExtResource("12_87usy")]
+
+[node name="hand" parent="Players/Player1/Camera3D" instance=ExtResource("13_rj10o")]
+transform = Transform3D(0.0009979546, 6.0219754e-05, -2.1433632e-05, -5.3363663e-05, 0.0009694908, 0.00023924897, 3.5187117e-05, -0.00023761581, 0.0009707217, 0.2985333, -0.07436061, 0.13051355)
+visible = false
+
+[node name="Camera3D2" type="Camera3D" parent="Players/Player1"]
+transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1306741, -0.47089425)
+fov = 80.0
+
+[node name="Player2" type="CharacterBody3D" parent="Players"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.6902044, -0.11820468, 0.013878375)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player2"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.727, 0)
+shape = SubResource("CapsuleShape3D_6yv3q")
+
+[node name="Camera3D" type="Camera3D" parent="Players/Player2"]
+transform = Transform3D(1, 0, 0, 0, 0.8522934, 0.5230639, 0, -0.5230639, 0.8522934, 0, -0.10607523, -0.013993621)
+fov = 80.0
+script = ExtResource("11_kcevw")
+
+[node name="InspectUI" parent="Players/Player2/Camera3D" instance=ExtResource("12_87usy")]
+
+[node name="hand" parent="Players/Player2/Camera3D" instance=ExtResource("13_rj10o")]
+transform = Transform3D(0.0009979546, 6.0219754e-05, -2.1433632e-05, -5.3363663e-05, 0.0009694908, 0.00023924897, 3.5187117e-05, -0.00023761581, 0.0009707217, 0.2985333, -0.07436061, 0.13051355)
+visible = false
+
+[node name="Camera3D2" type="Camera3D" parent="Players/Player2"]
+transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1306741, -0.47089425)
+fov = 80.0
+
+[node name="Player3" type="CharacterBody3D" parent="Players"]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -0.11820468, -0.67858154)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player3"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.727, 0)
+shape = SubResource("CapsuleShape3D_6yv3q")
+
+[node name="Camera3D" type="Camera3D" parent="Players/Player3"]
+transform = Transform3D(1, 0, 0, 0, 0.8522934, 0.5230639, 0, -0.5230639, 0.8522934, 0, -0.10607523, -0.013993621)
+fov = 80.0
+script = ExtResource("11_kcevw")
+
+[node name="InspectUI" parent="Players/Player3/Camera3D" instance=ExtResource("12_87usy")]
+
+[node name="hand" parent="Players/Player3/Camera3D" instance=ExtResource("13_rj10o")]
+transform = Transform3D(0.0009979546, 6.0219754e-05, -2.1433632e-05, -5.3363663e-05, 0.0009694908, 0.00023924897, 3.5187117e-05, -0.00023761581, 0.0009707217, 0.2985333, -0.07436061, 0.13051355)
+visible = false
+
+[node name="Camera3D2" type="Camera3D" parent="Players/Player3"]
+transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1306741, -0.47089425)
+fov = 80.0
+
+[node name="Player4" type="CharacterBody3D" parent="Players"]
+transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, -0.7004849, -0.118, 0.014)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player4"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.727, 0)
+shape = SubResource("CapsuleShape3D_6yv3q")
+
+[node name="Camera3D" type="Camera3D" parent="Players/Player4"]
+transform = Transform3D(1, 0, 0, 0, 0.8522934, 0.5230639, 0, -0.5230639, 0.8522934, 0, -0.10607523, -0.013993621)
+fov = 80.0
+script = ExtResource("11_kcevw")
+
+[node name="InspectUI" parent="Players/Player4/Camera3D" instance=ExtResource("12_87usy")]
+
+[node name="hand" parent="Players/Player4/Camera3D" instance=ExtResource("13_rj10o")]
+transform = Transform3D(0.0009979546, 6.0219754e-05, -2.1433632e-05, -5.3363663e-05, 0.0009694908, 0.00023924897, 3.5187117e-05, -0.00023761581, 0.0009707217, 0.2985333, -0.07436061, 0.13051355)
+visible = false
+
+[node name="Camera3D2" type="Camera3D" parent="Players/Player4"]
+transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1306741, -0.47089425)
+fov = 80.0
 
 [editable path="Masa/box"]
