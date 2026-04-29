@@ -232,7 +232,7 @@ func _on_lobby_match_list(lobbies: Array):
 				var name = Steam.getLobbyData(lob_id, "room_name")
 				if name == "": name = "Steam Room"
 				var cur = Steam.getNumLobbyMembers(lob_id)
-				var max_p = Steam.getLobbyMaxMembers(lob_id)
+				var max_p = max_players
 				var locked = Steam.getLobbyData(lob_id, "password") != ""
 				results.append({
 					"name": name,
