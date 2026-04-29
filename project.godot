@@ -24,6 +24,7 @@ InspectUI="*res://InspectUI.tscn"
 SesYoneticisi="*res://SesYoneticisi.gd"
 SettingsManager="*res://SettingsManager.gd"
 CustomCursor="*res://CustomCursor.tscn"
+OnlineManager="*res://OnlineManager.gd"
 
 [display]
 

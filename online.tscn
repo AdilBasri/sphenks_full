@@ -195,13 +195,13 @@ color = Color(1, 1, 1, 0.4)
 transform = Transform3D(0.08, 0, -5.0858397e-09, 0, 0.08, 0, 5.0858397e-09, 0, 0.08, -0.004329741, -0.5934596, 0.93991494)
 
 [node name="chair2" parent="chairs" instance=ExtResource("10_nggyx")]
-transform = Transform3D(-0.096, 0, -8.392592e-09, 0, 0.096, 0, 8.392592e-09, 0, -0.096, -0.004329741, -0.4671079, -1.013096)
+transform = Transform3D(1.869189e-08, 0, -0.096, 0, 0.096, 0, 0.096, 0, 1.869189e-08, -1.0054157, -0.46710798, -0.0064430833)
 
 [node name="chair3" parent="chairs" instance=ExtResource("10_nggyx")]
-transform = Transform3D(-3.4969108e-09, 0, 0.08, 0, 0.08, 0, -0.08, 0, -3.4969108e-09, 0.9589722, -0.5934597, -0.006443262)
+transform = Transform3D(-0.096, 0, -8.392592e-09, 0, 0.096, 0, 8.392592e-09, 0, -0.096, -0.004329741, -0.4671079, -1.013096)
 
 [node name="chair4" parent="chairs" instance=ExtResource("10_nggyx")]
-transform = Transform3D(1.869189e-08, 0, -0.096, 0, 0.096, 0, 0.096, 0, 1.869189e-08, -1.0054157, -0.46710798, -0.0064430833)
+transform = Transform3D(-3.4969108e-09, 0, 0.08, 0, 0.08, 0, -0.08, 0, -3.4969108e-09, 0.9589722, -0.5934597, -0.006443262)
 
 [node name="Players" type="Node3D" parent="."]
 
@@ -228,7 +228,7 @@ transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 
 fov = 80.0
 
 [node name="Player2" type="CharacterBody3D" parent="Players"]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.6902044, -0.11820468, 0.013878375)
+transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, -0.7004849, -0.118, 0.014)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player2"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.727, 0)
@@ -272,7 +272,7 @@ transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 
 fov = 80.0
 
 [node name="Player4" type="CharacterBody3D" parent="Players"]
-transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, -0.7004849, -0.118, 0.014)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.6425706, -0.11820468, 0.013878375)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player4"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.727, 0)
