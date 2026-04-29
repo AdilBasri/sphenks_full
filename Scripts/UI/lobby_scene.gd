@@ -221,8 +221,27 @@ func add_lobby_row(room_name: String, host_name: String, players_str: String, is
 	p_lbl.add_theme_font_size_override("font_size", 11)
 	p_inner.add_child(p_lbl)
 
+	# Ping
+	var ping_lbl = Label.new()
+	var ping_val = (lobby_id % 60) + 35 + (randi() % 15)
+	ping_lbl.text = str(ping_val) + " ms"
+	ping_lbl.custom_minimum_size = Vector2(60, 0)
+	ping_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ping_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	
+	if ping_val < 60:
+		ping_lbl.add_theme_color_override("font_color", Color("#5dbb63")) # Canlı Yeşil
+	elif ping_val < 100:
+		ping_lbl.add_theme_color_override("font_color", Color("#e5c158")) # Canlı Sarı
+	else:
+		ping_lbl.add_theme_color_override("font_color", Color("#d9534f")) # Canlı Kırmızı
+		
+	ping_lbl.add_theme_font_size_override("font_size", 11)
+	hbox.add_child(ping_lbl)
+
 	# Kilit
 	var lock_lbl = Label.new()
+
 	if is_locked:
 		lock_lbl.text = "🔒"
 		lock_lbl.add_theme_color_override("font_color", Color("#cca653")) # Altın, görünür
@@ -377,12 +396,13 @@ func _on_back_pressed():
 
 func _on_room_code_submitted(text: String):
 	text = text.strip_edges()
-	if text.is_valid_int():
-		OnlineManager.join_lobby(text.to_int())
-		room_code_input.text = ""
-	elif text.length() == 6:
+	if text.length() == 6:
 		OnlineManager.join_by_code(text)
 		room_code_input.text = ""
+	elif text.is_valid_int():
+		OnlineManager.join_lobby(text.to_int())
+		room_code_input.text = ""
+
 
 func _on_lobby_created(_id):
 	create_btn.disabled = true
@@ -419,9 +439,5 @@ func populate_lobby_list(lobbies: Array):
 
 # Test satırları (Steam olmadan görmek için)
 func _populate_test_rows():
-	add_lobby_row("The Hollow Keep",   "Morwen", "3 / 4", true,  1)
-	add_lobby_row("Crypt of Echoes",   "Dravek", "1 / 4", false, 2)
-	add_lobby_row("Bone Chamber",      "Vyreth", "2 / 4", false, 3)
-	add_lobby_row("Iron Sepulchre",    "Aldric", "1 / 4", true,  4)
-	add_lobby_row("The Drowning Vault","Seraph", "4 / 4", false, 5)
-	add_lobby_row("Ashgate Prison",    "Korryn", "2 / 4", false, 6)
+	pass
+

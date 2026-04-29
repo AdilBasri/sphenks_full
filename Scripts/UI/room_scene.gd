@@ -281,23 +281,14 @@ func _on_start_pressed():
 	OnlineManager.start_game()
 
 func _on_player_joined(steam_id: int, player_index: int):
-	var is_rdy = OnlineManager.player_ready.get(steam_id, false)
-	_set_slot_filled(player_index, steam_id, is_rdy)
-	_update_waiting_label()
-	_update_start_btn()
+	_init_room()
 
 func _on_player_left(steam_id: int):
-	var idx = OnlineManager.players.get(steam_id, -1)
-	if idx >= 0:
-		_set_slot_empty(idx)
-	_update_waiting_label()
-	_update_start_btn()
+	_init_room()
 
 func _on_player_ready_changed(steam_id: int, p_is_ready: bool):
-	var idx = OnlineManager.players.get(steam_id, -1)
-	if idx >= 0:
-		_set_slot_filled(idx, steam_id, p_is_ready)
-	_update_start_btn()
+	_init_room()
+
 
 func _on_game_started():
 	print("Oyun Başlıyor!")

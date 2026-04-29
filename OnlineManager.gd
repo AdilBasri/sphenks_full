@@ -82,17 +82,18 @@ func join_lobby(id: int):
 func join_by_code(code: String):
 	if not is_online: return
 	is_searching_by_code = true
-	# Worldwide filter for distance
 	Steam.addRequestLobbyListDistanceFilter(3)
+	Steam.addRequestLobbyListStringFilter("game_name", "sphenks", 0)
 	Steam.addRequestLobbyListStringFilter("room_code", code, 0)
 	Steam.requestLobbyList()
 
 func refresh_lobby_list():
 	if not is_online: return
 	is_searching_by_code = false
-	# Worldwide filter for distance
 	Steam.addRequestLobbyListDistanceFilter(3)
+	Steam.addRequestLobbyListStringFilter("game_name", "sphenks", 0)
 	Steam.requestLobbyList()
+
 
 
 func leave_lobby():
@@ -202,9 +203,11 @@ func _on_lobby_created(connect_flag: int, new_lobby_id: int):
 		lobby_id = new_lobby_id
 		is_host = true
 		room_code = _generate_unique_room_code()
+		Steam.setLobbyData(lobby_id, "game_name", "sphenks")
 		Steam.setLobbyData(lobby_id, "room_code", room_code)
 		Steam.setLobbyData(lobby_id, "room_name", room_name)
 		Steam.setLobbyData(lobby_id, "password", room_password)
+
 		_add_player(my_steam_id)
 		lobby_created.emit(lobby_id)
 		entered_room.emit()
@@ -253,11 +256,13 @@ func _on_lobby_joined(joined_lobby_id: int, _permissions: int, _locked: bool, re
 		room_name = Steam.getLobbyData(lobby_id, "room_name")
 		players.clear()
 		player_ready.clear()
-		_add_player(my_steam_id)
+		var owner_id = Steam.getLobbyOwner(lobby_id)
+		_add_player(owner_id)
+		
 		var num = Steam.getNumLobbyMembers(lobby_id)
 		for i in range(num):
 			var mid = Steam.getLobbyMemberByIndex(lobby_id, i)
-			if mid != my_steam_id:
+			if mid != owner_id:
 				_add_player(mid)
 		if players.size() >= max_players:
 			lobby_full.emit()
@@ -272,11 +277,12 @@ func _on_lobby_chat_update(changed_lobby_id: int, changed_user_id: int, _making:
 			_add_player(changed_user_id)
 			if players.size() >= max_players:
 				lobby_full.emit()
-	elif chat_state in [2, 8, 16]:
+	elif chat_state != 1:
 		if players.has(changed_user_id):
 			players.erase(changed_user_id)
 			player_ready.erase(changed_user_id)
 			player_left.emit(changed_user_id)
+
 
 func _on_p2p_session_request(remote_steam_id: int):
 	if players.has(remote_steam_id):
