@@ -5,24 +5,31 @@ extends Control
 @onready var refresh_btn: Button           = $MarginContainer/RootVBox/BottomBar/RefreshBtn
 @onready var create_btn: Button            = $MarginContainer/RootVBox/BottomBar/CreateBtn
 @onready var back_btn: Button              = $MarginContainer/RootVBox/BottomBar/BackBtn
-@onready var room_code_input: LineEdit     = $MarginContainer/RootVBox/BottomBar/RoomCodeInput
+@onready var join_by_code_btn: Button      = $MarginContainer/RootVBox/BottomBar/JoinByCodeBtn
 
 # Popup
-@onready var popup_overlay: ColorRect  = $PopupOverlay
-@onready var create_popup: Panel       = $CreateRoomPopup
-@onready var room_name_input: LineEdit = $CreateRoomPopup/MarginContainer/VBox/RoomNameInput
+@onready var popup_overlay: ColorRect      = $PopupOverlay
+@onready var create_popup: Panel           = $CreateRoomPopup
+@onready var room_name_input: LineEdit     = $CreateRoomPopup/MarginContainer/VBox/RoomNameInput
 @onready var room_password_input: LineEdit = $CreateRoomPopup/MarginContainer/VBox/RoomPasswordInput
-@onready var popup_cancel: Button      = $CreateRoomPopup/MarginContainer/VBox/Buttons/CancelBtn
-@onready var popup_confirm: Button     = $CreateRoomPopup/MarginContainer/VBox/Buttons/ConfirmBtn
+@onready var popup_cancel: Button          = $CreateRoomPopup/MarginContainer/VBox/Buttons/CancelBtn
+@onready var popup_confirm: Button         = $CreateRoomPopup/MarginContainer/VBox/Buttons/ConfirmBtn
 
 # Join Password Popup
-@onready var join_password_popup: Panel = $JoinPasswordPopup
-@onready var join_password_input: LineEdit = $JoinPasswordPopup/MarginContainer/VBox/JoinPasswordInput
-@onready var join_password_cancel: Button = $JoinPasswordPopup/MarginContainer/VBox/Buttons/CancelBtn
-@onready var join_password_confirm: Button = $JoinPasswordPopup/MarginContainer/VBox/Buttons/ConfirmBtn
+@onready var join_password_popup: Panel     = $JoinPasswordPopup
+@onready var join_password_input: LineEdit  = $JoinPasswordPopup/MarginContainer/VBox/JoinPasswordInput
+@onready var join_password_cancel: Button   = $JoinPasswordPopup/MarginContainer/VBox/Buttons/CancelBtn
+@onready var join_password_confirm: Button  = $JoinPasswordPopup/MarginContainer/VBox/Buttons/ConfirmBtn
+
+# Join By Code Popup
+@onready var join_by_code_popup: Panel     = $JoinByCodePopup
+@onready var code_popup_input: LineEdit     = $JoinByCodePopup/MarginContainer/VBox/CodeInput
+@onready var code_popup_cancel: Button     = $JoinByCodePopup/MarginContainer/VBox/Buttons/CancelBtn
+@onready var code_popup_confirm: Button    = $JoinByCodePopup/MarginContainer/VBox/Buttons/ConfirmBtn
 
 var temp_joining_lobby_id: int = 0
 var temp_joining_lobby_pwd: String = ""
+
 
 
 # --- RENKLER ---
@@ -56,8 +63,9 @@ func _apply_button_styles():
 	_style_button(back_btn, false)
 	_style_button(refresh_btn, false)
 	_style_button(create_btn, true)
-	_style_input(room_code_input)
+	_style_button(join_by_code_btn, false)
 	_style_popup()
+
 
 func _style_popup():
 	# Popup Panel arka planı
@@ -74,15 +82,20 @@ func _style_popup():
 	panel_style.corner_radius_bottom_right = 4
 	create_popup.add_theme_stylebox_override("panel", panel_style)
 	join_password_popup.add_theme_stylebox_override("panel", panel_style)
+	join_by_code_popup.add_theme_stylebox_override("panel", panel_style)
 
 	_style_input(room_name_input)
 	_style_input(room_password_input)
 	_style_input(join_password_input)
+	_style_input(code_popup_input)
 	
 	_style_button(popup_cancel, false)
 	_style_button(popup_confirm, true)
 	_style_button(join_password_cancel, false)
 	_style_button(join_password_confirm, true)
+	_style_button(code_popup_cancel, false)
+	_style_button(code_popup_confirm, true)
+
 
 func _style_button(btn: Button, gold_border: bool):
 	var normal = StyleBoxFlat.new()
@@ -104,10 +117,16 @@ func _style_button(btn: Button, gold_border: bool):
 	var pressed = normal.duplicate()
 	pressed.bg_color = Color("#0a0807")
 
+	var disabled_style = normal.duplicate()
+	disabled_style.bg_color = Color("#0a0908")
+	disabled_style.border_color = Color("#2d2418")
+	btn.add_theme_stylebox_override("disabled", disabled_style)
+
 	btn.add_theme_stylebox_override("normal", normal)
 	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", pressed)
 	btn.add_theme_stylebox_override("focus", normal.duplicate())
+
 	btn.add_theme_color_override("font_color", C_GOLD if gold_border else C_TEXT_DIM)
 	btn.add_theme_font_size_override("font_size", 11)
 
@@ -293,7 +312,7 @@ func _connect_signals():
 	create_btn.pressed.connect(_on_create_pressed)
 	refresh_btn.pressed.connect(_on_refresh_pressed)
 	back_btn.pressed.connect(_on_back_pressed)
-	room_code_input.text_submitted.connect(_on_room_code_submitted)
+	join_by_code_btn.pressed.connect(_on_enter_code_pressed)
 
 	OnlineManager.lobby_created.connect(_on_lobby_created)
 	OnlineManager.player_joined.connect(_on_player_joined)
@@ -306,7 +325,6 @@ func _connect_signals():
 	if OnlineManager.has_signal("lobby_list_updated"):
 		OnlineManager.lobby_list_updated.connect(populate_lobby_list)
 
-
 	# Popup sinyalleri
 	popup_cancel.pressed.connect(_on_popup_cancel)
 	popup_confirm.pressed.connect(_on_popup_confirm)
@@ -316,6 +334,11 @@ func _connect_signals():
 	join_password_cancel.pressed.connect(_on_join_password_cancel)
 	join_password_confirm.pressed.connect(_on_join_password_confirm)
 	join_password_input.text_submitted.connect(func(_t): _on_join_password_confirm())
+	
+	code_popup_cancel.pressed.connect(_on_code_popup_cancel)
+	code_popup_confirm.pressed.connect(_on_code_popup_confirm)
+	code_popup_input.text_submitted.connect(func(_t): _on_code_popup_confirm())
+
 	
 	popup_overlay.gui_input.connect(func(ev):
 		if ev is InputEventMouseButton and ev.pressed:
@@ -335,10 +358,33 @@ func _show_create_popup():
 func _close_popup():
 	popup_overlay.visible = false
 	create_popup.visible = false
+	join_by_code_popup.visible = false
+	join_password_popup.visible = false
 	room_name_input.text = ""
+	code_popup_input.text = ""
 
 func _on_popup_cancel():
 	_close_popup()
+
+
+func _on_enter_code_pressed():
+	code_popup_input.text = ""
+	popup_overlay.visible = true
+	join_by_code_popup.visible = true
+	code_popup_input.call_deferred("grab_focus")
+
+func _on_code_popup_cancel():
+	_close_popup()
+
+func _on_code_popup_confirm():
+	var code = code_popup_input.text.strip_edges()
+	if code.length() == 6:
+		_close_popup()
+		OnlineManager.join_by_code(code)
+	elif code.is_valid_int():
+		_close_popup()
+		OnlineManager.join_lobby(code.to_int())
+
 
 func _on_popup_confirm():
 	var name = room_name_input.text.strip_edges()
@@ -403,14 +449,7 @@ func _on_refresh_pressed():
 func _on_back_pressed():
 	(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://anamenu.tscn")
 
-func _on_room_code_submitted(text: String):
-	text = text.strip_edges()
-	if text.length() == 6:
-		OnlineManager.join_by_code(text)
-		room_code_input.text = ""
-	elif text.is_valid_int():
-		OnlineManager.join_lobby(text.to_int())
-		room_code_input.text = ""
+
 
 
 func _on_lobby_created(_id):
@@ -428,7 +467,7 @@ func _on_player_left(_steam_id):
 
 func _on_lobby_full():
 	create_btn.disabled = true
-	room_code_input.editable = false
+
 
 # ─────────────────────────────────────────────
 # LOBI LİSTESİ - Dışarıdan çağrılır

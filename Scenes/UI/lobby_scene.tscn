@@ -152,12 +152,12 @@ text = "↻  REFRESH"
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="RoomCodeInput" type="LineEdit" parent="MarginContainer/RootVBox/BottomBar"]
+[node name="JoinByCodeBtn" type="Button" parent="MarginContainer/RootVBox/BottomBar"]
 custom_minimum_size = Vector2(160, 34)
 layout_mode = 2
 size_flags_vertical = 4
-placeholder_text = "ENTER ROOM CODE"
-alignment = 1
+text = "ENTER ROOM CODE"
+
 
 [node name="CreateBtn" type="Button" parent="MarginContainer/RootVBox/BottomBar"]
 custom_minimum_size = Vector2(130, 34)
@@ -319,3 +319,60 @@ size_flags_horizontal = 3
 text = "JOIN"
 
 
+[node name="JoinByCodePopup" type="Panel" parent="."]
+visible = false
+custom_minimum_size = Vector2(260, 130)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="JoinByCodePopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="JoinByCodePopup/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="JoinByCodePopup/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.651, 0.325, 1)
+theme_override_font_sizes/font_size = 14
+text = "ENTER ROOM CODE"
+horizontal_alignment = 1
+
+[node name="CodeInput" type="LineEdit" parent="JoinByCodePopup/MarginContainer/VBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+placeholder_text = "e.g. 123456"
+max_length = 6
+alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="JoinByCodePopup/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CancelBtn" type="Button" parent="JoinByCodePopup/MarginContainer/VBox/Buttons"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CANCEL"
+
+[node name="ConfirmBtn" type="Button" parent="JoinByCodePopup/MarginContainer/VBox/Buttons"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "JOIN"
