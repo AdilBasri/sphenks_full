@@ -12,6 +12,7 @@ signal game_started()
 signal entered_room()
 signal password_required(lobby_id, correct_password)
 signal join_failed(reason)
+signal lobby_list_updated(lobbies)
 
 # --- DEĞİŞKENLER ---
 var lobby_id: int = 0
@@ -23,6 +24,7 @@ var room_code: String = ""
 var room_name: String = ""
 var room_password: String = ""
 var temp_joining_lobby_id: int = 0
+var is_searching_by_code: bool = false
 
 var is_online: bool = false
 var max_players: int = 4
