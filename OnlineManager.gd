@@ -119,7 +119,8 @@ func set_ready(rdy: bool):
 	player_ready[my_steam_id] = rdy
 	player_ready_changed.emit(my_steam_id, rdy)
 	if is_online:
-		broadcast({"type": "ready", "steam_id": my_steam_id, "is_ready": rdy})
+		broadcast({"type": "ready", "steam_id": str(my_steam_id), "is_ready": rdy})
+
 
 func start_game():
 	if not is_host: return
@@ -191,21 +192,34 @@ func _read_packets():
 func _handle_message(from_id: int, data: Dictionary):
 	match data.get("type", ""):
 		"ready":
-			var sid = int(data.get("steam_id", from_id))
+			var sid = from_id
+			if data.has("steam_id"):
+				sid = int(str(data["steam_id"]))
 			var rdy = data.get("is_ready", false)
 			player_ready[sid] = rdy
 			player_ready_changed.emit(sid, rdy)
+
+
+		"sync_players":
+			var pmap = data.get("map", {})
+			players.clear()
+			for sid_str in pmap.keys():
+				var sid = int(sid_str)
+				players[sid] = int(pmap[sid_str])
+			
+			for sid in players.keys():
+				player_joined.emit(sid, players[sid])
 
 		"start_game":
 			game_started.emit()
 		"add_bot":
 			var bid = int(data.get("bot_id", -1))
 			var bname = data.get("bot_name", "BOT")
+			bot_names[bid] = bname
+			player_ready[bid] = true
 			if not players.has(bid):
 				var idx = players.size()
 				players[bid] = idx
-				player_ready[bid] = true
-				bot_names[bid] = bname
 				player_joined.emit(bid, idx)
 		"remove_bot":
 			var bid = int(data.get("bot_id", -1))
@@ -407,14 +421,21 @@ func remove_bot(bot_id: int):
 
 
 func _sync_state_to(target_id: int):
+	var order_map = {}
+	for sid in players.keys():
+		order_map[str(sid)] = players[sid]
+	send_data(target_id, {"type": "sync_players", "map": order_map})
+	
 	for bot_id in bot_names.keys():
+
 		var bname = bot_names[bot_id]
 		send_data(target_id, {"type": "add_bot", "bot_id": bot_id, "bot_name": bname})
 	for sid in player_ready.keys():
 		var rdy = player_ready[sid]
-		send_data(target_id, {"type": "ready", "steam_id": sid, "is_ready": rdy})
+		send_data(target_id, {"type": "ready", "steam_id": str(sid), "is_ready": rdy})
 
 
 func kick_player(target_id: int):
 	if is_online and target_id > 0:
-		send_data(target_id, {"type": "kick", "steam_id": target_id})
+		send_data(target_id, {"type": "kick", "steam_id": str(target_id)})
+
