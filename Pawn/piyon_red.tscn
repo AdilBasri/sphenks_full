@@ -54,7 +54,7 @@ blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_h1ovo")
 
 [node name="Node3D" type="Node3D"]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
 
 [node name="Mesh_0_002_7" type="Node3D" parent="."]
 transform = Transform3D(-0.99993825, 0, 0.011110769, 0, 1, 0, -0.011110769, 0, -0.99993825, 0, 0, 0)
