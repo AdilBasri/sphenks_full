@@ -4,11 +4,11 @@
 [ext_resource type="PackedScene" uid="uid://wouv23y55lsa" path="res://Assets/light/scene.gltf" id="2_m35gp"]
 [ext_resource type="Material" uid="uid://devmr4jwek26h" path="res://Masa_Ahsap.tres" id="3_2ows1"]
 [ext_resource type="Script" uid="uid://0rccufjia2dw" path="res://grid_generator.gd" id="4_lyryc"]
-[ext_resource type="PackedScene" uid="uid://bthkggqs1ca4q" path="res://Assets/box/scene.gltf" id="5_8wwve"]
 [ext_resource type="PackedScene" uid="uid://b5mlgov7d0c4n" path="res://candle1.tscn" id="6_kcevw"]
 [ext_resource type="PackedScene" uid="uid://brheseaaqt0he" path="res://Assets/skull/scene.gltf" id="7_87usy"]
 [ext_resource type="Script" uid="uid://b4n0at4kjkrob" path="res://Scripts/SkullEye.gd" id="8_rj10o"]
 [ext_resource type="PackedScene" uid="uid://c5fd2o1npa5c0" path="res://Assets/ashtray/scene.gltf" id="9_6yv3q"]
+[ext_resource type="PackedScene" uid="uid://c4u1kxgsbt2t1" path="res://BoxChain.tscn" id="10_1384v"]
 [ext_resource type="PackedScene" uid="uid://berst0pur28ff" path="res://Assets/chair/scene.gltf" id="10_nggyx"]
 [ext_resource type="Script" uid="uid://wuvldqmhm6c6" path="res://camera_3d.gd" id="11_kcevw"]
 [ext_resource type="PackedScene" uid="uid://c5e7b2v7x8y1" path="res://InspectUI.tscn" id="12_87usy"]
@@ -160,15 +160,6 @@ bosluk = 0.01
 renk_ana = Color(0.5411765, 0.5294118, 0.5647059, 1)
 renk_alternatif = Color(0.29586652, 0.2958665, 0.2958665, 1)
 
-[node name="box" parent="Masa" instance=ExtResource("5_8wwve")]
-transform = Transform3D(0.034878254, 0, 0.49878204, 0, 0.5, 0, -0.49878204, 0, 0.034878254, -0.47413707, -0.7010992, -1.9360589)
-
-[node name="LockBar" parent="Masa/box/Sketchfab_model/Root" index="0"]
-transform = Transform3D(0.44068, 0, 0, 0, 0.9397346, -0.34190482, 0, 0.34190482, 0.9397346, -0.96221, 1, 0.80034)
-
-[node name="LockS" parent="Masa/box/Sketchfab_model/Root/BoiteA" index="2"]
-transform = Transform3D(0.14656, 0, 0, 0, 0.010498764, 0.06660159, 0, -0.0074957297, 0.09328437, -0.00055, -2.02035, 0.05038)
-
 [node name="candles" parent="Masa" instance=ExtResource("6_kcevw")]
 transform = Transform3D(0.5819385, 0, 0.14610806, 0, 0.59999996, 0, -0.14610806, 0, 0.5819385, -0.4545673, -0.70473886, -1.6157763)
 
@@ -210,6 +201,9 @@ scale_amount_min = 0.02
 scale_amount_max = 0.08
 scale_amount_curve = SubResource("Curve_r3rnl")
 color = Color(1, 1, 1, 0.4)
+
+[node name="boxchain" parent="Masa" instance=ExtResource("10_1384v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.51660365, -1.9169114)
 
 [node name="chairs" type="Node3D" parent="."]
 
@@ -331,6 +325,9 @@ collision_mask = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5031128, 0)
 shape = SubResource("BoxShape3D_cjx13")
 
+[node name="Node3D" parent="Players/Player2" instance=ExtResource("10_1384v")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 9.563207, 0.118, 12.873005)
+
 [node name="Player3" type="CharacterBody3D" parent="Players"]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -0.11820468, -0.67858154)
 
@@ -435,7 +432,6 @@ collision_mask = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5031128, 0)
 shape = SubResource("BoxShape3D_cjx13")
 
-[editable path="Masa/box"]
 [editable path="Players/Player1/Sitting"]
 [editable path="Players/Player2/Sitting"]
 [editable path="Players/Player3/Sitting"]

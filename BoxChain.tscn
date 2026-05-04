@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://c4u1kxgsbt2t1"]
+
+[ext_resource type="PackedScene" uid="uid://d1mxfjfllohyk" path="res://Assets/OnlineAssets/boxChain/scene.gltf" id="1_nl73h"]
+[ext_resource type="PackedScene" uid="uid://d18evy5lurd1d" path="res://Assets/OnlineAssets/box/scene.gltf" id="2_n00gu"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Sketchfab_Scene" parent="." instance=ExtResource("1_nl73h")]
+transform = Transform3D(-4.3711387e-10, 0, 0.01, 0, 0.01, 0, -0.01, 0, -4.3711387e-10, 0, 0.4777381, -0.022995383)
+
+[node name="Sketchfab_Scene3" parent="." instance=ExtResource("1_nl73h")]
+transform = Transform3D(-4.3711387e-10, 0, 0.01, 0, 0.01, 0, -0.01, 0, -4.3711387e-10, 0, 0.74385697, -0.022995383)
+
+[node name="Sketchfab_Scene2" parent="." instance=ExtResource("2_n00gu")]
+transform = Transform3D(0.5, 0, 0, 0, 0.3, 0, 0, 0, 0.5, 0, 0.1251209, 0.030446954)
+
+[node name="first aid kit - door_0" parent="Sketchfab_Scene2/Sketchfab_model/root/GLTF_SceneRootNode/first aid kit_1" index="1"]
+transform = Transform3D(1.0000002, 0, 3.5527133e-14, 0, 1, 0, -3.5527137e-14, 0, 1.0000001, -0.86056757, -0.005887842, 0.0004043643)
+
+[node name="Object_7" parent="Sketchfab_Scene2/Sketchfab_model/root/GLTF_SceneRootNode/first aid kit_1/first aid kit - door_0" index="1"]
+visible = false
+
+[editable path="Sketchfab_Scene2"]
