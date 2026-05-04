@@ -290,9 +290,9 @@ func start_upgrade_sequence():
 			# Rotation logic for upgrade screen
 			match OnlineManager.assigned_role:
 				0: piece.rotation_degrees.y = -90 # White
-				1: piece.rotation_degrees.y = 180 # Red
+				1: piece.rotation_degrees.y = -90 # Red
 				2: piece.rotation_degrees.y = 90  # Black
-				3: piece.rotation_degrees.y = 0   # Green (Assume 0 for now as it's opposite to Red 180)
+				3: piece.rotation_degrees.y = -90   # Green
 				
 			_add_collision_to_piece(piece)
 			selection_pieces.append(piece)
