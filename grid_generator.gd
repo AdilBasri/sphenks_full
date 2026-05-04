@@ -144,17 +144,17 @@ func taslari_gridle_eslestir() -> void:
 func spawn_kings() -> void:
 	# print("--- Krallar Yerleştiriliyor (7x7 Online) ---")
 	
-	# Player 1: White (Bottom Middle)
+	# Player 1: White (Bottom Middle) - Sitting at +Z looking -Z
 	_spawn_king_to_cell(3, 6, "res://Pawn/king_white.tscn")
 	
-	# Player 2: Red (Right Middle)
-	_spawn_king_to_cell(6, 3, "res://Pawn/king_red.tscn")
+	# Player 2: Red (Left Middle) - Sitting at -X looking +X
+	_spawn_king_to_cell(0, 3, "res://Pawn/king_red.tscn")
 	
-	# Player 3: Black (Top Middle)
+	# Player 3: Black (Top Middle) - Sitting at -Z looking +Z
 	_spawn_king_to_cell(3, 0, "res://Pawn/king_black.tscn")
 	
-	# Player 4: Green (Left Middle)
-	_spawn_king_to_cell(0, 3, "res://Pawn/king_green.tscn")
+	# Player 4: Green (Right Middle) - Sitting at +X looking -X
+	_spawn_king_to_cell(6, 3, "res://Pawn/king_green.tscn")
 	
 	# print("-------------------------------")
 

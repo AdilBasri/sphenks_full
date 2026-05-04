@@ -221,9 +221,17 @@ func start_upgrade_sequence():
 	is_selection_ready = false
 	selection_lockout = 0.4 # More responsive lockout
 	
-	if (OnlineManager.is_online and OnlineManager.lobby_id != 0) or get_tree().current_scene.name == "Node3D":
+	if (OnlineManager.is_online and OnlineManager.lobby_id != 0) or get_tree().current_scene.name == "Node3D" or get_tree().current_scene.name == "GameRoom":
 		is_online_mode = true
 		upgrade_points = 10
+		
+		# Ensure role is assigned before showing notification
+		if OnlineManager.assigned_role == -1:
+			OnlineManager.assigned_role = randi() % 4
+			print("[PieceUpgradeManager] Test Mode: Assigned Role ", OnlineManager.assigned_role + 1)
+		
+		# Inform player of their role
+		_show_role_notification()
 		if not online_timer:
 			online_timer = Timer.new()
 			add_child(online_timer)
@@ -281,6 +289,14 @@ func start_upgrade_sequence():
 			piece.scale = Vector3(1.5, 1.5, 1.5)
 			piece.set_meta("scene_path", piece_path)
 			piece.set_meta("is_upgrade_choice", true)
+			
+			# Rotation logic for upgrade screen
+			match OnlineManager.assigned_role:
+				0: piece.rotation_degrees.y = -90 # White
+				1: piece.rotation_degrees.y = -90 # Red
+				2: piece.rotation_degrees.y = 90  # Black
+				3: piece.rotation_degrees.y = -90   # Green
+				
 			_add_collision_to_piece(piece)
 			selection_pieces.append(piece)
 			_setup_piece_visuals(piece)
@@ -554,3 +570,33 @@ func _clear_selection_pieces():
 		if is_instance_valid(p): p.queue_free()
 	selection_pieces.clear()
 	selected_piece = null
+func _show_role_notification():
+	var role = OnlineManager.assigned_role
+	var colors = ["WHITE", "RED", "BLACK", "GREEN"]
+	var role_name = colors[role] if role >= 0 and role < 4 else "UNKNOWN"
+	
+	var label = Label.new()
+	label.text = "YOU ARE: " + role_name
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 32)
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 8)
+	
+	match role:
+		0: label.add_theme_color_override("font_color", Color.WHITE)
+		1: label.add_theme_color_override("font_color", Color.RED)
+		2: label.add_theme_color_override("font_color", Color.DARK_GRAY)
+		3: label.add_theme_color_override("font_color", Color.GREEN)
+		
+	var canvas = CanvasLayer.new()
+	canvas.add_child(label)
+	get_tree().current_scene.add_child(canvas)
+	
+	label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	label.position.y = 80
+	
+	# Fade out after 5 seconds
+	var tw = get_tree().create_tween()
+	tw.tween_interval(5.0)
+	tw.tween_property(label, "modulate:a", 0.0, 1.0)
+	tw.tween_callback(canvas.queue_free)
