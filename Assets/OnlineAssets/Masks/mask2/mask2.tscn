@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://ci136laeytkkr"]
+
+[ext_resource type="PackedScene" uid="uid://dvplgvmcqa8ya" path="res://Assets/OnlineAssets/Masks/mask2/scene.gltf" id="1_ixa4q"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Sketchfab_Scene" parent="." instance=ExtResource("1_ixa4q")]
+transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
