@@ -139,6 +139,18 @@ func _ready():
 	Engine.time_scale = 1.0
 	# The initial mouse mode is handled above in the current_state check
 	
+	if OnlineManager.is_online and OnlineManager.lobby_id != 0:
+		current_state = PlayerState.STANDING
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		if crosshair_ui: crosshair_ui.visible = false
+		var target_pos = Vector3(-1.062, -0.086, 2.303)
+		var target_rot = Vector3(-13.7, 84.9, 0)
+		global_position = target_pos
+		rotation_degrees = target_rot
+		yaw = target_rot.y
+		pitch = target_rot.x
+		is_upgrade_mode = true
+	
 	# Instantiate Upgrade Manager
 	var upgrade_script = load("res://Scripts/PieceUpgradeManager.gd")
 	if upgrade_script:

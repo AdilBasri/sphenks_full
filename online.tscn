@@ -212,16 +212,16 @@ color = Color(1, 1, 1, 0.4)
 [node name="chairs" type="Node3D" parent="."]
 
 [node name="chair" parent="chairs" instance=ExtResource("10_nggyx")]
-transform = Transform3D(0.08, 0, -5.0858397e-09, 0, 0.08, 0, 5.0858397e-09, 0, 0.08, -0.004329741, -0.5934596, 0.93991494)
+transform = Transform3D(0.08, 0, -5.0858397e-09, 0, 0.08, 0, 5.0858397e-09, 0, 0.08, -0.004329741, -0.5816538, 1.1938505)
 
 [node name="chair2" parent="chairs" instance=ExtResource("10_nggyx")]
-transform = Transform3D(1.869189e-08, 0, -0.096, 0, 0.096, 0, 0.096, 0, 1.869189e-08, -1.0054157, -0.46710798, -0.0064430833)
+transform = Transform3D(1.869189e-08, 0, -0.096, 0, 0.096, 0, 0.096, 0, 1.869189e-08, -1.2862463, -0.45530218, -0.0064430833)
 
 [node name="chair3" parent="chairs" instance=ExtResource("10_nggyx")]
-transform = Transform3D(-0.096, 0, -8.392592e-09, 0, 0.096, 0, 8.392592e-09, 0, -0.096, -0.004329741, -0.4671079, -1.013096)
+transform = Transform3D(-0.096, 0, -8.392592e-09, 0, 0.096, 0, 8.392592e-09, 0, -0.096, -0.004329741, -0.45530206, -1.2643825)
 
 [node name="chair4" parent="chairs" instance=ExtResource("10_nggyx")]
-transform = Transform3D(-3.4969108e-09, 0, 0.08, 0, 0.08, 0, -0.08, 0, -3.4969108e-09, 0.9589722, -0.5934597, -0.006443262)
+transform = Transform3D(-3.4969108e-09, 0, 0.08, 0, 0.08, 0, -0.08, 0, -3.4969108e-09, 1.2127103, -0.5816539, -0.006443262)
 
 [node name="Players" type="Node3D" parent="."]
 
@@ -248,7 +248,7 @@ transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 
 fov = 80.0
 
 [node name="Sitting" parent="Players/Player1" groups=["sitting_node"] instance=ExtResource("14_r3rnl")]
-transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, -1.24, -0.0072568655)
+transform = Transform3D(-0.8, 0, -6.9938224e-08, 0, 0.8, 0, 6.9938224e-08, 0, -0.8, 0, -1.122842, 0.45077813)
 
 [node name="Skeleton3D" parent="Players/Player1/Sitting" index="0"]
 script = ExtResource("15_1384v")
@@ -285,7 +285,7 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.727, 0)
 shape = SubResource("CapsuleShape3D_6yv3q")
 
 [node name="Camera3D" type="Camera3D" parent="Players/Player2"]
-transform = Transform3D(1, 0, 0, 0, 0.8522934, 0.5230639, 0, -0.5230639, 0.8522934, 0, -0.10607523, -0.013993621)
+transform = Transform3D(1, 4.440892e-16, 0, 0, 0.85229343, 0.52306396, 0, -0.52306396, 0.85229343, 9.313226e-10, -0.10607523, -0.08994484)
 fov = 80.0
 script = ExtResource("11_kcevw")
 
@@ -296,8 +296,38 @@ transform = Transform3D(0.0009979546, 6.0219754e-05, -2.1433632e-05, -5.3363663e
 visible = false
 
 [node name="Camera3D2" type="Camera3D" parent="Players/Player2"]
-transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1306741, -0.47089425)
+transform = Transform3D(0.99999094, -0.004169807, 0.0008650448, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 9.313226e-10, -0.1306741, -0.5495604)
 fov = 80.0
+
+[node name="Sitting" parent="Players/Player2" groups=["sitting_node"] instance=ExtResource("14_r3rnl")]
+transform = Transform3D(-0.8, 0, -6.9938224e-08, 0, 0.8, 0, 6.9938224e-08, 0, -0.8, 0, -1.122842, 0.45077813)
+
+[node name="Skeleton3D" parent="Players/Player2/Sitting" index="0"]
+script = ExtResource("15_1384v")
+
+[node name="WhiteClown" parent="Players/Player2/Sitting/Skeleton3D" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0038419962, 0)
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Players/Player2/Sitting/Skeleton3D" index="1"]
+transform = Transform3D(0.9992935, -0.021884156, 0.030555338, 0.02172313, 0.9997482, 0.00559178, -0.030670024, -0.0049241185, 0.99951744, 0.016935494, 1.3688762, 0.19300246)
+bone_name = "mixamorig_Head"
+bone_idx = 5
+
+[node name="mask" parent="Players/Player2/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("16_nvqwy")]
+transform = Transform3D(0.081192546, 0.001765005, -0.0024919389, -0.0017780864, 0.08122957, -0.00040008087, 0.0024826198, 0.00045433576, 0.081210785, 0.0013096482, -0.009360269, 0.030044317)
+
+[node name="AnimationPlayer" parent="Players/Player2/Sitting" index="1"]
+libraries = {
+&"": SubResource("AnimationLibrary_nnjqd")
+}
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Players/Player2/Sitting"]
+collision_layer = 3
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player2/Sitting/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5031128, 0)
+shape = SubResource("BoxShape3D_cjx13")
 
 [node name="Player3" type="CharacterBody3D" parent="Players"]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -0.11820468, -0.67858154)
@@ -318,8 +348,38 @@ transform = Transform3D(0.0009979546, 6.0219754e-05, -2.1433632e-05, -5.3363663e
 visible = false
 
 [node name="Camera3D2" type="Camera3D" parent="Players/Player3"]
-transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1306741, -0.47089425)
+transform = Transform3D(0.99999094, -0.004169807, 0.0008650448, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 3.858794e-09, -0.1306741, -0.5150337)
 fov = 80.0
+
+[node name="Sitting" parent="Players/Player3" groups=["sitting_node"] instance=ExtResource("14_r3rnl")]
+transform = Transform3D(-0.8, 0, -6.9938224e-08, 0, 0.8, 0, 6.9938224e-08, 0, -0.8, 0, -1.122842, 0.45077813)
+
+[node name="Skeleton3D" parent="Players/Player3/Sitting" index="0"]
+script = ExtResource("15_1384v")
+
+[node name="WhiteClown" parent="Players/Player3/Sitting/Skeleton3D" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0038419962, 0)
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Players/Player3/Sitting/Skeleton3D" index="1"]
+transform = Transform3D(0.9992935, -0.021884156, 0.030555338, 0.02172313, 0.9997482, 0.00559178, -0.030670024, -0.0049241185, 0.99951744, 0.016935494, 1.3688762, 0.19300246)
+bone_name = "mixamorig_Head"
+bone_idx = 5
+
+[node name="mask" parent="Players/Player3/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("16_nvqwy")]
+transform = Transform3D(0.081192546, 0.001765005, -0.0024919389, -0.0017780864, 0.08122957, -0.00040008087, 0.0024826198, 0.00045433576, 0.081210785, 0.0013096482, -0.009360269, 0.030044317)
+
+[node name="AnimationPlayer" parent="Players/Player3/Sitting" index="1"]
+libraries = {
+&"": SubResource("AnimationLibrary_nnjqd")
+}
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Players/Player3/Sitting"]
+collision_layer = 3
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player3/Sitting/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5031128, 0)
+shape = SubResource("BoxShape3D_cjx13")
 
 [node name="Player4" type="CharacterBody3D" parent="Players"]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.6425706, -0.11820468, 0.013878375)
@@ -343,5 +403,38 @@ visible = false
 transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1306741, -0.47089425)
 fov = 80.0
 
+[node name="Sitting" parent="Players/Player4" groups=["sitting_node"] instance=ExtResource("14_r3rnl")]
+transform = Transform3D(-0.8, 0, -6.9938224e-08, 0, 0.8, 0, 6.9938224e-08, 0, -0.8, 0, -1.122842, 0.45077813)
+
+[node name="Skeleton3D" parent="Players/Player4/Sitting" index="0"]
+script = ExtResource("15_1384v")
+
+[node name="WhiteClown" parent="Players/Player4/Sitting/Skeleton3D" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0038419962, 0)
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Players/Player4/Sitting/Skeleton3D" index="1"]
+transform = Transform3D(0.9992935, -0.021884156, 0.030555338, 0.02172313, 0.9997482, 0.00559178, -0.030670024, -0.0049241185, 0.99951744, 0.016935494, 1.3688762, 0.19300246)
+bone_name = "mixamorig_Head"
+bone_idx = 5
+
+[node name="mask" parent="Players/Player4/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("16_nvqwy")]
+transform = Transform3D(0.081192546, 0.001765005, -0.0024919389, -0.0017780864, 0.08122957, -0.00040008087, 0.0024826198, 0.00045433576, 0.081210785, 0.0013096482, -0.009360269, 0.030044317)
+
+[node name="AnimationPlayer" parent="Players/Player4/Sitting" index="1"]
+libraries = {
+&"": SubResource("AnimationLibrary_nnjqd")
+}
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Players/Player4/Sitting"]
+collision_layer = 3
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player4/Sitting/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5031128, 0)
+shape = SubResource("BoxShape3D_cjx13")
+
 [editable path="Masa/box"]
 [editable path="Players/Player1/Sitting"]
+[editable path="Players/Player2/Sitting"]
+[editable path="Players/Player3/Sitting"]
+[editable path="Players/Player4/Sitting"]

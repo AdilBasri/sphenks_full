@@ -160,7 +160,7 @@ func _setup_diegetic_ui():
 	screen_timer_label = Label.new()
 	screen_timer_label.text = "TIME: 60s"
 	screen_timer_label.add_theme_font_override("font", FONT_DOMINICA)
-	screen_timer_label.add_theme_font_size_override("font_size", 48)
+	screen_timer_label.add_theme_font_size_override("font_size", 28)
 	screen_timer_label.add_theme_color_override("font_color", Color.WHITE)
 	screen_timer_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	screen_timer_label.add_theme_constant_override("outline_size", 12)
@@ -241,6 +241,9 @@ func start_upgrade_sequence():
 	if points_label: points_label.text = str(upgrade_points)
 	
 	for l in labels_nodes: l.visible = true
+	
+	if drop_label: drop_label.visible = false
+	if points_label: points_label.visible = false
 	
 	if camera and camera.has_method("enter_upgrade_selection_view"):
 		camera.enter_upgrade_selection_view(is_online_mode)
