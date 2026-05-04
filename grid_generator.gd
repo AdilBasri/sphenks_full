@@ -2,12 +2,12 @@
 extends Node3D
 class_name GridOlusturucu
 
-@export var sutun_sayisi: int = 6:
+@export var sutun_sayisi: int = 7:
 	set(v):
 		sutun_sayisi = v
 		olustur_grid()
 
-@export var satir_sayisi: int = 3:
+@export var satir_sayisi: int = 7:
 	set(v):
 		satir_sayisi = v
 		olustur_grid()
@@ -142,13 +142,19 @@ func taslari_gridle_eslestir() -> void:
 	# print("---------------------------------")
 
 func spawn_kings() -> void:
-	# print("--- Krallar Yerleştiriliyor ---")
+	# print("--- Krallar Yerleştiriliyor (7x7 Online) ---")
 	
-	# White King (Row 4, Col 2) - Player Side
-	_spawn_king_to_cell(2, 4, "res://Pawn/king_white.tscn")
+	# Player 1: White (Bottom Middle)
+	_spawn_king_to_cell(3, 6, "res://Pawn/king_white.tscn")
 	
-	# Black King (Row 0, Col 2) - AI Side
-	_spawn_king_to_cell(2, 0, "res://Pawn/king_black.tscn")
+	# Player 2: Red (Right Middle)
+	_spawn_king_to_cell(6, 3, "res://Pawn/king_red.tscn")
+	
+	# Player 3: Black (Top Middle)
+	_spawn_king_to_cell(3, 0, "res://Pawn/king_black.tscn")
+	
+	# Player 4: Green (Left Middle)
+	_spawn_king_to_cell(0, 3, "res://Pawn/king_green.tscn")
 	
 	# print("-------------------------------")
 

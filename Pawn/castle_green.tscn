@@ -54,6 +54,7 @@ blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_u4xc7")
 
 [node name="Node3D" type="Node3D"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
 
 [node name="Castle WHITE_1" type="Node3D" parent="."]
 transform = Transform3D(-0.99993825, 0, 0.011110768, 0, 1, 0, -0.011110768, 0, -0.99993825, 0, 0, 0)

@@ -6,6 +6,10 @@ extends Node
 var white_stats: Dictionary = {}
 var black_stats: Dictionary = {}
 
+# Backups to preserve singleplayer progress during online matches
+var white_stats_backup: Dictionary = {}
+var black_stats_backup: Dictionary = {}
+
 func _ready():
 	_initialize_database()
 
@@ -132,13 +136,29 @@ func get_valid_moves(current_pos: Vector2i, piece_path: String) -> Array[Vector2
 		# King: Immovable
 		return []
 
-	# Calculate final coordinates and clamp to grid (5x5)
+	# Calculate final coordinates and clamp to grid (7x7)
 	for offset in offsets:
 		var target = current_pos + offset
-		if target.x >= 0 and target.x < 5 and target.y >= 0 and target.y < 5:
+		if target.x >= 0 and target.x < 7 and target.y >= 0 and target.y < 7:
 			moves.append(target)
 			
 	return moves
+
+func reset_database_for_online():
+	# Save current stats to backup (Singleplayer)
+	white_stats_backup = white_stats.duplicate(true)
+	black_stats_backup = black_stats.duplicate(true)
+	# Reset current stats to base for the online match
+	_initialize_database()
+	print("[PieceDatabase] Singleplayer stats backed up and database reset for online play.")
+
+func restore_database_after_online():
+	if not white_stats_backup.is_empty():
+		white_stats = white_stats_backup.duplicate(true)
+		black_stats = black_stats_backup.duplicate(true)
+		white_stats_backup.clear()
+		black_stats_backup.clear()
+		print("[PieceDatabase] Singleplayer stats restored from backup.")
 
 func get_raw_stats() -> Dictionary:
 	return {

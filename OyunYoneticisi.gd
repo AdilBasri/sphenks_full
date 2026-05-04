@@ -8,12 +8,28 @@ var white_pieces = [
 	"res://Pawn/queen_white.tscn"
 ]
 
+var red_pieces = [
+	"res://Pawn/bishop_red.tscn",
+	"res://Pawn/castle_red.tscn",
+	"res://Pawn/horse_red.tscn",
+	"res://Pawn/piyon_red.tscn",
+	"res://Pawn/queen_red.tscn"
+]
+
 var black_pieces = [
 	"res://Pawn/bishop_black.tscn",
 	"res://Pawn/castle_black.tscn",
 	"res://Pawn/horse_black.tscn",
 	"res://Pawn/piyon_black.tscn",
 	"res://Pawn/queen_black.tscn"
+]
+
+var green_pieces = [
+	"res://Pawn/bishop_green.tscn",
+	"res://Pawn/castle_green.tscn",
+	"res://Pawn/horse_green.tscn",
+	"res://Pawn/piyon_green.tscn",
+	"res://Pawn/queen_green.tscn"
 ]
 
 enum GameTurn { PLAYER, ENEMY }
@@ -88,6 +104,12 @@ func _ready():
 	if OnlineManager.is_online and OnlineManager.lobby_id != 0:
 		is_tutorial_mode = false
 		phase_number = 1
+		PieceDatabase.reset_database_for_online()
+	elif get_tree().current_scene.name == "Node3D":
+		# Direct online scene test
+		is_tutorial_mode = false
+		phase_number = 1
+		PieceDatabase.reset_database_for_online()
 		
 	# BGM Setup: Tutorial mode needs intro, otherwise direct loop
 	SesYoneticisi.setup_bgm_player(is_tutorial_mode)
@@ -100,6 +122,8 @@ func _ready():
 
 	if OnlineManager.is_online and OnlineManager.lobby_id != 0:
 		print("[OyunYoneticisi] Starting Online Mode directly")
+		if get_tree().current_scene.name == "Node3D":
+			_setup_online_player_roles()
 		start_game()
 	else:
 		# Start the game loop after a brief wait
@@ -1256,3 +1280,34 @@ func _enemy_react_to_damage(is_king_hit: bool = false):
 	var bounce_time = 0.8 if is_king_hit else 0.5
 	tw.tween_method(func(q: Quaternion): skel_node.set_bone_pose_rotation(bone_idx, q), slam_rot, original_pose, bounce_time).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(sitting_node, "position", original_pos, 0.1)
+func _setup_online_player_roles():
+	var role = OnlineManager.assigned_role
+	if role == -1:
+		# Random role for testing if not in a real lobby
+		role = randi() % 4
+		OnlineManager.assigned_role = role
+		print("[OyunYoneticisi] Testing mode: Randomly assigned to Player ", role + 1)
+		
+	var players_node = get_tree().root.find_child("Players", true, false)
+	if not players_node: return
+	
+	for i in range(4):
+		var p_name = "Player" + str(i + 1)
+		var p_node = players_node.get_node_or_null(p_name)
+		if p_node:
+			var cam = p_node.get_node_or_null("Camera3D")
+			if cam:
+				if i == role:
+					cam.make_current()
+					print("[OyunYoneticisi] Camera activated for: ", p_name)
+					# Ensure camera script knows its role if needed
+					if cam.has_method("set_assigned_role"):
+						cam.set_assigned_role(role)
+				else:
+					cam.clear_current()
+					cam.enabled = false # Optional but safer
+					# Disable processing for other players' cameras
+					cam.set_process(false)
+					cam.set_physics_process(false)
+					cam.set_process_input(false)
+					cam.set_process_unhandled_input(false)

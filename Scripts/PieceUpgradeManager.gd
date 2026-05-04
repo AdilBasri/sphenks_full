@@ -221,7 +221,7 @@ func start_upgrade_sequence():
 	is_selection_ready = false
 	selection_lockout = 0.4 # More responsive lockout
 	
-	if OnlineManager.is_online and OnlineManager.lobby_id != 0:
+	if (OnlineManager.is_online and OnlineManager.lobby_id != 0) or get_tree().current_scene.name == "Node3D":
 		is_online_mode = true
 		upgrade_points = 10
 		if not online_timer:
@@ -259,7 +259,12 @@ func start_upgrade_sequence():
 		is_selection_active = false
 		return
 		
-	var pool = game_manager.white_pieces.duplicate()
+	var pool = []
+	match OnlineManager.assigned_role:
+		1: pool = game_manager.red_pieces.duplicate()
+		2: pool = game_manager.black_pieces.duplicate()
+		3: pool = game_manager.green_pieces.duplicate()
+		_: pool = game_manager.white_pieces.duplicate()
 	pool.shuffle()
 	
 	var spawn_count = min(pool.size(), fabric_markers.size(), 3)

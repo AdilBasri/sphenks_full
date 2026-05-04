@@ -24,6 +24,7 @@ var bot_names: Dictionary = {}    # {steam_id: String}
 
 var room_code: String = ""
 var room_name: String = ""
+var assigned_role: int = -1 # 0=P1, 1=P2, 2=P3, 3=P4
 var room_password: String = ""
 var temp_joining_lobby_id: int = 0
 var is_searching_by_code: bool = false
@@ -55,6 +56,11 @@ func _connect_steam_signals():
 	Steam.lobby_chat_update.connect(_on_lobby_chat_update)
 	Steam.p2p_session_request.connect(_on_p2p_session_request)
 	Steam.lobby_match_list.connect(_on_lobby_match_list)
+	Steam.persona_state_change.connect(_on_persona_state_change)
+
+func _on_persona_state_change(steam_id: int, flag: int):
+	if players.has(steam_id):
+		player_joined.emit(steam_id, players[steam_id])
 
 # ─────────────────────────────────────────────
 # LOBİ
@@ -110,6 +116,7 @@ func leave_lobby():
 	room_code = ""
 	room_name = ""
 	is_host = false
+	PieceDatabase.restore_database_after_online()
 
 # ─────────────────────────────────────────────
 # HAZIR / OYUNU BAŞLAT
@@ -124,7 +131,24 @@ func set_ready(rdy: bool):
 
 func start_game():
 	if is_online:
-		broadcast({"type": "start_game"})
+		var role_map = {}
+		var sids = players.keys()
+		# Sort IDs to ensure consistency before shuffling (though shuffle is random)
+		sids.sort()
+		sids.shuffle()
+		for i in range(sids.size()):
+			role_map[str(sids[i])] = i
+		
+		broadcast({"type": "start_game", "role_map": role_map})
+		_apply_role_map(role_map)
+	else:
+		game_started.emit()
+
+func _apply_role_map(role_map: Dictionary):
+	var my_id_str = str(my_steam_id)
+	if role_map.has(my_id_str):
+		assigned_role = int(role_map[my_id_str])
+		print("[OnlineManager] Assigned Role: Player ", assigned_role + 1)
 	game_started.emit()
 
 func are_all_ready() -> bool:
@@ -210,7 +234,8 @@ func _handle_message(from_id: int, data: Dictionary):
 				player_joined.emit(sid, players[sid])
 
 		"start_game":
-			game_started.emit()
+			var role_map = data.get("role_map", {})
+			_apply_role_map(role_map)
 		"add_bot":
 			var bid = int(data.get("bot_id", -1))
 			var bname = data.get("bot_name", "BOT")
@@ -380,6 +405,7 @@ func _add_player(steam_id: int):
 		if is_online and steam_id != my_steam_id and steam_id > 0:
 			Steam.acceptP2PSessionWithUser(steam_id)
 			send_data(steam_id, {"type": "ping"})
+			Steam.requestUserInformation(steam_id, true)
 		player_joined.emit(steam_id, idx)
 
 
