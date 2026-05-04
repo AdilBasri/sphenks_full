@@ -94,6 +94,18 @@ signal camera_returned_to_board
 
 func _ready():
 	base_fov = fov
+	if get_tree().current_scene.name == "Node3D":
+		# Online mode: Keep the position assigned by OnlineMatchManager
+		yaw = rotation_degrees.y
+		pitch = rotation_degrees.x
+		start_y = yaw
+		start_x = pitch
+		seated_position = position
+		seated_rotation = rotation_degrees
+		seated_body_position = get_parent().global_position
+		print("[Camera3D] Online mode detected, skipping SP initialization.")
+		return
+		
 	if get_tree().current_scene.name == "anamenu":
 		if crosshair_ui:
 			crosshair_ui.visible = false
