@@ -84,7 +84,7 @@ func _is_excluded(node: Node) -> bool:
 		var lname = p.name.to_lower()
 		if lname == "fabric1" or lname == "altar" or lname == "ashtray" or "whetstone" in lname \
 		or "vent" in lname or "kapi" in lname or "door" in lname or "kapı" in lname \
-		or "hand" in lname or "chain" in lname or "mirror" in lname:
+		or "hand" in lname or "chain" in lname or "mirror" in lname or "mask" in lname:
 			result = true
 			break
 		p = p.get_parent()

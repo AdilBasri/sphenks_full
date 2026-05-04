@@ -420,7 +420,7 @@ transform = Transform3D(0.9992935, -0.021884156, 0.030555338, 0.02172313, 0.9997
 bone_name = "mixamorig_Head"
 bone_idx = 5
 
-[node name="Node3D" parent="Players/Player4/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("25_dngu3")]
+[node name="mask4" parent="Players/Player4/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("25_dngu3")]
 transform = Transform3D(0.99001104, -0.097935975, 0.1014304, 0.098751955, 0.99510765, -0.0030449175, -0.10063587, 0.01303094, 0.99483794, 0.002437465, -0.23725553, 0.019518375)
 
 [node name="AnimationPlayer" parent="Players/Player4/Sitting" index="1"]
