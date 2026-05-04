@@ -145,10 +145,11 @@ func _ensure_collision(node: Node3D, type: String):
 func _setup_diegetic_ui():
 	# Points Label on Altar (Raised to -0.12 to avoid clipping)
 	points_label = _create_label("3", Vector3(-1.83, 0.15, 2.265), Color.GOLD)
+	points_label.font_size = 48
 	
-	drop_label = _create_label("Taşı Geri Bırak\n(Sağ Tık)", Vector3(-1.83, -0.15, 2.265), Color.GRAY)
+	drop_label = _create_label("Right Click to Drop", Vector3(-1.83, -0.15, 2.265), Color.GRAY)
 	drop_label.visible = false
-	drop_label.font_size = 20
+	drop_label.font_size = 26
 	
 	# Atk & Def Labels
 	_create_label("+1 Attack", Vector3(-1.78, -0.12, 2.561), Color.RED)
@@ -368,7 +369,7 @@ func select_piece(piece: Node3D):
 		if is_online_mode:
 			drop_label.visible = true
 	if points_label:
-		points_label.global_position = target_pos + Vector3(0, 0.35, 0)
+		points_label.global_position = target_pos + Vector3(0, 0.20, 0)
 		points_label.visible = true
 	
 	_update_screen_stats()

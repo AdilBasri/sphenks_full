@@ -139,7 +139,7 @@ func _ready():
 	Engine.time_scale = 1.0
 	# The initial mouse mode is handled above in the current_state check
 	
-	if OnlineManager.is_online and OnlineManager.lobby_id != 0:
+	if OnlineManager.is_online and OnlineManager.lobby_id != 0 and get_tree().current_scene.name == "GameRoom":
 		current_state = PlayerState.STANDING
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		if crosshair_ui: crosshair_ui.visible = false
