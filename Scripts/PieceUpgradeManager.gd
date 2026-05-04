@@ -11,6 +11,10 @@ var selected_piece: Node3D = null
 var is_selection_active: bool = false
 var is_selection_ready: bool = false
 var is_upgrading: bool = false
+var is_online_mode: bool = false
+var online_timer: Timer = null
+var time_left: int = 60
+var timer_label: Label3D = null
 
 var fabric_markers: Array[Marker3D] = []
 var altar_marker: Marker3D = null
@@ -143,6 +147,8 @@ func _setup_diegetic_ui():
 	_create_label("+1 Attack", Vector3(-1.78, -0.12, 2.561), Color.RED)
 	_create_label("+1 Defense", Vector3(-1.78, -0.12, 1.975), Color.SKY_BLUE)
 	
+	timer_label = _create_label("TIME: 60s", Vector3(-1.83, 0.2, 2.265), Color.WHITE)
+	
 	# Configure Manually Added Screen Labels
 	if atk_screen_label:
 		_configure_existing_label(atk_screen_label, Color.RED)
@@ -190,9 +196,26 @@ func start_upgrade_sequence():
 	
 	is_selection_active = true
 	is_selection_ready = false
-	upgrade_points = 3
 	selection_lockout = 0.4 # More responsive lockout
-	if points_label: points_label.text = "3"
+	
+	if OnlineManager.is_online and OnlineManager.lobby_id != 0:
+		is_online_mode = true
+		upgrade_points = 10
+		if not online_timer:
+			online_timer = Timer.new()
+			add_child(online_timer)
+			online_timer.timeout.connect(_on_online_timer_tick)
+		time_left = 60
+		if timer_label:
+			timer_label.text = "TIME: %ds" % time_left
+			timer_label.visible = true
+		online_timer.start(1.0)
+	else:
+		is_online_mode = false
+		upgrade_points = 3
+		if timer_label: timer_label.visible = false
+
+	if points_label: points_label.text = str(upgrade_points)
 	
 	for l in labels_nodes: l.visible = true
 	
@@ -233,6 +256,37 @@ func start_upgrade_sequence():
 	is_selection_ready = true
 	print("[PieceUpgradeManager] Drafting phase ready. Pieces: ", selection_pieces.size())
 
+func _on_online_timer_tick():
+	if not is_selection_active:
+		online_timer.stop()
+		return
+	
+	time_left -= 1
+	if timer_label:
+		timer_label.text = "TIME: %ds" % time_left
+		
+	if time_left <= 0:
+		online_timer.stop()
+		_auto_complete_upgrades()
+
+func _auto_complete_upgrades():
+	if not is_selection_active: return
+	
+	while upgrade_points > 0:
+		var valid_pieces = []
+		for p in selection_pieces:
+			if is_instance_valid(p): valid_pieces.append(p)
+			
+		if valid_pieces.is_empty(): break
+		
+		var random_piece = valid_pieces[randi() % valid_pieces.size()]
+		var path = random_piece.get_meta("scene_path")
+		var stat = "attack" if randf() > 0.5 else "defense"
+		PieceDatabase.upgrade_piece(PieceDatabase.get_piece_type(path), true, stat, 1)
+		upgrade_points -= 1
+		
+	_finish_upgrade()
+
 func _add_collision_to_piece(piece: Node3D):
 	if piece.find_child("*StaticBody*", true, false): return
 	var body = StaticBody3D.new()
@@ -267,11 +321,16 @@ func select_piece(piece: Node3D):
 	print("[PieceUpgradeManager] Selection confirmed: ", piece.name)
 	
 	# Hide others
-	for p in selection_pieces:
-		if p != piece:
-			var tw_hide = create_tween()
-			tw_hide.tween_property(p, "scale", Vector3.ZERO, 0.2)
-			tw_hide.tween_callback(p.queue_free)
+	if is_online_mode:
+		for p in selection_pieces:
+			if p != piece:
+				p.visible = false
+	else:
+		for p in selection_pieces:
+			if p != piece:
+				var tw_hide = create_tween()
+				tw_hide.tween_property(p, "scale", Vector3.ZERO, 0.2)
+				tw_hide.tween_callback(p.queue_free)
 	
 	if not altar_marker: return
 	var target_pos = altar_marker.global_position
@@ -282,6 +341,27 @@ func select_piece(piece: Node3D):
 	
 	_update_screen_stats()
 	piece_placed_on_altar.emit()  # TutorialManager Box 12'yi tetikler
+
+func drop_selected_piece():
+	if not is_online_mode or not selected_piece or is_upgrading: return
+	
+	var idx = selection_pieces.find(selected_piece)
+	if idx != -1 and idx < fabric_markers.size():
+		var target_pos = fabric_markers[idx].global_position
+		target_pos.y += 0.08
+		var tw = create_tween()
+		tw.tween_property(selected_piece, "global_position", target_pos, 0.4).set_trans(Tween.TRANS_SINE)
+		
+	selected_piece = null
+	
+	# Show other pieces
+	for p in selection_pieces:
+		if is_instance_valid(p):
+			p.visible = true
+			p.scale = Vector3(1.5, 1.5, 1.5)
+			
+	if atk_screen_label: atk_screen_label.visible = false
+	if def_screen_label: def_screen_label.visible = false
 
 
 
@@ -399,6 +479,8 @@ func _play_sharpening_effects(type: String):
 func _finish_upgrade():
 	is_selection_active = false
 	for l in labels_nodes: l.visible = false
+	if timer_label: timer_label.visible = false
+	if online_timer: online_timer.stop()
 	
 	if selected_piece:
 		var tw = create_tween()
@@ -407,12 +489,22 @@ func _finish_upgrade():
 		selected_piece = null
 	
 	is_upgrading = false
+	
+	if is_online_mode:
+		for p in selection_pieces:
+			if is_instance_valid(p):
+				p.queue_free()
+				
 	selection_pieces.clear()
 	
 	if camera and camera.has_method("exit_upgrade_selection_view"):
 		camera.exit_upgrade_selection_view()
 	if camera and camera.has_method("return_to_table"):
 		camera.return_to_table()
+
+	if is_online_mode and game_manager and game_manager.round_number == 1 and game_manager.current_turn == game_manager.GameTurn.PLAYER:
+		game_manager.start_current_turn_logic()
+		is_online_mode = false
 
 func _clear_selection_pieces():
 	for p in selection_pieces:

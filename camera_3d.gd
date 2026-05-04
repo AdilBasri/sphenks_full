@@ -341,6 +341,12 @@ func _input(event):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		if is_game_over or is_placing_piece or is_receiving_piece: return
 		
+		if is_upgrade_mode:
+			if upgrade_manager and upgrade_manager.has_method("drop_selected_piece"):
+				upgrade_manager.drop_selected_piece()
+			get_viewport().set_input_as_handled()
+			return
+		
 		# Check if we are right-clicking a piece to inspect it
 		var result = _raycast_from_mouse()
 		if result and result.collider.has_meta("is_grid_cell"):

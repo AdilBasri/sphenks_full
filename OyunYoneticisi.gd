@@ -85,7 +85,9 @@ func _ready():
 		if save_data.has("piece_stats"):
 			PieceDatabase.set_raw_stats(save_data["piece_stats"])
 		print("[OyunYoneticisi] Game Loaded. Phase: ", phase_number, " Tutorial Mode: ", is_tutorial_mode)
-	
+	if OnlineManager.is_online and OnlineManager.lobby_id != 0:
+		is_tutorial_mode = false
+		
 	# BGM Setup: Tutorial mode needs intro, otherwise direct loop
 	SesYoneticisi.setup_bgm_player(is_tutorial_mode)
 
@@ -355,6 +357,13 @@ func start_game():
 	is_game_active = true
 	round_number = 1
 	current_turn = GameTurn.PLAYER
+	
+	if OnlineManager.is_online and OnlineManager.lobby_id != 0 and phase_number == 1:
+		var cam = get_viewport().get_camera_3d()
+		if cam and cam.get("upgrade_manager"):
+			cam.upgrade_manager.start_upgrade_sequence()
+			return
+			
 	start_current_turn_logic()
 
 func start_current_turn_logic():

@@ -378,7 +378,23 @@ func _on_player_ready_changed(steam_id: int, p_is_ready: bool):
 
 func _on_game_started():
 	print("Oyun Başlıyor!")
-	# get_tree().change_scene_to_file("res://Scenes/Game/game.tscn")
+	if is_instance_valid(start_btn): start_btn.disabled = true
+	if is_instance_valid(ready_btn): ready_btn.disabled = true
+	if is_instance_valid(leave_btn): leave_btn.disabled = true
+	
+	var canvas = CanvasLayer.new()
+	canvas.layer = 100
+	add_child(canvas)
+	var rect = ColorRect.new()
+	rect.color = Color(0, 0, 0, 0)
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	canvas.add_child(rect)
+	
+	var tw = create_tween()
+	tw.tween_property(rect, "color:a", 1.0, 1.5)
+	tw.tween_callback(func():
+		get_tree().change_scene_to_file("res://camera.tscn")
+	)
 
 # ─────────────────────────────────────────────
 # STİLLER

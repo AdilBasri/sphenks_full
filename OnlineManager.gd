@@ -123,7 +123,6 @@ func set_ready(rdy: bool):
 
 
 func start_game():
-	if not is_host: return
 	if is_online:
 		broadcast({"type": "start_game"})
 	game_started.emit()
@@ -312,12 +311,12 @@ func _on_lobby_match_list(lobbies: Array):
 func _on_lobby_joined(joined_lobby_id: int, _permissions: int, _locked: bool, response: int):
 	if response == 1:
 		lobby_id = joined_lobby_id
-		is_host = false
+		var owner_id = Steam.getLobbyOwner(lobby_id)
+		is_host = (owner_id == my_steam_id)
 		room_code = Steam.getLobbyData(lobby_id, "room_code")
 		room_name = Steam.getLobbyData(lobby_id, "room_name")
 		players.clear()
 		player_ready.clear()
-		var owner_id = Steam.getLobbyOwner(lobby_id)
 		_add_player(owner_id)
 		
 		var num = Steam.getNumLobbyMembers(lobby_id)
