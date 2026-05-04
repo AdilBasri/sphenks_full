@@ -438,4 +438,3 @@ func _sync_state_to(target_id: int):
 func kick_player(target_id: int):
 	if is_online and target_id > 0:
 		send_data(target_id, {"type": "kick", "steam_id": str(target_id)})
-
