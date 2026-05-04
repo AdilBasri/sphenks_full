@@ -1,0 +1,11 @@
+Model Information:
+* title:	Hazmat Mask
+* source:	https://sketchfab.com/3d-models/hazmat-mask-de516e7330e1491fac4144e3d2f458f1
+* author:	Sket_h (https://sketchfab.com/skettch)
+
+Model License:
+* license type:	CC-BY-SA-4.0 (http://creativecommons.org/licenses/by-sa/4.0/)
+* requirements:	Author must be credited. Modified versions must have the same license. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Hazmat Mask" (https://sketchfab.com/3d-models/hazmat-mask-de516e7330e1491fac4144e3d2f458f1) by Sket_h (https://sketchfab.com/skettch) licensed under CC-BY-SA-4.0 (http://creativecommons.org/licenses/by-sa/4.0/)

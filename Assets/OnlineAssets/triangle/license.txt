@@ -1,0 +1,11 @@
+Model Information:
+* title:	Triangle V2
+* source:	https://sketchfab.com/3d-models/triangle-v2-c570eff445f241a0957d851a53e4a64d
+* author:	Sam (https://sketchfab.com/swiseman59)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Triangle V2" (https://sketchfab.com/3d-models/triangle-v2-c570eff445f241a0957d851a53e4a64d) by Sam (https://sketchfab.com/swiseman59) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

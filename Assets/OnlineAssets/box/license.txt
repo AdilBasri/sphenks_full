@@ -1,0 +1,8 @@
+Model Information:
+* title:	First Aid Box
+* source:	https://sketchfab.com/3d-models/first-aid-box-10f0dbf1f1b046f4b8b30dea420d1c3b
+* author:	bytephunk (https://sketchfab.com/bytephunk)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works
