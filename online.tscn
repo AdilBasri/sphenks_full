@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3 uid="uid://b6n4x214s2u3d"]
+[gd_scene load_steps=35 format=3 uid="uid://b6n4x214s2u3d"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_ixjfh"]
 [ext_resource type="PackedScene" uid="uid://wouv23y55lsa" path="res://Assets/light/scene.gltf" id="2_m35gp"]
@@ -15,12 +15,15 @@
 [ext_resource type="PackedScene" uid="uid://dxykbh2n17nqv" path="res://hand.tscn" id="13_rj10o"]
 [ext_resource type="PackedScene" path="res://Sitting.tscn" id="14_r3rnl"]
 [ext_resource type="Script" uid="uid://dsq5ui7ws5gbu" path="res://EnemyHeadLook.gd" id="15_1384v"]
-[ext_resource type="PackedScene" uid="uid://dxkvsxq0j5mgj" path="res://Assets/glitched_skull/scene.gltf" id="16_nvqwy"]
 [ext_resource type="Animation" uid="uid://bvdvopdnjdm5w" path="res://enemy_gun.res" id="17_djvgb"]
+[ext_resource type="PackedScene" uid="uid://b1ppebpe4nnds" path="res://Assets/OnlineAssets/Masks/mask1/mask1.tscn" id="17_nvqwy"]
 [ext_resource type="Animation" uid="uid://b70e1rtqi4x57" path="res://geri_otur.res" id="18_dngu3"]
 [ext_resource type="Animation" uid="uid://c3w5olixra7ns" path="res://oturma1.res" id="19_syjir"]
 [ext_resource type="Animation" uid="uid://dp5eolmpu3nkh" path="res://puke.res" id="20_3ume1"]
 [ext_resource type="Animation" uid="uid://chhb1wxyk0mns" path="res://take_gun.res" id="21_u0j5w"]
+[ext_resource type="PackedScene" uid="uid://ci136laeytkkr" path="res://Assets/OnlineAssets/Masks/mask2/mask2.tscn" id="23_djvgb"]
+[ext_resource type="PackedScene" uid="uid://f4aoh4r0c6xi" path="res://Assets/OnlineAssets/Masks/mask3/mask3.tscn" id="24_djvgb"]
+[ext_resource type="PackedScene" uid="uid://6ehg02ns2ri2" path="res://Assets/OnlineAssets/Masks/mask4/mask4.tscn" id="25_dngu3"]
 [ext_resource type="Script" uid="uid://bvbfs3jwe2ech" path="res://Scripts/OnlineMatchManager.gd" id="50_online_manager"]
 
 [sub_resource type="Environment" id="Environment_14b8j"]
@@ -204,6 +207,7 @@ color = Color(1, 1, 1, 0.4)
 
 [node name="boxchain" parent="Masa" instance=ExtResource("10_1384v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.51660365, -1.9169114)
+visible = false
 
 [node name="chairs" type="Node3D" parent="."]
 
@@ -257,8 +261,8 @@ transform = Transform3D(0.9992935, -0.021884156, 0.030555338, 0.02172313, 0.9997
 bone_name = "mixamorig_Head"
 bone_idx = 5
 
-[node name="mask" parent="Players/Player1/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("16_nvqwy")]
-transform = Transform3D(0.081192546, 0.001765005, -0.0024919389, -0.0017780864, 0.08122957, -0.00040008087, 0.0024826198, 0.00045433576, 0.081210785, 0.0013096482, -0.009360269, 0.030044317)
+[node name="mask1" parent="Players/Player1/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("17_nvqwy")]
+transform = Transform3D(1.2299799, -0.0060037123, -0.0036441796, 0.00538287, 1.215812, -0.18620448, 0.0045110285, 0.18618552, 1.2158183, 7.015467e-05, -0.23304439, 0.09947848)
 
 [node name="AnimationPlayer" parent="Players/Player1/Sitting" index="1"]
 libraries = {
@@ -309,8 +313,8 @@ transform = Transform3D(0.9992935, -0.021884156, 0.030555338, 0.02172313, 0.9997
 bone_name = "mixamorig_Head"
 bone_idx = 5
 
-[node name="mask" parent="Players/Player2/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("16_nvqwy")]
-transform = Transform3D(0.081192546, 0.001765005, -0.0024919389, -0.0017780864, 0.08122957, -0.00040008087, 0.0024826198, 0.00045433576, 0.081210785, 0.0013096482, -0.009360269, 0.030044317)
+[node name="mask2" parent="Players/Player2/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("23_djvgb")]
+transform = Transform3D(0.5499948, -0.0020333696, -0.0012843627, 0.0018705493, 0.5462792, -0.06384023, 0.0015116939, 0.06383525, 0.54628086, -0.0016982555, -0.03773658, 0.14561963)
 
 [node name="AnimationPlayer" parent="Players/Player2/Sitting" index="1"]
 libraries = {
@@ -364,8 +368,8 @@ transform = Transform3D(0.9992935, -0.021884156, 0.030555338, 0.02172313, 0.9997
 bone_name = "mixamorig_Head"
 bone_idx = 5
 
-[node name="mask" parent="Players/Player3/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("16_nvqwy")]
-transform = Transform3D(0.081192546, 0.001765005, -0.0024919389, -0.0017780864, 0.08122957, -0.00040008087, 0.0024826198, 0.00045433576, 0.081210785, 0.0013096482, -0.009360269, 0.030044317)
+[node name="mask3" parent="Players/Player3/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("24_djvgb")]
+transform = Transform3D(0.5499947, -0.0020286478, -0.0012817336, 0.0018665666, 0.5462959, -0.063697316, 0.0015080431, 0.06369233, 0.5462975, -0.0016768128, 0.0080727935, 0.060620546)
 
 [node name="AnimationPlayer" parent="Players/Player3/Sitting" index="1"]
 libraries = {
@@ -416,8 +420,8 @@ transform = Transform3D(0.9992935, -0.021884156, 0.030555338, 0.02172313, 0.9997
 bone_name = "mixamorig_Head"
 bone_idx = 5
 
-[node name="mask" parent="Players/Player4/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("16_nvqwy")]
-transform = Transform3D(0.081192546, 0.001765005, -0.0024919389, -0.0017780864, 0.08122957, -0.00040008087, 0.0024826198, 0.00045433576, 0.081210785, 0.0013096482, -0.009360269, 0.030044317)
+[node name="Node3D" parent="Players/Player4/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("25_dngu3")]
+transform = Transform3D(0.99001104, -0.097935975, 0.1014304, 0.098751955, 0.99510765, -0.0030449175, -0.10063587, 0.01303094, 0.99483794, 0.002437465, -0.23725553, 0.019518375)
 
 [node name="AnimationPlayer" parent="Players/Player4/Sitting" index="1"]
 libraries = {

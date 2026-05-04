@@ -23,9 +23,9 @@ func setup(p_sutun: int, p_satir: int, p_boyut: float = 1.0, p_renk: Color = Col
 	refresh_visuals()
 
 func refresh_visuals() -> void:
-	# Mevcut görselleri temizle (Highlight mesh hariç)
+	# Mevcut görselleri temizle (Bazı özel node'lar hariç)
 	for child in get_children():
-		if child != highlight_mesh and child != preview_tas and child != mevcut_tas and not child is StaticBody3D:
+		if child != highlight_mesh and child != preview_tas and child != mevcut_tas:
 			child.queue_free()
 	
 	# Eğer highlight_mesh yoksa oluştur (Sadece ilk kez)
@@ -62,9 +62,6 @@ func refresh_visuals() -> void:
 	var surface_mat = StandardMaterial3D.new()
 	surface_mat.albedo_color = hucre_rengi
 	surface_mesh.material_override = surface_mat
-	surface_mesh.position.y = 0.001 
-	add_child(surface_mesh)
-	
 	surface_mesh.position.y = 0.001 
 	add_child(surface_mesh)
 	
