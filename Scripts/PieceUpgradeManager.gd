@@ -27,6 +27,7 @@ var marker_def: Marker3D = null
 var upgrade_points: int = 3
 var labels_nodes: Array[Label3D] = []
 var points_label: Label3D = null
+var drop_label: Label3D = null
 var atk_screen_label: Label3D = null
 var def_screen_label: Label3D = null
 
@@ -141,13 +142,17 @@ func _ensure_collision(node: Node3D, type: String):
 
 func _setup_diegetic_ui():
 	# Points Label on Altar (Raised to -0.12 to avoid clipping)
-	points_label = _create_label("3", Vector3(-1.83, -0.12, 2.265), Color.GOLD)
+	points_label = _create_label("3", Vector3(-1.83, 0.15, 2.265), Color.GOLD)
+	
+	drop_label = _create_label("Taşı Geri Bırak\n(Sağ Tık)", Vector3(-1.83, -0.15, 2.265), Color.GRAY)
+	drop_label.visible = false
+	drop_label.font_size = 20
 	
 	# Atk & Def Labels
 	_create_label("+1 Attack", Vector3(-1.78, -0.12, 2.561), Color.RED)
 	_create_label("+1 Defense", Vector3(-1.78, -0.12, 1.975), Color.SKY_BLUE)
 	
-	timer_label = _create_label("TIME: 60s", Vector3(-1.83, 0.2, 2.265), Color.WHITE)
+	timer_label = _create_label("TIME: 60s", Vector3(-1.83, 0.35, 2.265), Color.WHITE)
 	
 	# Configure Manually Added Screen Labels
 	if atk_screen_label:
@@ -220,7 +225,7 @@ func start_upgrade_sequence():
 	for l in labels_nodes: l.visible = true
 	
 	if camera and camera.has_method("enter_upgrade_selection_view"):
-		camera.enter_upgrade_selection_view()
+		camera.enter_upgrade_selection_view(is_online_mode)
 	
 	_clear_selection_pieces()
 	
@@ -339,6 +344,14 @@ func select_piece(piece: Node3D):
 	tw.tween_property(piece, "global_position", target_pos, 0.6).set_trans(Tween.TRANS_SINE)
 	await tw.finished
 	
+	if drop_label:
+		drop_label.global_position = target_pos + Vector3(0, -0.2, 0)
+		if is_online_mode:
+			drop_label.visible = true
+	if points_label:
+		points_label.global_position = target_pos + Vector3(0, 0.35, 0)
+		points_label.visible = true
+	
 	_update_screen_stats()
 	piece_placed_on_altar.emit()  # TutorialManager Box 12'yi tetikler
 
@@ -359,6 +372,9 @@ func drop_selected_piece():
 		if is_instance_valid(p):
 			p.visible = true
 			p.scale = Vector3(1.5, 1.5, 1.5)
+			
+	if drop_label: drop_label.visible = false
+	if points_label: points_label.visible = false
 			
 	if atk_screen_label: atk_screen_label.visible = false
 	if def_screen_label: def_screen_label.visible = false
@@ -480,6 +496,8 @@ func _finish_upgrade():
 	is_selection_active = false
 	for l in labels_nodes: l.visible = false
 	if timer_label: timer_label.visible = false
+	if drop_label: drop_label.visible = false
+	if points_label: points_label.visible = false
 	if online_timer: online_timer.stop()
 	
 	if selected_piece:
@@ -502,8 +520,8 @@ func _finish_upgrade():
 	if camera and camera.has_method("return_to_table"):
 		camera.return_to_table()
 
-	if is_online_mode and game_manager and game_manager.round_number == 1 and game_manager.current_turn == game_manager.GameTurn.PLAYER:
-		game_manager.start_current_turn_logic()
+	if is_online_mode:
+		get_tree().change_scene_to_file("res://online.tscn")
 		is_online_mode = false
 
 func _clear_selection_pieces():

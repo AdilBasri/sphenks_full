@@ -1658,7 +1658,7 @@ func trigger_loss():
 func _transition_to_upgrade_view():
 	enter_upgrade_selection_view()
 
-func enter_upgrade_selection_view():
+func enter_upgrade_selection_view(instant: bool = false):
 	is_upgrade_mode = true
 	
 	# CLEAR HELD PIECE (Fix for softlock)
@@ -1668,10 +1668,6 @@ func enter_upgrade_selection_view():
 		held_piece_scene = ""
 	is_receiving_piece = false
 	
-	if current_state == PlayerState.SEATED:
-		stand_up()
-		await get_tree().create_timer(1.2).timeout 
-	
 	if hand_node:
 		hand_node.visible = false
 	
@@ -1679,6 +1675,20 @@ func enter_upgrade_selection_view():
 	var target_pos = Vector3(-1.062, -0.086, 2.303)
 	var target_rot = Vector3(-13.7, 84.9, 0)
 	
+	if instant:
+		current_state = PlayerState.STANDING
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		if crosshair_ui: crosshair_ui.visible = false
+		global_position = target_pos
+		rotation_degrees = target_rot
+		yaw = target_rot.y
+		pitch = target_rot.x
+		return
+	
+	if current_state == PlayerState.SEATED:
+		stand_up()
+		await get_tree().create_timer(1.2).timeout 
+		
 	var tw = create_tween().set_parallel(true)
 	tw.tween_property(self, "global_position", target_pos, 1.2).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(self, "rotation_degrees", target_rot, 1.2).set_trans(Tween.TRANS_SINE)

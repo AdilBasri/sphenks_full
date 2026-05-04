@@ -87,6 +87,7 @@ func _ready():
 		print("[OyunYoneticisi] Game Loaded. Phase: ", phase_number, " Tutorial Mode: ", is_tutorial_mode)
 	if OnlineManager.is_online and OnlineManager.lobby_id != 0:
 		is_tutorial_mode = false
+		phase_number = 1
 		
 	# BGM Setup: Tutorial mode needs intro, otherwise direct loop
 	SesYoneticisi.setup_bgm_player(is_tutorial_mode)
