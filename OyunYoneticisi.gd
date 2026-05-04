@@ -98,14 +98,18 @@ func _ready():
 		add_child(tutorial_manager)
 		tutorial_manager.tutorial_completed.connect(_on_tutorial_completed)
 
-	# Start the game loop after a brief wait
-	await get_tree().create_timer(1.0).timeout
-	
-	if not is_tutorial_mode:
-		print("[OyunYoneticisi] Starting directly in Phase ", phase_number)
+	if OnlineManager.is_online and OnlineManager.lobby_id != 0:
+		print("[OyunYoneticisi] Starting Online Mode directly")
 		start_game()
 	else:
-		print("[OyunYoneticisi] Starting Tutorial...")
+		# Start the game loop after a brief wait
+		await get_tree().create_timer(1.0).timeout
+		
+		if not is_tutorial_mode:
+			print("[OyunYoneticisi] Starting directly in Phase ", phase_number)
+			start_game()
+		else:
+			print("[OyunYoneticisi] Starting Tutorial...")
 	
 	# Setup basement door interaction
 	_setup_basement_door()

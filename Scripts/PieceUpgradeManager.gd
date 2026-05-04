@@ -28,6 +28,8 @@ var upgrade_points: int = 3
 var labels_nodes: Array[Label3D] = []
 var points_label: Label3D = null
 var drop_label: Label3D = null
+var timer_canvas: CanvasLayer = null
+var screen_timer_label: Label = null
 var atk_screen_label: Label3D = null
 var def_screen_label: Label3D = null
 
@@ -152,7 +154,22 @@ func _setup_diegetic_ui():
 	_create_label("+1 Attack", Vector3(-1.78, -0.12, 2.561), Color.RED)
 	_create_label("+1 Defense", Vector3(-1.78, -0.12, 1.975), Color.SKY_BLUE)
 	
-	timer_label = _create_label("TIME: 60s", Vector3(-1.83, 0.35, 2.265), Color.WHITE)
+	timer_canvas = CanvasLayer.new()
+	timer_canvas.layer = 50
+	add_child(timer_canvas)
+	screen_timer_label = Label.new()
+	screen_timer_label.text = "TIME: 60s"
+	screen_timer_label.add_theme_font_override("font", FONT_DOMINICA)
+	screen_timer_label.add_theme_font_size_override("font_size", 48)
+	screen_timer_label.add_theme_color_override("font_color", Color.WHITE)
+	screen_timer_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	screen_timer_label.add_theme_constant_override("outline_size", 12)
+	screen_timer_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	screen_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	screen_timer_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	screen_timer_label.custom_minimum_size = Vector2(0, 100)
+	timer_canvas.add_child(screen_timer_label)
+	timer_canvas.visible = false
 	
 	# Configure Manually Added Screen Labels
 	if atk_screen_label:
@@ -211,14 +228,15 @@ func start_upgrade_sequence():
 			add_child(online_timer)
 			online_timer.timeout.connect(_on_online_timer_tick)
 		time_left = 60
-		if timer_label:
-			timer_label.text = "TIME: %ds" % time_left
-			timer_label.visible = true
+		if screen_timer_label:
+			screen_timer_label.text = "TIME: %ds" % time_left
+		if timer_canvas:
+			timer_canvas.visible = true
 		online_timer.start(1.0)
 	else:
 		is_online_mode = false
 		upgrade_points = 3
-		if timer_label: timer_label.visible = false
+		if timer_canvas: timer_canvas.visible = false
 
 	if points_label: points_label.text = str(upgrade_points)
 	
@@ -267,8 +285,8 @@ func _on_online_timer_tick():
 		return
 	
 	time_left -= 1
-	if timer_label:
-		timer_label.text = "TIME: %ds" % time_left
+	if screen_timer_label:
+		screen_timer_label.text = "TIME: %ds" % time_left
 		
 	if time_left <= 0:
 		online_timer.stop()
@@ -327,9 +345,7 @@ func select_piece(piece: Node3D):
 	
 	# Hide others
 	if is_online_mode:
-		for p in selection_pieces:
-			if p != piece:
-				p.visible = false
+		pass # Do not hide others in online mode
 	else:
 		for p in selection_pieces:
 			if p != piece:
@@ -495,7 +511,7 @@ func _play_sharpening_effects(type: String):
 func _finish_upgrade():
 	is_selection_active = false
 	for l in labels_nodes: l.visible = false
-	if timer_label: timer_label.visible = false
+	if timer_canvas: timer_canvas.visible = false
 	if drop_label: drop_label.visible = false
 	if points_label: points_label.visible = false
 	if online_timer: online_timer.stop()

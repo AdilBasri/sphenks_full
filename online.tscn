@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://b6n4x214s2u3d"]
+[gd_scene load_steps=31 format=3 uid="uid://b6n4x214s2u3d"]
 
 [ext_resource type="PackedScene" uid="uid://dy2noq2fsu1wo" path="res://bodrum_odasi.tscn" id="1_ixjfh"]
 [ext_resource type="PackedScene" uid="uid://wouv23y55lsa" path="res://Assets/light/scene.gltf" id="2_m35gp"]
@@ -13,6 +13,14 @@
 [ext_resource type="Script" uid="uid://wuvldqmhm6c6" path="res://camera_3d.gd" id="11_kcevw"]
 [ext_resource type="PackedScene" uid="uid://c5e7b2v7x8y1" path="res://InspectUI.tscn" id="12_87usy"]
 [ext_resource type="PackedScene" uid="uid://dxykbh2n17nqv" path="res://hand.tscn" id="13_rj10o"]
+[ext_resource type="PackedScene" path="res://Sitting.tscn" id="14_r3rnl"]
+[ext_resource type="Script" uid="uid://dsq5ui7ws5gbu" path="res://EnemyHeadLook.gd" id="15_1384v"]
+[ext_resource type="PackedScene" uid="uid://dxkvsxq0j5mgj" path="res://Assets/glitched_skull/scene.gltf" id="16_nvqwy"]
+[ext_resource type="Animation" uid="uid://bvdvopdnjdm5w" path="res://enemy_gun.res" id="17_djvgb"]
+[ext_resource type="Animation" uid="uid://b70e1rtqi4x57" path="res://geri_otur.res" id="18_dngu3"]
+[ext_resource type="Animation" uid="uid://c3w5olixra7ns" path="res://oturma1.res" id="19_syjir"]
+[ext_resource type="Animation" uid="uid://dp5eolmpu3nkh" path="res://puke.res" id="20_3ume1"]
+[ext_resource type="Animation" uid="uid://chhb1wxyk0mns" path="res://take_gun.res" id="21_u0j5w"]
 
 [sub_resource type="Environment" id="Environment_14b8j"]
 background_mode = 1
@@ -47,6 +55,18 @@ point_count = 3
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6yv3q"]
 height = 1.9550781
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_nnjqd"]
+_data = {
+&"enemy_gun": ExtResource("17_djvgb"),
+&"geri_otur": ExtResource("18_dngu3"),
+&"oturma1": ExtResource("19_syjir"),
+&"puke": ExtResource("20_3ume1"),
+&"take_gun": ExtResource("21_u0j5w")
+}
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cjx13"]
+size = Vector3(1, 2.0062256, 1)
 
 [node name="Node3D" type="Node3D"]
 
@@ -227,6 +247,36 @@ visible = false
 transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.1306741, -0.47089425)
 fov = 80.0
 
+[node name="Sitting" parent="Players/Player1" groups=["sitting_node"] instance=ExtResource("14_r3rnl")]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, -1.24, -0.0072568655)
+
+[node name="Skeleton3D" parent="Players/Player1/Sitting" index="0"]
+script = ExtResource("15_1384v")
+
+[node name="WhiteClown" parent="Players/Player1/Sitting/Skeleton3D" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0038419962, 0)
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Players/Player1/Sitting/Skeleton3D" index="1"]
+transform = Transform3D(0.9992935, -0.021884156, 0.030555338, 0.02172313, 0.9997482, 0.00559178, -0.030670024, -0.0049241185, 0.99951744, 0.016935494, 1.3688762, 0.19300246)
+bone_name = "mixamorig_Head"
+bone_idx = 5
+
+[node name="mask" parent="Players/Player1/Sitting/Skeleton3D/BoneAttachment3D" instance=ExtResource("16_nvqwy")]
+transform = Transform3D(0.081192546, 0.001765005, -0.0024919389, -0.0017780864, 0.08122957, -0.00040008087, 0.0024826198, 0.00045433576, 0.081210785, 0.0013096482, -0.009360269, 0.030044317)
+
+[node name="AnimationPlayer" parent="Players/Player1/Sitting" index="1"]
+libraries = {
+&"": SubResource("AnimationLibrary_nnjqd")
+}
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Players/Player1/Sitting"]
+collision_layer = 3
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player1/Sitting/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5031128, 0)
+shape = SubResource("BoxShape3D_cjx13")
+
 [node name="Player2" type="CharacterBody3D" parent="Players"]
 transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, -0.7004849, -0.118, 0.014)
 
@@ -294,3 +344,4 @@ transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 
 fov = 80.0
 
 [editable path="Masa/box"]
+[editable path="Players/Player1/Sitting"]
