@@ -207,34 +207,33 @@ color = Color(1, 1, 1, 0.4)
 
 [node name="boxchain" parent="Masa" instance=ExtResource("10_1384v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.51660365, -1.9169114)
-visible = false
 
 [node name="chairs" type="Node3D" parent="."]
 
 [node name="chair" parent="chairs" instance=ExtResource("10_nggyx")]
-transform = Transform3D(0.08, 0, -5.0858397e-09, 0, 0.08, 0, 5.0858397e-09, 0, 0.08, -0.004329741, -0.5816538, 1.1938505)
+transform = Transform3D(0.08, 0, -5.0858397e-09, 0, 0.08, 0, 5.0858397e-09, 0, 0.08, -0.034237146, -0.5816538, 1.1938505)
 
 [node name="chair2" parent="chairs" instance=ExtResource("10_nggyx")]
-transform = Transform3D(1.869189e-08, 0, -0.096, 0, 0.096, 0, 0.096, 0, 1.869189e-08, -1.2862463, -0.45530218, -0.0064430833)
+transform = Transform3D(1.869189e-08, 0, -0.096, 0, 0.096, 0, 0.096, 0, 1.869189e-08, -1.2862463, -0.45530218, -0.01579842)
 
 [node name="chair3" parent="chairs" instance=ExtResource("10_nggyx")]
-transform = Transform3D(-0.096, 0, -8.392592e-09, 0, 0.096, 0, 8.392592e-09, 0, -0.096, -0.004329741, -0.45530206, -1.2643825)
+transform = Transform3D(-0.096, 0, -8.392592e-09, 0, 0.096, 0, 8.392592e-09, 0, -0.096, -0.034237146, -0.45530206, -1.2643825)
 
 [node name="chair4" parent="chairs" instance=ExtResource("10_nggyx")]
-transform = Transform3D(-3.4969108e-09, 0, 0.08, 0, 0.08, 0, -0.08, 0, -3.4969108e-09, 1.2127103, -0.5816539, -0.006443262)
+transform = Transform3D(-3.4969108e-09, 0, 0.08, 0, 0.08, 0, -0.08, 0, -3.4969108e-09, 1.2127103, -0.5816539, -0.01579842)
 
 [node name="Players" type="Node3D" parent="."]
 
 [node name="Player1" type="CharacterBody3D" parent="Players"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11820468, 0.62548625)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.029907405, -0.11820468, 0.62548625)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player1"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.727, 0)
 shape = SubResource("CapsuleShape3D_6yv3q")
 
 [node name="Camera3D" type="Camera3D" parent="Players/Player1"]
-transform = Transform3D(1, 0, 0, 0, 0.8522934, 0.5230639, 0, -0.5230639, 0.8522934, 0, -0.10607523, -0.013993621)
-fov = 80.0
+transform = Transform3D(1, 0, 0, 0, 0.91354537, 0.4067366, 0, -0.4067366, 0.91354537, 0, -0.10607523, -0.013993621)
+fov = 90.0
 script = ExtResource("11_kcevw")
 
 [node name="InspectUI" parent="Players/Player1/Camera3D" instance=ExtResource("12_87usy")]
@@ -278,15 +277,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5031128, 0)
 shape = SubResource("BoxShape3D_cjx13")
 
 [node name="Player2" type="CharacterBody3D" parent="Players"]
-transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, -0.7004849, -0.118, 0.014)
+transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, -0.7004849, -0.118, -0.01579842)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player2"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.727, 0)
 shape = SubResource("CapsuleShape3D_6yv3q")
 
 [node name="Camera3D" type="Camera3D" parent="Players/Player2"]
-transform = Transform3D(1, 4.440892e-16, 0, 0, 0.85229343, 0.52306396, 0, -0.52306396, 0.85229343, 9.313226e-10, -0.10607523, -0.08994484)
-fov = 80.0
+transform = Transform3D(1, 0, 0, 0, 0.9135454, 0.40673664, 0, -0.40673664, 0.9135454, 9.313226e-10, -0.10607523, -0.08994484)
+fov = 90.0
 script = ExtResource("11_kcevw")
 
 [node name="InspectUI" parent="Players/Player2/Camera3D" instance=ExtResource("12_87usy")]
@@ -333,15 +332,15 @@ shape = SubResource("BoxShape3D_cjx13")
 transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 9.563207, 0.118, 12.873005)
 
 [node name="Player3" type="CharacterBody3D" parent="Players"]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -0.11820468, -0.67858154)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.029907405, -0.11820468, -0.67858154)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player3"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.727, 0)
 shape = SubResource("CapsuleShape3D_6yv3q")
 
 [node name="Camera3D" type="Camera3D" parent="Players/Player3"]
-transform = Transform3D(1, 0, 0, 0, 0.8522934, 0.5230639, 0, -0.5230639, 0.8522934, 0, -0.10607523, -0.013993621)
-fov = 80.0
+transform = Transform3D(1, 0, 0, 0, 0.91354537, 0.4067366, 0, -0.4067366, 0.91354537, 0, -0.10607523, -0.013993621)
+fov = 90.0
 script = ExtResource("11_kcevw")
 
 [node name="InspectUI" parent="Players/Player3/Camera3D" instance=ExtResource("12_87usy")]
@@ -385,15 +384,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5031128, 0)
 shape = SubResource("BoxShape3D_cjx13")
 
 [node name="Player4" type="CharacterBody3D" parent="Players"]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.6425706, -0.11820468, 0.013878375)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.6425706, -0.11820468, -0.01579842)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Players/Player4"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.727, 0)
 shape = SubResource("CapsuleShape3D_6yv3q")
 
 [node name="Camera3D" type="Camera3D" parent="Players/Player4"]
-transform = Transform3D(1, 0, 0, 0, 0.8522934, 0.5230639, 0, -0.5230639, 0.8522934, 0, -0.10607523, -0.013993621)
-fov = 80.0
+transform = Transform3D(1, 0, 0, 0, 0.91354537, 0.4067366, 0, -0.4067366, 0.91354537, 0, -0.10607523, -0.013993621)
+fov = 90.0
 script = ExtResource("11_kcevw")
 
 [node name="InspectUI" parent="Players/Player4/Camera3D" instance=ExtResource("12_87usy")]
