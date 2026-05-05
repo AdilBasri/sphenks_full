@@ -4,11 +4,15 @@ extends Node
 # Completely decoupled to allow independent upgrades in the future.
 
 var white_stats: Dictionary = {}
+var red_stats: Dictionary = {}
 var black_stats: Dictionary = {}
+var green_stats: Dictionary = {}
 
 # Backups to preserve singleplayer progress during online matches
 var white_stats_backup: Dictionary = {}
+var red_stats_backup: Dictionary = {}
 var black_stats_backup: Dictionary = {}
+var green_stats_backup: Dictionary = {}
 
 func _ready():
 	_initialize_database()
@@ -57,14 +61,20 @@ func _initialize_database():
 	# Deep copy to dictionaries (ensure they are completely independent objects)
 	for key in base_data:
 		white_stats[key] = base_data[key].duplicate(true)
+		red_stats[key] = base_data[key].duplicate(true)
 		black_stats[key] = base_data[key].duplicate(true)
+		green_stats[key] = base_data[key].duplicate(true)
 		
-	print("[PieceDatabase] Decoupled stats initialized.")
+	print("[PieceDatabase] Decoupled stats initialized for 4 colors.")
 
 func get_piece_stats(piece_id: String) -> Dictionary:
 	var lower_id = piece_id.to_lower()
-	var is_white = "white" in lower_id
-	var stats_source = white_stats if is_white else black_stats
+	var stats_source = white_stats
+	
+	if "white" in lower_id: stats_source = white_stats
+	elif "red" in lower_id: stats_source = red_stats
+	elif "black" in lower_id: stats_source = black_stats
+	elif "green" in lower_id: stats_source = green_stats
 	
 	# Determine type from filename only (to avoid 'Pawn/' directory matching)
 	var filename = lower_id.get_file()
@@ -81,11 +91,27 @@ func get_piece_stats(piece_id: String) -> Dictionary:
 	
 	return {}
 
-func upgrade_piece(type_key: String, is_white: bool, stat_name: String, amount: int):
-	var stats_source = white_stats if is_white else black_stats
+func upgrade_piece(type_key: String, is_white: bool, stat_name: String, amount: int, path_for_color: String = ""):
+	var stats_source = white_stats
+	var color_name = "White"
+	
+	if path_for_color != "":
+		var lower_path = path_for_color.to_lower()
+		if "white" in lower_path:
+			stats_source = white_stats; color_name = "White"
+		elif "red" in lower_path:
+			stats_source = red_stats; color_name = "Red"
+		elif "black" in lower_path:
+			stats_source = black_stats; color_name = "Black"
+		elif "green" in lower_path:
+			stats_source = green_stats; color_name = "Green"
+	else:
+		stats_source = white_stats if is_white else black_stats
+		color_name = "White" if is_white else "Black"
+		
 	if stats_source.has(type_key) and stats_source[type_key].has(stat_name):
 		stats_source[type_key][stat_name] += amount
-		print("[PieceDatabase] Upgraded %s %s: %s +%d" % ["White" if is_white else "Black", type_key, stat_name, amount])
+		print("[PieceDatabase] Upgraded %s %s: %s +%d (New Val: %d)" % [color_name, type_key, stat_name, amount, stats_source[type_key][stat_name]])
 
 func get_piece_display_name(path: String) -> String:
 	var file_name = path.get_file().to_lower()
@@ -147,7 +173,9 @@ func get_valid_moves(current_pos: Vector2i, piece_path: String) -> Array[Vector2
 func reset_database_for_online():
 	# Save current stats to backup (Singleplayer)
 	white_stats_backup = white_stats.duplicate(true)
+	red_stats_backup = red_stats.duplicate(true)
 	black_stats_backup = black_stats.duplicate(true)
+	green_stats_backup = green_stats.duplicate(true)
 	# Reset current stats to base for the online match
 	_initialize_database()
 	print("[PieceDatabase] Singleplayer stats backed up and database reset for online play.")
@@ -155,15 +183,21 @@ func reset_database_for_online():
 func restore_database_after_online():
 	if not white_stats_backup.is_empty():
 		white_stats = white_stats_backup.duplicate(true)
+		red_stats = red_stats_backup.duplicate(true)
 		black_stats = black_stats_backup.duplicate(true)
+		green_stats = green_stats_backup.duplicate(true)
 		white_stats_backup.clear()
+		red_stats_backup.clear()
 		black_stats_backup.clear()
+		green_stats_backup.clear()
 		print("[PieceDatabase] Singleplayer stats restored from backup.")
 
 func get_raw_stats() -> Dictionary:
 	return {
 		"white": white_stats,
-		"black": black_stats
+		"red": red_stats,
+		"black": black_stats,
+		"green": green_stats
 	}
 
 func set_raw_stats(data: Dictionary):

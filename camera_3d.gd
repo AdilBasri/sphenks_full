@@ -1,6 +1,8 @@
 @tool
 extends Camera3D
 
+var side_look_tween: Tween = null
+
 @export var sensitivity: float = 0.08
 @export var limit_y: float = 100.0  # Horizontal (Left/Right)
 @export var limit_x: float = 75.0  # Vertical (Up/Down)
@@ -448,9 +450,9 @@ func _input(event):
 				elif event.keycode == KEY_S and is_zoomed_view:
 					_transition_to_seated_view()
 				elif event.keycode == KEY_A and not is_zoomed_view:
-					_switch_temp_camera("Camera3D3")
-				elif event.keycode == KEY_D and not is_zoomed_view:
 					_switch_temp_camera("Camera3D4")
+				elif event.keycode == KEY_D and not is_zoomed_view:
+					_switch_temp_camera("Camera3D3")
 					
 			# if event.keycode == KEY_C and current_state == PlayerState.SEATED and not is_transitioning_view:
 			# 	stand_up()
@@ -1597,51 +1599,57 @@ func _is_cell_valid_for_placement(hucre: GridHucre) -> bool:
 
 func _on_inspect_dismissed():
 	if held_piece:
-		# Kesikliği önlemek için: Önce taşı yaklaşık UI konumunda (ortada) hazırla, sonra süzdür
-		held_piece.position = Vector3(0.1, -0.1, -0.8) # Başlangıç (Süzülme başlangıcı)
+		# To prevent jitter: first prepare piece at approximate UI position (center), then glide
+		held_piece.position = Vector3(0.1, -0.1, -0.8) # Start (Glide start)
 		held_piece.rotation_degrees = Vector3(5, 155, 0)
 		held_piece.scale = Vector3(3.2, 3.2, 3.2)
 		held_piece.visible = true
-
-func _switch_temp_camera(cam_name: String):
-	if is_locked or current_state != PlayerState.SEATED or is_zoomed_view: return
-	
-	var target_cam = get_parent().get_node_or_null(cam_name)
-	if not target_cam:
-		print("[Camera3D] Target camera ", cam_name, " not found!")
-		return
-	
-	is_locked = true
-	var original_pos = position
-	var original_rot = rotation_degrees
-	
-	var tw = create_tween()
-	tw.set_parallel(true)
-	# Smoothly move to target camera's global transform
-	tw.tween_property(self, "global_position", target_cam.global_position, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_property(self, "global_rotation_degrees", target_cam.global_rotation_degrees, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	
-	tw.set_parallel(false)
-	tw.tween_interval(1.5) # Wait as requested
-	
-	tw.set_parallel(true)
-	# Return to original seated position
-	tw.tween_property(self, "position", original_pos, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_property(self, "rotation_degrees", original_rot, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	
-	await tw.finished
-	is_locked = false
-	# Reset yaw/pitch to match current rotation to prevent snap on next mouse move
-	yaw = rotation_degrees.y
-	pitch = rotation_degrees.x
 		
-		# Şimdi eldeki asıl "büyük ve sağ-üst" yerine süzülerek gitsin
+		# Now glide to the actual "large and top-right" position
 		var tw = create_tween().set_parallel(true)
 		tw.tween_property(held_piece, "position", Vector3(0.75, -0.05, -0.8), 0.6).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
 		tw.tween_property(held_piece, "scale", Vector3(4.2, 4.2, 4.2), 0.6).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
 		
-		# Global shader (Kenarlık vb.) ve önde görünme (X-Ray) aktif
+		# Global shader (Outline etc.) and X-Ray active
 		set_piece_render_priority(held_piece, 10, true)
+
+func _switch_temp_camera(cam_name: String):
+	if current_state != PlayerState.SEATED or is_zoomed_view: return
+	
+	var target_cam = get_parent().get_node_or_null(cam_name)
+	if not target_cam: return
+	
+	# Interruption logic: Kill existing tween if user switches direction
+	if side_look_tween and side_look_tween.is_valid():
+		side_look_tween.kill()
+	
+	is_locked = true
+	side_look_tween = create_tween()
+	side_look_tween.set_parallel(true)
+	
+	# Smoothly move to target camera's global transform
+	side_look_tween.tween_property(self, "global_position", target_cam.global_position, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	side_look_tween.tween_property(self, "global_rotation_degrees", target_cam.global_rotation_degrees, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	
+	side_look_tween.set_parallel(false)
+	side_look_tween.tween_interval(1.0) # Reduced to 1 second as requested
+	
+	side_look_tween.tween_callback(_return_from_temp_camera)
+
+func _return_from_temp_camera():
+	if side_look_tween and side_look_tween.is_valid():
+		side_look_tween.kill()
+		
+	side_look_tween = create_tween().set_parallel(true)
+	# Return to original seated position
+	side_look_tween.tween_property(self, "position", seated_position, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	side_look_tween.tween_property(self, "rotation_degrees", seated_rotation, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	
+	await side_look_tween.finished
+	is_locked = false
+	# Reset yaw/pitch to match current rotation to prevent snap on next mouse move
+	yaw = rotation_degrees.y
+	pitch = rotation_degrees.x
 
 func apply_shake(intensity: float, duration: float):
 	shake_intensity = intensity

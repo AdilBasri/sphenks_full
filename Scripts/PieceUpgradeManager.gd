@@ -79,15 +79,17 @@ func _find_markers():
 	
 	if whetstone_atk:
 		marker_atk = whetstone_atk.find_child("Marker3D", true, false)
+		if not marker_atk: marker_atk = whetstone_atk
 		_ensure_collision(whetstone_atk, "atk")
-		# print("[PieceUpgradeManager] Whetstone ATK found at ", whetstone_atk.global_position)
+		print("[PieceUpgradeManager] Whetstone ATK ready at ", marker_atk.global_position)
 	else:
 		print("[PieceUpgradeManager] WARNING: whetstone_atk not found!")
 		
 	if whetstone_def:
 		marker_def = whetstone_def.find_child("Marker3D", true, false)
+		if not marker_def: marker_def = whetstone_def
 		_ensure_collision(whetstone_def, "def")
-		# print("[PieceUpgradeManager] Whetstone DEF found at ", whetstone_def.global_position)
+		print("[PieceUpgradeManager] Whetstone DEF ready at ", marker_def.global_position)
 	else:
 		print("[PieceUpgradeManager] WARNING: whetstone_def not found!")
 		
@@ -138,7 +140,7 @@ func _ensure_collision(node: Node3D, type: String):
 	sb.collision_layer = 1
 	var cs = CollisionShape3D.new()
 	var box = BoxShape3D.new()
-	box.size = Vector3(0.4, 0.4, 0.4)
+	box.size = Vector3(0.6, 0.6, 0.6) # Increased for better click detection
 	cs.shape = box
 	sb.add_child(cs)
 
@@ -282,7 +284,7 @@ func start_upgrade_sequence():
 			
 			get_tree().current_scene.add_child(piece)
 			piece.global_position = target_global_pos
-			piece.global_position.y += 0.08
+			piece.global_position.y += 0.04 # Lowered from 0.08 as requested
 			piece.scale = Vector3(1.5, 1.5, 1.5)
 			piece.set_meta("scene_path", piece_path)
 			piece.set_meta("is_upgrade_choice", true)
@@ -399,7 +401,7 @@ func drop_selected_piece():
 	var idx = selection_pieces.find(selected_piece)
 	if idx != -1 and idx < fabric_markers.size():
 		var target_pos = fabric_markers[idx].global_position
-		target_pos.y += 0.08
+		target_pos.y += 0.04 # Match the lowered height
 		var tw = create_tween()
 		tw.tween_property(selected_piece, "global_position", target_pos, 0.4).set_trans(Tween.TRANS_SINE)
 		
@@ -448,7 +450,7 @@ func process_upgrade(type: String):
 	# 3. Apply Stat
 	var path = selected_piece.get_meta("scene_path")
 	var stat_name = "attack" if type == "atk" else "defense"
-	PieceDatabase.upgrade_piece(PieceDatabase.get_piece_type(path), true, stat_name, 1)
+	PieceDatabase.upgrade_piece(PieceDatabase.get_piece_type(path), true, stat_name, 1, path)
 	
 	upgrade_points -= 1
 	if points_label: points_label.text = str(upgrade_points)

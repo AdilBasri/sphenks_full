@@ -122,7 +122,9 @@ func _setup_player_names():
 				
 				bone_attachment.add_child(label)
 				
-				if idx == role:
+				# CRITICAL FIX: Hide the label from our own perspective
+				if steam_id == OnlineManager.my_steam_id or idx == role:
 					label.visible = false
-				
-				_names_initialized = true
+					label.queue_free() # Completely remove it for the local player
+			
+	_names_initialized = true
