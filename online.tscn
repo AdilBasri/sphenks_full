@@ -246,6 +246,14 @@ visible = false
 transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.0284231, -0.47089425)
 fov = 80.0
 
+[node name="Camera3D3" type="Camera3D" parent="Players/Player1"]
+transform = Transform3D(0.707107, 0.353553, -0.612372, 0, 0.866025, 0.5, 0.707107, -0.353553, 0.612372, 0, -0.106, -0.014)
+fov = 85.0
+
+[node name="Camera3D4" type="Camera3D" parent="Players/Player1"]
+transform = Transform3D(0.707107, -0.353553, 0.612372, 0, 0.866025, 0.5, -0.707107, -0.353553, 0.612372, 0, -0.106, -0.014)
+fov = 85.0
+
 [node name="Sitting" parent="Players/Player1" groups=["sitting_node"] instance=ExtResource("14_r3rnl")]
 transform = Transform3D(-0.8, 0, -6.9938224e-08, 0, 0.8, 0, 6.9938224e-08, 0, -0.8, 0, -1.122842, 0.45077813)
 
@@ -297,6 +305,14 @@ visible = false
 [node name="Camera3D2" type="Camera3D" parent="Players/Player2"]
 transform = Transform3D(0.99999094, -0.004169807, 0.0008650448, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 9.313226e-10, -0.0284231, -0.5495604)
 fov = 80.0
+
+[node name="Camera3D3" type="Camera3D" parent="Players/Player2"]
+transform = Transform3D(0.707107, 0.353553, -0.612372, 0, 0.866025, 0.5, 0.707107, -0.353553, 0.612372, 0, -0.106, -0.014)
+fov = 85.0
+
+[node name="Camera3D4" type="Camera3D" parent="Players/Player2"]
+transform = Transform3D(0.707107, -0.353553, 0.612372, 0, 0.866025, 0.5, -0.707107, -0.353553, 0.612372, 0, -0.106, -0.014)
+fov = 85.0
 
 [node name="Sitting" parent="Players/Player2" groups=["sitting_node"] instance=ExtResource("14_r3rnl")]
 transform = Transform3D(-0.8, 0, -6.9938224e-08, 0, 0.8, 0, 6.9938224e-08, 0, -0.8, 0, -1.122842, 0.45077813)
@@ -353,6 +369,14 @@ visible = false
 transform = Transform3D(0.99999094, -0.004169807, 0.0008650448, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 3.858794e-09, -0.0284231, -0.5150337)
 fov = 80.0
 
+[node name="Camera3D3" type="Camera3D" parent="Players/Player3"]
+transform = Transform3D(0.707107, 0.353553, -0.612372, 0, 0.866025, 0.5, 0.707107, -0.353553, 0.612372, 0, -0.106, -0.014)
+fov = 85.0
+
+[node name="Camera3D4" type="Camera3D" parent="Players/Player3"]
+transform = Transform3D(0.707107, -0.353553, 0.612372, 0, 0.866025, 0.5, -0.707107, -0.353553, 0.612372, 0, -0.106, -0.014)
+fov = 85.0
+
 [node name="Sitting" parent="Players/Player3" groups=["sitting_node"] instance=ExtResource("14_r3rnl")]
 transform = Transform3D(-0.8, 0, -6.9938224e-08, 0, 0.8, 0, 6.9938224e-08, 0, -0.8, 0, -1.122842, 0.45077813)
 
@@ -404,6 +428,14 @@ visible = false
 [node name="Camera3D2" type="Camera3D" parent="Players/Player4"]
 transform = Transform3D(0.99999094, -0.004169807, 0.00086504477, 0, 0.20312938, 0.9791519, -0.0042585903, -0.979143, 0.20312753, 0, -0.0284231, -0.47089425)
 fov = 80.0
+
+[node name="Camera3D3" type="Camera3D" parent="Players/Player4"]
+transform = Transform3D(0.707107, 0.353553, -0.612372, 0, 0.866025, 0.5, 0.707107, -0.353553, 0.612372, 0, -0.106, -0.014)
+fov = 85.0
+
+[node name="Camera3D4" type="Camera3D" parent="Players/Player4"]
+transform = Transform3D(0.707107, -0.353553, 0.612372, 0, 0.866025, 0.5, -0.707107, -0.353553, 0.612372, 0, -0.106, -0.014)
+fov = 85.0
 
 [node name="Sitting" parent="Players/Player4" groups=["sitting_node"] instance=ExtResource("14_r3rnl")]
 transform = Transform3D(-0.8, 0, -6.9938224e-08, 0, 0.8, 0, 6.9938224e-08, 0, -0.8, 0, -1.122842, 0.45077813)

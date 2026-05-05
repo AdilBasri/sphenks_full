@@ -447,6 +447,10 @@ func _input(event):
 					_transition_to_board_view()
 				elif event.keycode == KEY_S and is_zoomed_view:
 					_transition_to_seated_view()
+				elif event.keycode == KEY_A and not is_zoomed_view:
+					_switch_temp_camera("Camera3D3")
+				elif event.keycode == KEY_D and not is_zoomed_view:
+					_switch_temp_camera("Camera3D4")
 					
 			# if event.keycode == KEY_C and current_state == PlayerState.SEATED and not is_transitioning_view:
 			# 	stand_up()
@@ -1598,6 +1602,38 @@ func _on_inspect_dismissed():
 		held_piece.rotation_degrees = Vector3(5, 155, 0)
 		held_piece.scale = Vector3(3.2, 3.2, 3.2)
 		held_piece.visible = true
+
+func _switch_temp_camera(cam_name: String):
+	if is_locked or current_state != PlayerState.SEATED or is_zoomed_view: return
+	
+	var target_cam = get_parent().get_node_or_null(cam_name)
+	if not target_cam:
+		print("[Camera3D] Target camera ", cam_name, " not found!")
+		return
+	
+	is_locked = true
+	var original_pos = position
+	var original_rot = rotation_degrees
+	
+	var tw = create_tween()
+	tw.set_parallel(true)
+	# Smoothly move to target camera's global transform
+	tw.tween_property(self, "global_position", target_cam.global_position, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(self, "global_rotation_degrees", target_cam.global_rotation_degrees, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	
+	tw.set_parallel(false)
+	tw.tween_interval(1.5) # Wait as requested
+	
+	tw.set_parallel(true)
+	# Return to original seated position
+	tw.tween_property(self, "position", original_pos, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(self, "rotation_degrees", original_rot, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	
+	await tw.finished
+	is_locked = false
+	# Reset yaw/pitch to match current rotation to prevent snap on next mouse move
+	yaw = rotation_degrees.y
+	pitch = rotation_degrees.x
 		
 		# Şimdi eldeki asıl "büyük ve sağ-üst" yerine süzülerek gitsin
 		var tw = create_tween().set_parallel(true)
